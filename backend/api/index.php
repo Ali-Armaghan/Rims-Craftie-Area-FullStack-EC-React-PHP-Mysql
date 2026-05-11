@@ -29,6 +29,9 @@ switch ($module) {
     case 'products':
         require_once __DIR__ . '/products/handler.php';
         break;
+    case 'categories':
+        require_once __DIR__ . '/categories/handler.php';
+        break;
     case 'orders':
         require_once __DIR__ . '/orders/handler.php';
         break;

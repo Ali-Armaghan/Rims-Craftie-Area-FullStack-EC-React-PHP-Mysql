@@ -1,5 +1,5 @@
+import { useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
-import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
@@ -9,7 +9,7 @@ import { UsersDialogs } from './components/users-dialogs'
 import { UsersPrimaryButtons } from './components/users-primary-buttons'
 import { UsersProvider } from './components/users-provider'
 import { UsersTable } from './components/users-table'
-import { users } from './data/users'
+import apiClient from '@/lib/api-client'
 
 const route = getRouteApi('/_authenticated/users/')
 
@@ -17,13 +17,20 @@ export function Users() {
   const search = route.useSearch()
   const navigate = route.useNavigate()
 
+  const { data: users = [], isLoading } = useQuery({
+    queryKey: ['users'],
+    queryFn: async () => {
+      const response = await apiClient.get('/admin/users')
+      return response.data
+    },
+  })
+
   return (
     <UsersProvider>
       <Header fixed>
         <Search />
         <div className='ms-auto flex items-center space-x-4'>
           <ThemeSwitch />
-          <ConfigDrawer />
           <ProfileDropdown />
         </div>
       </Header>
@@ -33,12 +40,16 @@ export function Users() {
           <div>
             <h2 className='text-2xl font-bold tracking-tight'>User List</h2>
             <p className='text-muted-foreground'>
-              Manage your users and their roles here.
+              Manage your users and their resale balances here.
             </p>
           </div>
           <UsersPrimaryButtons />
         </div>
-        <UsersTable data={users} search={search} navigate={navigate} />
+        {isLoading ? (
+          <div>Loading users...</div>
+        ) : (
+          <UsersTable data={users} search={search} navigate={navigate} />
+        )}
       </Main>
 
       <UsersDialogs />

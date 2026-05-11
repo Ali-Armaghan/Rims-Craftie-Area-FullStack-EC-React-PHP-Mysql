@@ -25,5 +25,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $res = $product->read($params);
         echo json_encode($res);
     }
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $data = json_decode(file_get_contents("php://input"), true);
+    if ($product->create($data)) {
+        http_response_code(201);
+        echo json_encode(["message" => "Product created."]);
+    } else {
+        http_response_code(503);
+        echo json_encode(["message" => "Unable to create product."]);
+    }
+} elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+    $data = json_decode(file_get_contents("php://input"), true);
+    $id = isset($data['id']) ? $data['id'] : null;
+    if ($id && $product->update($id, $data)) {
+        echo json_encode(["message" => "Product updated."]);
+    } else {
+        http_response_code(503);
+        echo json_encode(["message" => "Unable to update product."]);
+    }
+} elseif ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+    $id = isset($_GET['id']) ? $_GET['id'] : null;
+    if ($id && $product->delete($id)) {
+        echo json_encode(["message" => "Product deleted."]);
+    } else {
+        http_response_code(503);
+        echo json_encode(["message" => "Unable to delete product."]);
+    }
 }
 ?>

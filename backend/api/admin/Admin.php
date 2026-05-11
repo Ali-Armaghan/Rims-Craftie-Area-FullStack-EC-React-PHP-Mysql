@@ -68,5 +68,11 @@ class Admin {
             return false;
         }
     }
+    public function getUsers() {
+        $query = "SELECT id, name, email, phone, resale_code, resale_balance, status, created_at FROM users ORDER BY created_at DESC";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?>

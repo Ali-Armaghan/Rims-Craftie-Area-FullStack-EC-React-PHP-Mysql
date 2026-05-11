@@ -57,8 +57,35 @@ class Product {
         $stmt->bindParam(":price", $data['price']);
         $stmt->bindParam(":stock", $data['stock']);
         $stmt->bindParam(":images", $images);
+        return $stmt->execute();
+    }
+
+    public function update($id, $data) {
+        $query = "UPDATE " . $this->table_name . " 
+                  SET name=:name, slug=:slug, category_id=:cat_id, 
+                      description=:desc, price=:price, stock=:stock, images=:images, is_active=:is_active
+                  WHERE id=:id";
+        $stmt = $this->conn->prepare($query);
+        
+        $images = json_encode($data['images']);
+        
+        $stmt->bindParam(":name", $data['name']);
+        $stmt->bindParam(":slug", $data['slug']);
+        $stmt->bindParam(":cat_id", $data['category_id']);
+        $stmt->bindParam(":desc", $data['description']);
+        $stmt->bindParam(":price", $data['price']);
+        $stmt->bindParam(":stock", $data['stock']);
+        $stmt->bindParam(":images", $images);
+        $stmt->bindParam(":is_active", $data['is_active']);
+        $stmt->bindParam(":id", $id);
         
         return $stmt->execute();
+    }
+
+    public function delete($id) {
+        $query = "DELETE FROM " . $this->table_name . " WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        return $stmt->execute([$id]);
     }
 }
 ?>

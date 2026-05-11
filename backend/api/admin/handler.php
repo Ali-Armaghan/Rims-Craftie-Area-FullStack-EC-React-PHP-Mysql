@@ -18,6 +18,10 @@ switch ($action) {
     case 'stats':
         echo json_encode($admin->getDashboardStats());
         break;
+    
+    case 'users':
+        echo json_encode($admin->getUsers());
+        break;
 
     case 'live-traffic':
         echo json_encode($admin->getLiveTraffic());
