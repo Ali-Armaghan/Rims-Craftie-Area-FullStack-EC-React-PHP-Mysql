@@ -1,4 +1,9 @@
-import { useEffect, useState, type ChangeEvent } from 'react'
+import {
+  useEffect,
+  useState,
+  type ChangeEvent,
+  type PointerEvent,
+} from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
@@ -18,6 +23,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   Form,
   FormControl,
@@ -42,6 +55,16 @@ type ProductFormPageProps = {
   productId?: string
 }
 
+type CropMode = 'main' | 'carousel'
+
+type CropSession = {
+  mode: CropMode
+  currentFile: File
+  imageUrl: string
+  remainingFiles: File[]
+  croppedFiles: File[]
+}
+
 function getProductCategoryId(product: Product, categories: Category[]) {
   const categoryId = Number(product.category_id)
 
@@ -60,13 +83,32 @@ function getProductCategoryId(product: Product, categories: Category[]) {
   return Number(categories[0]?.id ?? 0)
 }
 
+function parseProductImages(images: unknown): string[] {
+  if (Array.isArray(images)) {
+    return images.filter((image): image is string => typeof image === 'string')
+  }
+
+  if (typeof images === 'string' && images.trim()) {
+    try {
+      const parsed = JSON.parse(images)
+      return Array.isArray(parsed)
+        ? parsed.filter((image): image is string => typeof image === 'string')
+        : [images]
+    } catch {
+      return [images]
+    }
+  }
+
+  return []
+}
+
 function normalizeProduct(product: Product, categories: Category[]): Product {
   return {
     ...product,
     category_id: getProductCategoryId(product, categories),
     price: Number(product.price),
     stock: Number(product.stock),
-    images: Array.isArray(product.images) ? product.images : [],
+    images: parseProductImages(product.images),
     is_active: Number(product.is_active),
   }
 }
@@ -75,6 +117,19 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [isSaving, setIsSaving] = useState(false)
+  const [cropSession, setCropSession] = useState<CropSession | null>(null)
+  const [cropZoom, setCropZoom] = useState(1)
+  const [cropOffset, setCropOffset] = useState({ x: 0, y: 0 })
+  const [cropNaturalSize, setCropNaturalSize] = useState({
+    width: 0,
+    height: 0,
+  })
+  const [dragStart, setDragStart] = useState<{
+    pointerX: number
+    pointerY: number
+    offsetX: number
+    offsetY: number
+  } | null>(null)
   const isEdit = Boolean(productId)
 
   const {
@@ -151,46 +206,133 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
     const formData = new FormData()
     files.forEach((file) => formData.append('images[]', file))
 
-    const response = await apiClient.post('/uploads/products', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    const response = await apiClient.post('/uploads/products', formData)
 
     return Array.isArray(response.data.images) ? response.data.images : []
   }
 
-  const onMainImageChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files ?? [])
-    event.target.value = ''
+  const openCropper = (files: File[], mode: CropMode) => {
     if (!files.length) return
 
-    setIsSaving(true)
-    try {
-      const [mainImage] = await uploadProductImages([files[0]])
-      if (!mainImage) return
-
-      setValue('images', [mainImage, ...productImages.slice(1)], {
-        shouldDirty: true,
-        shouldValidate: true,
-      })
-      toast.success('Main image uploaded')
-    } catch {
-      toast.error('Failed to upload main image')
-    } finally {
-      setIsSaving(false)
-    }
+    setCropZoom(1)
+    setCropOffset({ x: 0, y: 0 })
+    setCropNaturalSize({ width: 0, height: 0 })
+    setCropSession({
+      mode,
+      currentFile: files[0],
+      imageUrl: URL.createObjectURL(files[0]),
+      remainingFiles: files.slice(1),
+      croppedFiles: [],
+    })
   }
 
-  const onCarouselImagesChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files ?? [])
-    event.target.value = ''
-    if (!files.length) return
+  const closeCropper = () => {
+    if (cropSession?.imageUrl) {
+      URL.revokeObjectURL(cropSession.imageUrl)
+    }
+    setCropSession(null)
+    setDragStart(null)
+    setCropZoom(1)
+    setCropOffset({ x: 0, y: 0 })
+    setCropNaturalSize({ width: 0, height: 0 })
+  }
 
+  const cropImageToSquare = async (session: CropSession) => {
+    const cropSize = 700
+    const previewSize = 320
+    const image = new Image()
+    image.src = session.imageUrl
+
+    await new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve()
+      image.onerror = reject
+    })
+
+    const baseScale = Math.max(
+      previewSize / image.naturalWidth,
+      previewSize / image.naturalHeight
+    )
+    const totalScale = baseScale * cropZoom
+    const displayedWidth = image.naturalWidth * totalScale
+    const displayedHeight = image.naturalHeight * totalScale
+    const sourceSize = previewSize / totalScale
+    const maxSourceX = image.naturalWidth - sourceSize
+    const maxSourceY = image.naturalHeight - sourceSize
+    const sourceX = Math.min(
+      Math.max(
+        (displayedWidth / 2 - previewSize / 2 - cropOffset.x) / totalScale,
+        0
+      ),
+      Math.max(maxSourceX, 0)
+    )
+    const sourceY = Math.min(
+      Math.max(
+        (displayedHeight / 2 - previewSize / 2 - cropOffset.y) / totalScale,
+        0
+      ),
+      Math.max(maxSourceY, 0)
+    )
+
+    const canvas = document.createElement('canvas')
+    canvas.width = cropSize
+    canvas.height = cropSize
+    const ctx = canvas.getContext('2d')
+    if (!ctx) {
+      throw new Error('Canvas is not supported')
+    }
+
+    ctx.drawImage(
+      image,
+      sourceX,
+      sourceY,
+      sourceSize,
+      sourceSize,
+      0,
+      0,
+      cropSize,
+      cropSize
+    )
+
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (result) => {
+          if (result) {
+            resolve(result)
+            return
+          }
+          reject(new Error('Unable to crop image'))
+        },
+        'image/jpeg',
+        0.92
+      )
+    })
+
+    return new File(
+      [blob],
+      session.currentFile.name.replace(/\.[^.]+$/, '') + '-square.jpg',
+      { type: 'image/jpeg' }
+    )
+  }
+
+  const finishCroppedUpload = async (mode: CropMode, files: File[]) => {
     setIsSaving(true)
     try {
       const uploadedImages = await uploadProductImages(files)
+
+      if (mode === 'main') {
+        const [mainImage] = uploadedImages
+        if (!mainImage) return
+
+        setValue('images', [mainImage, ...productImages.slice(1)], {
+          shouldDirty: true,
+          shouldValidate: true,
+        })
+        toast.success('Main image cropped and uploaded')
+        return
+      }
+
       const mainImage = productImages[0]
       const carouselImages = productImages.slice(1)
-
       setValue(
         'images',
         mainImage
@@ -198,13 +340,104 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
           : uploadedImages,
         { shouldDirty: true, shouldValidate: true }
       )
-      toast.success('Carousel images uploaded')
+      toast.success('Carousel images cropped and uploaded')
     } catch {
-      toast.error('Failed to upload carousel images')
+      toast.error('Failed to upload cropped images')
     } finally {
       setIsSaving(false)
     }
   }
+
+  const confirmCrop = async () => {
+    if (!cropSession) return
+
+    try {
+      const croppedFile = await cropImageToSquare(cropSession)
+      const croppedFiles = [...cropSession.croppedFiles, croppedFile]
+
+      URL.revokeObjectURL(cropSession.imageUrl)
+
+      if (cropSession.remainingFiles.length) {
+        const [nextFile, ...remainingFiles] = cropSession.remainingFiles
+        setCropZoom(1)
+        setCropOffset({ x: 0, y: 0 })
+        setCropNaturalSize({ width: 0, height: 0 })
+        setDragStart(null)
+        setCropSession({
+          mode: cropSession.mode,
+          currentFile: nextFile,
+          imageUrl: URL.createObjectURL(nextFile),
+          remainingFiles,
+          croppedFiles,
+        })
+        return
+      }
+
+      const mode = cropSession.mode
+      setCropSession(null)
+      setDragStart(null)
+      setCropZoom(1)
+      setCropOffset({ x: 0, y: 0 })
+      setCropNaturalSize({ width: 0, height: 0 })
+      await finishCroppedUpload(mode, croppedFiles)
+    } catch {
+      toast.error('Failed to crop image')
+    }
+  }
+
+  const onMainImageChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? [])
+    event.target.value = ''
+    if (!files.length) return
+
+    openCropper([files[0]], 'main')
+  }
+
+  const onCarouselImagesChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? [])
+    event.target.value = ''
+    if (!files.length) return
+
+    openCropper(files, 'carousel')
+  }
+
+  const onCropPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    event.currentTarget.setPointerCapture(event.pointerId)
+    setDragStart({
+      pointerX: event.clientX,
+      pointerY: event.clientY,
+      offsetX: cropOffset.x,
+      offsetY: cropOffset.y,
+    })
+  }
+
+  const onCropPointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    if (!dragStart) return
+
+    setCropOffset({
+      x: dragStart.offsetX + event.clientX - dragStart.pointerX,
+      y: dragStart.offsetY + event.clientY - dragStart.pointerY,
+    })
+  }
+
+  const onCropPointerUp = () => {
+    setDragStart(null)
+  }
+
+  const cropPreviewSize = 320
+  const cropDisplayScale =
+    cropNaturalSize.width && cropNaturalSize.height
+      ? Math.max(
+          cropPreviewSize / cropNaturalSize.width,
+          cropPreviewSize / cropNaturalSize.height
+        )
+      : 1
+  const cropDisplayWidth = cropNaturalSize.width
+    ? cropNaturalSize.width * cropDisplayScale
+    : cropPreviewSize
+  const cropDisplayHeight = cropNaturalSize.height
+    ? cropNaturalSize.height * cropDisplayScale
+    : cropPreviewSize
 
   const removeImage = (index: number) => {
     setValue(
@@ -531,6 +764,87 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
           </Card>
         </div>
       </Main>
+
+      <Dialog open={!!cropSession} onOpenChange={(open) => !open && closeCropper()}>
+        <DialogContent className='sm:max-w-xl'>
+          <DialogHeader>
+            <DialogTitle>Crop Image Square</DialogTitle>
+            <DialogDescription>
+              Drag the image and adjust zoom. The cropped square image will be
+              uploaded after confirmation.
+            </DialogDescription>
+          </DialogHeader>
+
+          {cropSession && (
+            <div className='space-y-4'>
+              <div className='text-sm text-muted-foreground'>
+                {cropSession.mode === 'main'
+                  ? 'Front / main image'
+                  : `Carousel image ${
+                      cropSession.croppedFiles.length + 1
+                    } of ${
+                      cropSession.croppedFiles.length +
+                      cropSession.remainingFiles.length +
+                      1
+                    }`}
+              </div>
+
+              <div className='flex justify-center'>
+                <div
+                  className='relative h-80 w-80 touch-none overflow-hidden rounded-md border bg-muted'
+                  onPointerDown={onCropPointerDown}
+                  onPointerMove={onCropPointerMove}
+                  onPointerUp={onCropPointerUp}
+                  onPointerCancel={onCropPointerUp}
+                >
+                  <img
+                    src={cropSession.imageUrl}
+                    alt='Crop preview'
+                    className='absolute left-1/2 top-1/2 max-w-none select-none'
+                    draggable={false}
+                    onLoad={(event) =>
+                      setCropNaturalSize({
+                        width: event.currentTarget.naturalWidth,
+                        height: event.currentTarget.naturalHeight,
+                      })
+                    }
+                    style={{
+                      width: cropDisplayWidth,
+                      height: cropDisplayHeight,
+                      transform: `translate(-50%, -50%) translate(${cropOffset.x}px, ${cropOffset.y}px) scale(${cropZoom})`,
+                    }}
+                  />
+                  <div className='pointer-events-none absolute inset-0 border-2 border-primary/80' />
+                </div>
+              </div>
+
+              <div>
+                <label className='mb-2 block text-sm font-medium'>
+                  Zoom
+                </label>
+                <Input
+                  type='range'
+                  min='1'
+                  max='3'
+                  step='0.05'
+                  value={cropZoom}
+                  onChange={(event) => setCropZoom(Number(event.target.value))}
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button type='button' variant='outline' onClick={closeCropper}>
+              Cancel
+            </Button>
+            <Button type='button' onClick={confirmCrop} disabled={isSaving}>
+              {isSaving && <Loader2 className='animate-spin' />}
+              Crop & Upload
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

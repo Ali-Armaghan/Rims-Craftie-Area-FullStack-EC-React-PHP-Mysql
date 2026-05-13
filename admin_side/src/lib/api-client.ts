@@ -16,6 +16,10 @@ apiClient.interceptors.request.use((config) => {
     return config
   }
 
+  if (config.data instanceof FormData) {
+    config.headers.delete('Content-Type')
+  }
+
   const [path, queryString] = config.url.replace(/^\/+/, '').split('?')
   const queryParams = Object.fromEntries(new URLSearchParams(queryString))
 
