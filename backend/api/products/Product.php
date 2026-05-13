@@ -9,6 +9,72 @@ class Product {
         $this->conn = $db;
     }
 
+    private function parseImages($images) {
+        if (is_array($images)) {
+            return array_values(array_filter($images, function ($image) {
+                return is_string($image) && trim($image) !== '';
+            }));
+        }
+
+        if (!is_string($images) || trim($images) === '') {
+            return [];
+        }
+
+        $decoded = json_decode($images, true);
+        if (is_array($decoded)) {
+            return array_values(array_filter($decoded, function ($image) {
+                return is_string($image) && trim($image) !== '';
+            }));
+        }
+
+        return [$images];
+    }
+
+    private function getImagesById($id) {
+        $query = "SELECT images FROM " . $this->table_name . " WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$id]);
+        $images = $stmt->fetchColumn();
+
+        return $this->parseImages($images);
+    }
+
+    private function deleteLocalImage($imageUrl) {
+        $path = parse_url($imageUrl, PHP_URL_PATH);
+        if (!$path || strpos($path, '/uploads/products/') === false) {
+            return;
+        }
+
+        $fileName = basename($path);
+        if ($fileName === '' || $fileName === '.' || $fileName === '..') {
+            return;
+        }
+
+        $uploadDir = realpath(__DIR__ . '/../../uploads/products');
+        if (!$uploadDir) {
+            return;
+        }
+
+        $filePath = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
+        $realFilePath = realpath($filePath);
+
+        if (
+            $realFilePath &&
+            strpos($realFilePath, $uploadDir) === 0 &&
+            is_file($realFilePath)
+        ) {
+            unlink($realFilePath);
+        }
+    }
+
+    private function deleteRemovedImages($oldImages, $newImages) {
+        $removedImages = array_diff($oldImages, $newImages);
+
+        foreach ($removedImages as $image) {
+            $this->deleteLocalImage($image);
+        }
+    }
+
     public function read($params = []) {
         $query = "SELECT p.*, c.name as category_name,
                          COALESCE(ROUND(AVG(r.rating), 1), 0) as average_rating,
@@ -80,13 +146,15 @@ class Product {
     }
 
     public function update($id, $data) {
+        $oldImages = $this->getImagesById($id);
         $query = "UPDATE " . $this->table_name . " 
                   SET name=:name, slug=:slug, category_id=:cat_id, 
                       description=:desc, price=:price, stock=:stock, images=:images, is_active=:is_active
                   WHERE id=:id";
         $stmt = $this->conn->prepare($query);
         
-        $images = json_encode($data['images']);
+        $newImages = $this->parseImages(isset($data['images']) ? $data['images'] : []);
+        $images = json_encode($newImages);
         
         $stmt->bindParam(":name", $data['name']);
         $stmt->bindParam(":slug", $data['slug']);
@@ -98,13 +166,28 @@ class Product {
         $stmt->bindParam(":is_active", $data['is_active']);
         $stmt->bindParam(":id", $id);
         
-        return $stmt->execute();
+        $updated = $stmt->execute();
+
+        if ($updated) {
+            $this->deleteRemovedImages($oldImages, $newImages);
+        }
+
+        return $updated;
     }
 
     public function delete($id) {
+        $oldImages = $this->getImagesById($id);
         $query = "DELETE FROM " . $this->table_name . " WHERE id = ?";
         $stmt = $this->conn->prepare($query);
-        return $stmt->execute([$id]);
+        $deleted = $stmt->execute([$id]);
+
+        if ($deleted) {
+            foreach ($oldImages as $image) {
+                $this->deleteLocalImage($image);
+            }
+        }
+
+        return $deleted;
     }
 }
 ?>
