@@ -16,9 +16,22 @@ switch ($_SERVER['REQUEST_METHOD']) {
                       FROM orders o 
                       LEFT JOIN users u ON o.user_id = u.id 
                       WHERE o.id = ?";
+            $params = [$_GET['id']];
+
+            if (!empty($_GET['user_id'])) {
+                $query .= " AND o.user_id = ?";
+                $params[] = $_GET['user_id'];
+            }
+
             $stmt = $db->prepare($query);
-            $stmt->execute([$_GET['id']]);
+            $stmt->execute($params);
             $ord = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$ord) {
+                http_response_code(404);
+                echo json_encode(['message' => 'Order not found']);
+                break;
+            }
             
             // Get items
             $iq = "SELECT oi.*, p.name as product_name FROM order_items oi LEFT JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?";
@@ -27,6 +40,15 @@ switch ($_SERVER['REQUEST_METHOD']) {
             $ord['items'] = $istmt->fetchAll(PDO::FETCH_ASSOC);
             
             echo json_encode($ord);
+        } elseif (!empty($_GET['user_id'])) {
+            $query = "SELECT o.*, u.name as customer_name 
+                      FROM orders o 
+                      LEFT JOIN users u ON o.user_id = u.id 
+                      WHERE o.user_id = ?
+                      ORDER BY o.created_at DESC";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$_GET['user_id']]);
+            echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
         } else {
             $query = "SELECT o.*, u.name as customer_name 
                       FROM orders o 
@@ -36,6 +58,24 @@ switch ($_SERVER['REQUEST_METHOD']) {
             $stmt->execute();
             echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
         }
+        break;
+
+    case 'POST':
+        if (
+            empty($data['user_id']) ||
+            empty($data['shipping_address']) ||
+            empty($data['items']) ||
+            !isset($data['subtotal']) ||
+            !isset($data['total'])
+        ) {
+            http_response_code(400);
+            echo json_encode(['message' => 'Incomplete order data']);
+            break;
+        }
+
+        $res = $order->create($data);
+        http_response_code($res['success'] ? 201 : 500);
+        echo json_encode($res);
         break;
 
     case 'PUT':

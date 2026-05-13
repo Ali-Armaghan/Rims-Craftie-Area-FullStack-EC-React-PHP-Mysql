@@ -5,9 +5,11 @@ import { useCart } from "@/context/CartContext";
 import { Lock, ArrowLeft, Loader2 } from "lucide-react";
 import { createOrder, OrderPayload } from "@/services/api";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
 
 const Checkout = () => {
   const { items, totalPrice, clearCart } = useCart();
+  const { user } = useAuth();
   const [placed, setPlaced] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -18,6 +20,7 @@ const Checkout = () => {
     city: '',
     state: '',
     zip: '',
+    referralCode: '',
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,6 +29,11 @@ const Checkout = () => {
   };
 
   const handlePlaceOrder = async () => {
+    if (!user) {
+      toast.error('Please login before placing an order.');
+      return;
+    }
+
     // Basic validation
     if (!formData.fullName || !formData.phone || !formData.address || !formData.city || !formData.state) {
       toast.error('Please fill in all required fields.');
@@ -35,36 +43,25 @@ const Checkout = () => {
     setIsSubmitting(true);
 
     try {
-      const nameParts = formData.fullName.trim().split(' ');
-      const firstName = nameParts[0] || '';
-      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : ' ';
-
       const orderPayload: OrderPayload = {
-        payment_method: 'cod', // Cash on Delivery
-        payment_method_title: 'Cash on delivery',
-        set_paid: false,
-        billing: {
-          first_name: firstName,
-          last_name: lastName,
-          address_1: formData.address,
+        user_id: Number(user.id),
+        subtotal: totalPrice,
+        total: totalPrice,
+        referred_by_code: formData.referralCode || undefined,
+        shipping_address: {
+          full_name: formData.fullName,
+          address: formData.address,
           city: formData.city,
           state: formData.state,
-          postcode: formData.zip,
-          country: 'PK', // Defaulting to Pakistan, update as needed
+          zip: formData.zip,
+          country: 'PK',
           email: formData.email || 'no-email@cod.com',
           phone: formData.phone,
         },
-        shipping: {
-          first_name: firstName,
-          last_name: lastName,
-          address_1: formData.address,
-          city: formData.city,
-          state: formData.state,
-          postcode: formData.zip,
-          country: 'PK',
-        },
-        line_items: items.map(item => ({
+        items: items.map(item => ({
           product_id: parseInt(item.product.id),
+          name: item.product.name,
+          price: item.product.price,
           quantity: item.quantity,
         })),
       };
@@ -115,6 +112,23 @@ const Checkout = () => {
 
   const shipping = 0; // FREE shipping for COD in Pakistan
 
+  if (!user) {
+    return (
+      <div className="container py-32 text-center">
+        <h2 className="font-display text-2xl text-foreground mb-3">Login Required</h2>
+        <p className="font-body text-muted-foreground mb-6">
+          Please login to place an order and track it from your dashboard.
+        </p>
+        <Link
+          to="/login"
+          className="inline-block bg-foreground text-primary-foreground font-nav text-xs tracking-[0.2em] uppercase px-10 py-4"
+        >
+          Login to Checkout
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <section className="container py-16">
       <Link to="/cart" className="inline-flex items-center gap-2 font-nav text-xs tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground transition-colors mb-8">
@@ -145,6 +159,7 @@ const Checkout = () => {
                   <input type="text" name="state" value={formData.state} onChange={handleInputChange} placeholder="State" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
                   <input type="text" name="zip" value={formData.zip} onChange={handleInputChange} placeholder="ZIP" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
                 </div>
+                <input type="text" name="referralCode" value={formData.referralCode} onChange={handleInputChange} placeholder="Referral / ReSale Code (Optional)" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
               </div>
             </div>
 

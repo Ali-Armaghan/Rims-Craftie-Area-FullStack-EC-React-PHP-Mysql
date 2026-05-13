@@ -1,34 +1,75 @@
 import { Product, ProductReview } from '@/data/products';
 
 export interface OrderPayload {
-    payment_method: string;
-    payment_method_title: string;
-    set_paid: boolean;
-    billing: {
-        first_name: string;
-        last_name: string;
-        address_1: string;
+    user_id: number;
+    subtotal: number;
+    total: number;
+    referred_by_code?: string;
+    shipping_address: {
+        full_name: string;
+        phone: string;
+        email?: string;
+        address: string;
         city: string;
         state: string;
-        postcode: string;
-        country: string;
-        email: string;
-        phone?: string;
-    };
-    shipping: {
-        first_name: string;
-        last_name: string;
-        address_1: string;
-        city: string;
-        state: string;
-        postcode: string;
+        zip?: string;
         country: string;
     };
-    line_items: {
+    items: {
         product_id: number;
+        name: string;
+        price: number;
         quantity: number;
     }[];
 }
+
+export type CustomerOrder = {
+    id: number;
+    order_number: string;
+    status: string;
+    subtotal: string | number;
+    total: string | number;
+    referred_by_code?: string | null;
+    commission_earned?: string | number;
+    resale_credited?: number;
+    created_at: string;
+};
+
+export type CustomerOrderItem = {
+    id: number;
+    product_id: number;
+    product_name: string;
+    name?: string;
+    price: string | number;
+    quantity: number;
+    subtotal: string | number;
+};
+
+export type CustomerOrderDetail = CustomerOrder & {
+    shipping_address: string;
+    items: CustomerOrderItem[];
+};
+
+export type CustomerResaleSummary = {
+    id: number;
+    name: string;
+    email: string;
+    resale_code: string;
+    resale_balance: string | number;
+    total_referrals: string | number;
+    total_commissions: string | number;
+    referral_sales: string | number;
+};
+
+export type CustomerResaleLedgerEntry = {
+    id: number;
+    user_id: number;
+    order_id?: number | null;
+    type: 'credit' | 'debit';
+    amount: string | number;
+    description?: string;
+    created_at: string;
+};
 
 export type AuthUser = {
     id: number | string;
@@ -59,10 +100,6 @@ export type SignupPayload = {
  * VITE_API_BASE_URL=http://localhost/ateeqo/backend/api
  */
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '');
-
-// Legacy WooCommerce proxy retained only for reviews/orders until those backend
-// endpoints are migrated.
-const PROXY_URL = '/api/woocommerce';
 
 type BackendProduct = {
     id: number | string;
@@ -245,15 +282,9 @@ export async function signupCustomer(payload: SignupPayload) {
     return data;
 }
 
-/**
- * Creates an order in WooCommerce
- */
 export async function createOrder(orderData: OrderPayload) {
     try {
-        const url = new URL(PROXY_URL, window.location.origin);
-        url.searchParams.append('endpoint', 'orders');
-
-        const response = await fetch(url.toString(), {
+        const response = await fetch(getBackendUrl('orders').toString(), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -273,6 +304,70 @@ export async function createOrder(orderData: OrderPayload) {
         console.error("Failed to create order:", error);
         throw error;
     }
+}
+
+export async function fetchCustomerOrders(userId: string | number): Promise<CustomerOrder[]> {
+    const response = await fetch(getBackendUrl('orders', { user_id: userId }).toString(), {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+    });
+
+    if (!response.ok) {
+        throw new Error(`Error fetching orders: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
+}
+
+export async function fetchCustomerOrder(orderId: string | number, userId: string | number): Promise<CustomerOrderDetail | null> {
+    const response = await fetch(
+        getBackendUrl('orders', { id: orderId, user_id: userId }).toString(),
+        {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+        }
+    );
+
+    if (response.status === 404) {
+        return null;
+    }
+
+    if (!response.ok) {
+        throw new Error(`Error fetching order: ${response.statusText}`);
+    }
+
+    return response.json();
+}
+
+export async function fetchCustomerResale(userId: string | number): Promise<CustomerResaleSummary> {
+    const response = await fetch(getBackendUrl('resale', { user_id: userId }).toString(), {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+    });
+
+    if (!response.ok) {
+        throw new Error(`Error fetching resale data: ${response.statusText}`);
+    }
+
+    return response.json();
+}
+
+export async function fetchCustomerResaleLedger(userId: string | number): Promise<CustomerResaleLedgerEntry[]> {
+    const response = await fetch(
+        getBackendUrl('resale/ledger', { user_id: userId }).toString(),
+        {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error(`Error fetching resale ledger: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
 }
 
 /**

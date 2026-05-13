@@ -15,6 +15,7 @@ class Order {
 
             $order_number = "ORD-" . date('Ymd') . "-" . rand(1000, 9999);
             $shipping = json_encode($data['shipping_address']);
+            $referred_by_code = isset($data['referred_by_code']) ? $data['referred_by_code'] : null;
 
             $query = "INSERT INTO " . $this->table_name . " 
                       SET user_id=:user_id, order_number=:onum, subtotal=:sub, 
@@ -26,7 +27,7 @@ class Order {
             $stmt->bindParam(":sub", $data['subtotal']);
             $stmt->bindParam(":total", $data['total']);
             $stmt->bindParam(":ship", $shipping);
-            $stmt->bindParam(":ref", $data['referred_by_code']);
+            $stmt->bindParam(":ref", $referred_by_code);
             $stmt->execute();
             
             $order_id = $this->conn->lastInsertId();
@@ -48,7 +49,7 @@ class Order {
             }
 
             $this->conn->commit();
-            return ["success" => true, "order_number" => $order_number];
+            return ["success" => true, "order_id" => (int)$order_id, "order_number" => $order_number];
 
         } catch (Exception $e) {
             $this->conn->rollBack();

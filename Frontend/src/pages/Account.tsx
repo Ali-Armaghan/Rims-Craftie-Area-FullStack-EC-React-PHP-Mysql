@@ -1,62 +1,303 @@
+import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { LogOut } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { BadgeDollarSign, ClipboardList, Gift, LayoutDashboard, LogOut, ReceiptText } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import {
+  CustomerOrder,
+  CustomerOrderDetail,
+  fetchCustomerOrder,
+  fetchCustomerOrders,
+  fetchCustomerResale,
+  fetchCustomerResaleLedger,
+} from "@/services/api";
+
+type DashboardTab = "overview" | "orders" | "resale" | "ledger";
+
+const dashboardTabs: { id: DashboardTab; label: string; icon: typeof LayoutDashboard }[] = [
+  { id: "overview", label: "Overview", icon: LayoutDashboard },
+  { id: "orders", label: "Orders", icon: ClipboardList },
+  { id: "resale", label: "ReSale", icon: Gift },
+  { id: "ledger", label: "Ledger", icon: ReceiptText },
+];
+
+function money(value: string | number | undefined | null) {
+  return `Rs. ${Number(value ?? 0).toLocaleString()}`;
+}
+
+function parseShippingAddress(value: string | CustomerOrderDetail["shipping_address"]) {
+  if (!value) return null;
+
+  try {
+    return typeof value === "string" ? JSON.parse(value) : value;
+  } catch {
+    return null;
+  }
+}
 
 const Account = () => {
   const { user, logout } = useAuth();
+  const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+
+  const userId = user?.id;
+
+  const { data: orders = [], isLoading: ordersLoading } = useQuery({
+    queryKey: ["customer-orders", userId],
+    queryFn: () => fetchCustomerOrders(userId!),
+    enabled: !!userId,
+  });
+
+  const { data: selectedOrder, isLoading: orderDetailLoading } = useQuery({
+    queryKey: ["customer-order", selectedOrderId, userId],
+    queryFn: () => fetchCustomerOrder(selectedOrderId!, userId!),
+    enabled: !!selectedOrderId && !!userId,
+  });
+
+  const { data: resale } = useQuery({
+    queryKey: ["customer-resale", userId],
+    queryFn: () => fetchCustomerResale(userId!),
+    enabled: !!userId,
+  });
+
+  const { data: ledger = [], isLoading: ledgerLoading } = useQuery({
+    queryKey: ["customer-resale-ledger", userId],
+    queryFn: () => fetchCustomerResaleLedger(userId!),
+    enabled: !!userId,
+  });
 
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
+  const selectedShipping = selectedOrder
+    ? parseShippingAddress(selectedOrder.shipping_address)
+    : null;
+
   return (
-    <section className="container py-16">
+    <section className="container py-12">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mx-auto max-w-3xl"
+        className="grid gap-8 lg:grid-cols-[260px_1fr]"
       >
-        <p className="font-nav text-[10px] tracking-[0.4em] uppercase text-primary mb-3">
-          Dashboard
-        </p>
-        <h1 className="font-display text-4xl text-foreground mb-8">
-          Welcome, {user.name}
-        </h1>
+        <aside className="h-fit border border-border bg-background p-5">
+          <p className="font-nav text-[10px] tracking-[0.3em] uppercase text-primary mb-2">
+            My Account
+          </p>
+          <h1 className="font-display text-2xl text-foreground mb-1">{user.name}</h1>
+          <p className="font-body text-sm text-muted-foreground mb-6">{user.email}</p>
 
-        <div className="grid gap-4 border border-border bg-background p-8">
-          <div>
-            <p className="font-nav text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
-              Email
-            </p>
-            <p className="font-body text-lg text-foreground">{user.email}</p>
-          </div>
+          <nav className="grid gap-2">
+            {dashboardTabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-3 px-3 py-3 text-left font-nav text-xs tracking-[0.15em] uppercase transition-colors ${
+                    activeTab === tab.id
+                      ? "bg-foreground text-primary-foreground"
+                      : "text-foreground/70 hover:bg-secondary"
+                  }`}
+                >
+                  <Icon size={16} />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </nav>
 
-          {user.resale_code && (
-            <div>
-              <p className="font-nav text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
-                Resale Code
-              </p>
-              <p className="font-body text-lg text-foreground">{user.resale_code}</p>
+          <button
+            onClick={logout}
+            className="mt-6 inline-flex w-full items-center justify-center gap-2 border border-border px-4 py-3 font-nav text-xs tracking-[0.2em] uppercase text-foreground"
+          >
+            <LogOut size={14} />
+            Logout
+          </button>
+        </aside>
+
+        <main>
+          {activeTab === "overview" && (
+            <div className="space-y-6">
+              <div>
+                <p className="font-nav text-[10px] tracking-[0.4em] uppercase text-primary mb-3">
+                  Dashboard
+                </p>
+                <h2 className="font-display text-4xl text-foreground">
+                  Welcome, {user.name}
+                </h2>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-4">
+                <div className="border border-border p-5">
+                  <p className="font-nav text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Orders</p>
+                  <p className="font-display text-3xl text-foreground mt-2">{orders.length}</p>
+                </div>
+                <div className="border border-border p-5">
+                  <p className="font-nav text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Resale Code</p>
+                  <p className="font-body text-lg text-foreground mt-2">{resale?.resale_code ?? user.resale_code ?? "N/A"}</p>
+                </div>
+                <div className="border border-border p-5">
+                  <p className="font-nav text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Balance</p>
+                  <p className="font-display text-2xl text-foreground mt-2">{money(resale?.resale_balance ?? user.resale_balance)}</p>
+                </div>
+                <div className="border border-border p-5">
+                  <p className="font-nav text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Commission</p>
+                  <p className="font-display text-2xl text-foreground mt-2">{money(resale?.total_commissions)}</p>
+                </div>
+              </div>
+
+              <div className="border border-border p-6">
+                <h3 className="font-display text-2xl text-foreground mb-3">Recent Orders</h3>
+                {orders.slice(0, 3).map((order) => (
+                  <button
+                    key={order.id}
+                    onClick={() => {
+                      setSelectedOrderId(order.id);
+                      setActiveTab("orders");
+                    }}
+                    className="flex w-full items-center justify-between border-t border-border py-4 text-left"
+                  >
+                    <span className="font-body text-sm">{order.order_number}</span>
+                    <span className="font-body text-sm capitalize text-muted-foreground">{order.status}</span>
+                    <span className="font-body text-sm">{money(order.total)}</span>
+                  </button>
+                ))}
+                {orders.length === 0 && (
+                  <p className="font-body text-sm text-muted-foreground">No orders yet.</p>
+                )}
+              </div>
             </div>
           )}
 
-          <div className="flex flex-wrap gap-3 pt-4">
-            <Link
-              to="/products"
-              className="bg-foreground px-6 py-3 font-nav text-xs tracking-[0.2em] uppercase text-primary-foreground"
-            >
-              Continue Shopping
-            </Link>
-            <button
-              onClick={logout}
-              className="inline-flex items-center gap-2 border border-border px-6 py-3 font-nav text-xs tracking-[0.2em] uppercase text-foreground"
-            >
-              <LogOut size={14} />
-              Logout
-            </button>
-          </div>
-        </div>
+          {activeTab === "orders" && (
+            <div className="grid gap-6 xl:grid-cols-[1fr_420px]">
+              <div className="border border-border">
+                <div className="border-b border-border p-5">
+                  <h2 className="font-display text-3xl text-foreground">My Orders</h2>
+                </div>
+                {ordersLoading ? (
+                  <div className="p-8 text-center text-muted-foreground">Loading orders...</div>
+                ) : orders.length ? (
+                  orders.map((order: CustomerOrder) => (
+                    <button
+                      key={order.id}
+                      onClick={() => setSelectedOrderId(order.id)}
+                      className={`grid w-full gap-2 border-b border-border p-5 text-left transition-colors md:grid-cols-4 ${
+                        selectedOrderId === order.id ? "bg-secondary" : "hover:bg-secondary/60"
+                      }`}
+                    >
+                      <span className="font-body text-sm font-medium">{order.order_number}</span>
+                      <span className="font-body text-sm capitalize text-muted-foreground">{order.status}</span>
+                      <span className="font-body text-sm">{money(order.total)}</span>
+                      <span className="font-body text-sm text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</span>
+                    </button>
+                  ))
+                ) : (
+                  <div className="p-8 text-center">
+                    <p className="font-body text-muted-foreground mb-4">You have no orders yet.</p>
+                    <Link to="/products" className="text-primary underline">Browse products</Link>
+                  </div>
+                )}
+              </div>
+
+              <div className="border border-border p-5">
+                <h3 className="font-display text-2xl text-foreground mb-4">Order Details</h3>
+                {!selectedOrderId ? (
+                  <p className="font-body text-sm text-muted-foreground">Select an order to view details.</p>
+                ) : orderDetailLoading ? (
+                  <p className="font-body text-sm text-muted-foreground">Loading details...</p>
+                ) : selectedOrder ? (
+                  <div className="space-y-5">
+                    <div>
+                      <p className="font-nav text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Status</p>
+                      <p className="font-body text-lg capitalize">{selectedOrder.status}</p>
+                    </div>
+                    <div>
+                      <p className="font-nav text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Shipping</p>
+                      <p className="font-body text-sm text-foreground">
+                        {selectedShipping?.full_name}<br />
+                        {selectedShipping?.address}<br />
+                        {selectedShipping?.city}, {selectedShipping?.state}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-nav text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-2">Items</p>
+                      {selectedOrder.items?.map((item) => (
+                        <div key={item.id} className="flex justify-between border-t border-border py-3 font-body text-sm">
+                          <span>{item.product_name ?? item.name} x {item.quantity}</span>
+                          <span>{money(item.subtotal)}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex justify-between border-t border-border pt-4 font-display text-xl">
+                      <span>Total</span>
+                      <span>{money(selectedOrder.total)}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="font-body text-sm text-muted-foreground">Order not found.</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === "resale" && (
+            <div className="space-y-6">
+              <h2 className="font-display text-3xl text-foreground">ReSale Dashboard</h2>
+              <div className="grid gap-4 md:grid-cols-4">
+                <div className="border border-border p-5">
+                  <p className="font-nav text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Your Code</p>
+                  <p className="font-body text-xl text-foreground mt-2">{resale?.resale_code ?? user.resale_code}</p>
+                </div>
+                <div className="border border-border p-5">
+                  <p className="font-nav text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Referral Sales</p>
+                  <p className="font-display text-2xl text-foreground mt-2">{money(resale?.referral_sales)}</p>
+                </div>
+                <div className="border border-border p-5">
+                  <p className="font-nav text-[10px] tracking-[0.2em] uppercase text-muted-foreground">5% Commission</p>
+                  <p className="font-display text-2xl text-foreground mt-2">{money(resale?.total_commissions)}</p>
+                </div>
+                <div className="border border-border p-5">
+                  <p className="font-nav text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Earning Balance</p>
+                  <p className="font-display text-2xl text-foreground mt-2">{money(resale?.resale_balance ?? user.resale_balance)}</p>
+                </div>
+              </div>
+              <div className="border border-border p-6">
+                <div className="flex items-center gap-3 text-primary">
+                  <BadgeDollarSign size={18} />
+                  <p className="font-body text-sm">
+                    Commission is credited when an order placed with your resale code is marked as delivered.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "ledger" && (
+            <div className="border border-border">
+              <div className="border-b border-border p-5">
+                <h2 className="font-display text-3xl text-foreground">Resale Earning Record</h2>
+              </div>
+              {ledgerLoading ? (
+                <div className="p-8 text-center text-muted-foreground">Loading ledger...</div>
+              ) : ledger.length ? (
+                ledger.map((entry) => (
+                  <div key={entry.id} className="grid gap-2 border-b border-border p-5 md:grid-cols-4">
+                    <span className={`font-body text-sm capitalize ${entry.type === "credit" ? "text-green-600" : "text-red-600"}`}>{entry.type}</span>
+                    <span className="font-body text-sm">{money(entry.amount)}</span>
+                    <span className="font-body text-sm text-muted-foreground md:col-span-1">{entry.description}</span>
+                    <span className="font-body text-sm text-muted-foreground">{new Date(entry.created_at).toLocaleDateString()}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="p-8 text-center text-muted-foreground">No resale ledger records yet.</div>
+              )}
+            </div>
+          )}
+        </main>
       </motion.div>
     </section>
   );
