@@ -34,6 +34,7 @@ import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_a
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
 import { Route as AuthenticatedResaleLedgerRouteImport } from './routes/_authenticated/resale/ledger'
 import { Route as AuthenticatedResaleCommissionsRouteImport } from './routes/_authenticated/resale/commissions'
+import { Route as AuthenticatedProductsNewRouteImport } from './routes/_authenticated/products/new'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -172,6 +173,12 @@ const AuthenticatedResaleCommissionsRoute =
     path: '/resale/commissions',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedProductsNewRoute =
+  AuthenticatedProductsNewRouteImport.update({
+    id: '/products/new',
+    path: '/products/new',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedErrorsErrorRoute =
   AuthenticatedErrorsErrorRouteImport.update({
     id: '/errors/$error',
@@ -193,6 +200,7 @@ export interface FileRoutesByFullPath {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
+  '/products/new': typeof AuthenticatedProductsNewRoute
   '/resale/commissions': typeof AuthenticatedResaleCommissionsRoute
   '/resale/ledger': typeof AuthenticatedResaleLedgerRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
@@ -219,6 +227,7 @@ export interface FileRoutesByTo {
   '/503': typeof errors503Route
   '/': typeof AuthenticatedIndexRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
+  '/products/new': typeof AuthenticatedProductsNewRoute
   '/resale/commissions': typeof AuthenticatedResaleCommissionsRoute
   '/resale/ledger': typeof AuthenticatedResaleLedgerRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
@@ -248,6 +257,7 @@ export interface FileRoutesById {
   '/(errors)/503': typeof errors503Route
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/errors/$error': typeof AuthenticatedErrorsErrorRoute
+  '/_authenticated/products/new': typeof AuthenticatedProductsNewRoute
   '/_authenticated/resale/commissions': typeof AuthenticatedResaleCommissionsRoute
   '/_authenticated/resale/ledger': typeof AuthenticatedResaleLedgerRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
@@ -277,6 +287,7 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/errors/$error'
+    | '/products/new'
     | '/resale/commissions'
     | '/resale/ledger'
     | '/settings/account'
@@ -303,6 +314,7 @@ export interface FileRouteTypes {
     | '/503'
     | '/'
     | '/errors/$error'
+    | '/products/new'
     | '/resale/commissions'
     | '/resale/ledger'
     | '/settings/account'
@@ -331,6 +343,7 @@ export interface FileRouteTypes {
     | '/(errors)/503'
     | '/_authenticated/'
     | '/_authenticated/errors/$error'
+    | '/_authenticated/products/new'
     | '/_authenticated/resale/commissions'
     | '/_authenticated/resale/ledger'
     | '/_authenticated/settings/account'
@@ -536,6 +549,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedResaleCommissionsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/products/new': {
+      id: '/_authenticated/products/new'
+      path: '/products/new'
+      fullPath: '/products/new'
+      preLoaderRoute: typeof AuthenticatedProductsNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/errors/$error': {
       id: '/_authenticated/errors/$error'
       path: '/errors/$error'
@@ -573,6 +593,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedErrorsErrorRoute: typeof AuthenticatedErrorsErrorRoute
+  AuthenticatedProductsNewRoute: typeof AuthenticatedProductsNewRoute
   AuthenticatedResaleCommissionsRoute: typeof AuthenticatedResaleCommissionsRoute
   AuthenticatedResaleLedgerRoute: typeof AuthenticatedResaleLedgerRoute
   AuthenticatedTrackingLiveRoute: typeof AuthenticatedTrackingLiveRoute
@@ -586,6 +607,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedErrorsErrorRoute: AuthenticatedErrorsErrorRoute,
+  AuthenticatedProductsNewRoute: AuthenticatedProductsNewRoute,
   AuthenticatedResaleCommissionsRoute: AuthenticatedResaleCommissionsRoute,
   AuthenticatedResaleLedgerRoute: AuthenticatedResaleLedgerRoute,
   AuthenticatedTrackingLiveRoute: AuthenticatedTrackingLiveRoute,

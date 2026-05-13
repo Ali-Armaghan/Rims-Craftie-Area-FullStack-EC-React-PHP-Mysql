@@ -33,12 +33,19 @@ import { useProducts } from '../context/products-context'
 import apiClient from '@/lib/api-client'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
+type Category = {
+  id: number
+  name: string
+}
+
+const emptyCategories: Category[] = []
+
 export function ProductDialog() {
   const { open, setOpen, currentRow } = useProducts()
   const queryClient = useQueryClient()
   const isEdit = open === 'edit'
 
-  const { data: categories = [] } = useQuery<{ id: number; name: string }[]>({
+  const { data: categories = emptyCategories } = useQuery<Category[]>({
     queryKey: ['categories'],
     queryFn: async () => {
       const response = await apiClient.get('/categories')
@@ -59,29 +66,33 @@ export function ProductDialog() {
       is_active: 1,
     },
   })
+  const { reset } = form
 
   useEffect(() => {
-    if (open) {
-      if (isEdit && currentRow) {
-        form.reset({
-          ...currentRow,
-          price: Number(currentRow.price),
-          stock: Number(currentRow.stock),
-        })
-      } else if (!isEdit && categories.length > 0) {
-        form.reset({
-          name: '',
-          slug: '',
-          category_id: categories[0]?.id || 0,
-          description: '',
-          price: 0,
-          stock: 0,
-          images: [],
-          is_active: 1,
-        })
-      }
+    if (!open) return
+
+    if (isEdit && currentRow) {
+      reset({
+        ...currentRow,
+        price: Number(currentRow.price),
+        stock: Number(currentRow.stock),
+      })
+      return
     }
-  }, [open, currentRow, isEdit, categories.length])
+
+    if (!isEdit) {
+      reset({
+        name: '',
+        slug: '',
+        category_id: categories[0]?.id ?? 0,
+        description: '',
+        price: 0,
+        stock: 0,
+        images: [],
+        is_active: 1,
+      })
+    }
+  }, [open, currentRow, isEdit, categories, reset])
 
   const onSubmit = async (data: Product) => {
     try {
@@ -94,7 +105,7 @@ export function ProductDialog() {
       }
       queryClient.invalidateQueries({ queryKey: ['products'] })
       setOpen(null)
-    } catch (error) {
+    } catch {
       toast.error('Failed to save product')
     }
   }
@@ -109,9 +120,9 @@ export function ProductDialog() {
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit as any)} className='space-y-4'>
-            <FormField<Product>
-              control={form.control as any}
+          <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+            <FormField
+              control={form.control}
               name='name'
               render={({ field }) => (
                 <FormItem>
@@ -123,8 +134,8 @@ export function ProductDialog() {
                 </FormItem>
               )}
             />
-            <FormField<Product>
-              control={form.control as any}
+            <FormField
+              control={form.control}
               name='slug'
               render={({ field }) => (
                 <FormItem>
@@ -136,8 +147,8 @@ export function ProductDialog() {
                 </FormItem>
               )}
             />
-            <FormField<Product>
-              control={form.control as any}
+            <FormField
+              control={form.control}
               name='category_id'
               render={({ field }) => (
                 <FormItem>
@@ -163,8 +174,8 @@ export function ProductDialog() {
                 </FormItem>
               )}
             />
-             <FormField<Product>
-              control={form.control as any}
+             <FormField
+              control={form.control}
               name='price'
               render={({ field }) => (
                 <FormItem>
@@ -176,8 +187,8 @@ export function ProductDialog() {
                 </FormItem>
               )}
             />
-            <FormField<Product>
-              control={form.control as any}
+            <FormField
+              control={form.control}
               name='stock'
               render={({ field }) => (
                 <FormItem>
@@ -189,8 +200,8 @@ export function ProductDialog() {
                 </FormItem>
               )}
             />
-            <FormField<Product>
-              control={form.control as any}
+            <FormField
+              control={form.control}
               name='description'
               render={({ field }) => (
                 <FormItem>

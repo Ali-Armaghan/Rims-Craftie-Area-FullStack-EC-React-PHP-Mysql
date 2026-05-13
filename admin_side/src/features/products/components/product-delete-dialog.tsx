@@ -23,7 +23,7 @@ export function ProductDeleteDialog() {
       toast.success('Product deleted successfully')
       queryClient.invalidateQueries({ queryKey: ['products'] })
       setOpen(null)
-    } catch (error) {
+    } catch {
       toast.error('Failed to delete product')
     }
   }

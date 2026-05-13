@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { Search } from '@/components/search'
@@ -19,16 +20,14 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import { ProductsProvider, useProducts } from './context/products-context'
+import { ProductsProvider } from './context/products-context'
 import { productsColumns } from './components/products-columns'
 import { ProductDialog } from './components/product-dialog'
 import { ProductDeleteDialog } from './components/product-delete-dialog'
 import apiClient from '@/lib/api-client'
-import { Product } from './types'
+import type { Product } from './types'
 
 function ProductsContent() {
-  const { setOpen } = useProducts()
-  
   const { data: products = [], isLoading } = useQuery<Product[]>({
     queryKey: ['products'],
     queryFn: async () => {
@@ -61,8 +60,10 @@ function ProductsContent() {
               Manage your store products here.
             </p>
           </div>
-          <Button onClick={() => setOpen('add')}>
-            <Plus className='mr-2 h-4 w-4' /> Add Product
+          <Button asChild>
+            <Link to='/products/new'>
+              <Plus className='mr-2 h-4 w-4' /> Add Product
+            </Link>
           </Button>
         </div>
         

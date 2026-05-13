@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState } from 'react'
-import { Product } from '../types'
+import { createContext, useContext, useState, type ReactNode } from 'react'
+import type { Product } from '../types'
 
 type ProductsDialogType = 'add' | 'edit' | 'delete'
 
@@ -12,7 +12,7 @@ interface ProductsContextType {
 
 const ProductsContext = createContext<ProductsContextType | null>(null)
 
-export const ProductsProvider = ({ children }: { children: React.ReactNode }) => {
+export const ProductsProvider = ({ children }: { children: ReactNode }) => {
   const [open, setOpen] = useState<ProductsDialogType | null>(null)
   const [currentRow, setCurrentRow] = useState<Product | null>(null)
 

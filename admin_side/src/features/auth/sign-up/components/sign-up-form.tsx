@@ -2,7 +2,10 @@ import { useState } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Link } from '@tanstack/react-router'
+import { toast } from 'sonner'
 import { IconFacebook, IconGithub } from '@/assets/brand-icons'
+import apiClient from '@/lib/api-client'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,6 +21,7 @@ import { PasswordInput } from '@/components/password-input'
 
 const formSchema = z
   .object({
+    name: z.string().min(1, 'Please enter your name'),
     email: z.email({
       error: (iss) =>
         iss.input === '' ? 'Please enter your email' : undefined,
@@ -42,20 +46,29 @@ export function SignUpForm({
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      name: '',
       email: '',
       password: '',
       confirmPassword: '',
     },
   })
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
+  async function onSubmit(data: z.infer<typeof formSchema>) {
     setIsLoading(true)
-    // eslint-disable-next-line no-console
-    console.log(data)
 
-    setTimeout(() => {
+    try {
+      await apiClient.post('/auth/register', {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+      })
+      toast.success('Account created successfully. Please sign in.')
+      form.reset()
+    } catch {
+      toast.error('Unable to create account. Email may already exist.')
+    } finally {
       setIsLoading(false)
-    }, 3000)
+    }
   }
 
   return (
@@ -65,6 +78,19 @@ export function SignUpForm({
         className={cn('grid gap-3', className)}
         {...props}
       >
+        <FormField
+          control={form.control}
+          name='name'
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Name</FormLabel>
+              <FormControl>
+                <Input placeholder='Your name' {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name='email'
@@ -107,6 +133,15 @@ export function SignUpForm({
         <Button className='mt-2' disabled={isLoading}>
           Create Account
         </Button>
+        <p className='text-center text-sm text-muted-foreground'>
+          Already have an account?{' '}
+          <Link
+            to='/sign-in'
+            className='underline underline-offset-4 hover:text-primary'
+          >
+            Sign in
+          </Link>
+        </p>
 
         <div className='relative my-2'>
           <div className='absolute inset-0 flex items-center'>

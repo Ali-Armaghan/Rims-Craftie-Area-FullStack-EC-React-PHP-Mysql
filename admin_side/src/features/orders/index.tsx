@@ -6,8 +6,6 @@ import { Main } from '@/components/layout/main'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { ProfileDropdown } from '@/components/profile-dropdown'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -37,15 +35,6 @@ type Order = {
 }
 
 const STATUS_OPTIONS = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled']
-
-const statusVariant: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  pending: 'secondary',
-  paid: 'outline',
-  processing: 'outline',
-  shipped: 'default',
-  delivered: 'default',
-  cancelled: 'destructive',
-}
 
 function OrderStatusSelect({ order }: { order: Order }) {
   const queryClient = useQueryClient()

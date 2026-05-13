@@ -1,4 +1,4 @@
-import { ColumnDef } from '@tanstack/react-table'
+import type { ColumnDef } from '@tanstack/react-table'
 import { MoreHorizontal, Edit, Trash } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -9,8 +9,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Product } from '../types'
 import { useProducts } from '../context/products-context'
+import type { Product } from '../types'
 
 // Extracted into a proper React component so hooks can be called safely
 function ProductRowActions({ product }: { product: Product }) {

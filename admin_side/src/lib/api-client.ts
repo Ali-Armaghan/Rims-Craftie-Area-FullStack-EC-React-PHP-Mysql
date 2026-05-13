@@ -1,7 +1,11 @@
 import axios from 'axios'
 
+const baseURL =
+  import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ??
+  'http://localhost/ateeqo/backend/api'
+
 const apiClient = axios.create({
-  baseURL: 'http://localhost/ateeqo/backend/api',
+  baseURL,
   headers: {
     'Content-Type': 'application/json',
   },
