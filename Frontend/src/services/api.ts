@@ -114,6 +114,8 @@ type BackendProduct = {
     stock?: number | string | null;
     images?: string[] | string | null;
     is_active?: number | string | boolean;
+    average_rating?: number | string | null;
+    review_count?: number | string | null;
     created_at?: string;
 };
 
@@ -220,8 +222,8 @@ function mapBackendProduct(product: BackendProduct): Product {
         material: 'Premium Quality',
         inStock: stockQuantity > 0 && Number(product.is_active ?? 1) === 1,
         stockQuantity,
-        rating: '0.00',
-        reviewCount: 0,
+        rating: String(Number(product.average_rating ?? 0).toFixed(1)),
+        reviewCount: Number(product.review_count ?? 0),
     };
 }
 

@@ -10,16 +10,19 @@ class Product {
     }
 
     public function read($params = []) {
-        $query = "SELECT p.*, c.name as category_name 
+        $query = "SELECT p.*, c.name as category_name,
+                         COALESCE(ROUND(AVG(r.rating), 1), 0) as average_rating,
+                         COUNT(r.id) as review_count
                   FROM " . $this->table_name . " p 
                   LEFT JOIN categories c ON p.category_id = c.id 
+                  LEFT JOIN product_reviews r ON r.product_id = p.id AND r.status = 'approved'
                   WHERE p.is_active = 1";
         
         if (isset($params['category'])) {
             $query .= " AND c.slug = :cat";
         }
         
-        $query .= " ORDER BY p.created_at DESC";
+        $query .= " GROUP BY p.id ORDER BY p.created_at DESC";
         
         $stmt = $this->conn->prepare($query);
         
@@ -32,20 +35,26 @@ class Product {
     }
 
     public function readOne($slug) {
-        $query = "SELECT p.*, c.name as category_name 
+        $query = "SELECT p.*, c.name as category_name,
+                         COALESCE(ROUND(AVG(r.rating), 1), 0) as average_rating,
+                         COUNT(r.id) as review_count
                   FROM " . $this->table_name . " p 
                   LEFT JOIN categories c ON p.category_id = c.id 
-                  WHERE p.slug = ? LIMIT 0,1";
+                  LEFT JOIN product_reviews r ON r.product_id = p.id AND r.status = 'approved'
+                  WHERE p.slug = ? GROUP BY p.id LIMIT 0,1";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([$slug]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function readOneById($id) {
-        $query = "SELECT p.*, c.name as category_name 
+        $query = "SELECT p.*, c.name as category_name,
+                         COALESCE(ROUND(AVG(r.rating), 1), 0) as average_rating,
+                         COUNT(r.id) as review_count
                   FROM " . $this->table_name . " p 
                   LEFT JOIN categories c ON p.category_id = c.id 
-                  WHERE p.id = ? LIMIT 0,1";
+                  LEFT JOIN product_reviews r ON r.product_id = p.id AND r.status = 'approved'
+                  WHERE p.id = ? GROUP BY p.id LIMIT 0,1";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
