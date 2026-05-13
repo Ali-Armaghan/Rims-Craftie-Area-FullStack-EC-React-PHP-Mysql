@@ -53,14 +53,6 @@ CREATE TABLE IF NOT EXISTS products (
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
 );
 
--- Initial Categories
-INSERT IGNORE INTO categories (name, slug) VALUES
-('Electronics', 'electronics'),
-('Fashion', 'fashion'),
-('Home & Kitchen', 'home-kitchen'),
-('Beauty', 'beauty'),
-('Sports', 'sports');
-
 -- 5. Orders Table
 CREATE TABLE IF NOT EXISTS orders (
     id INT AUTO_INCREMENT PRIMARY KEY,

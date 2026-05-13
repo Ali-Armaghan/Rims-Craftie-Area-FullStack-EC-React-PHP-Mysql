@@ -2,6 +2,17 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      ;(() => {
+        const hook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__
+        if (hook && typeof hook.on !== 'function') {
+          hook.on = () => {}
+        }
+        if (hook && typeof hook.off !== 'function') {
+          hook.off = () => {}
+        }
+      })()
+    </script>
     <link
       rel="icon"
       type="image/svg+xml"

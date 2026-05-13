@@ -41,6 +41,16 @@ class Product {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    public function readOneById($id) {
+        $query = "SELECT p.*, c.name as category_name 
+                  FROM " . $this->table_name . " p 
+                  LEFT JOIN categories c ON p.category_id = c.id 
+                  WHERE p.id = ? LIMIT 0,1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     // Admin Methods
     public function create($data) {
         $query = "INSERT INTO " . $this->table_name . " 

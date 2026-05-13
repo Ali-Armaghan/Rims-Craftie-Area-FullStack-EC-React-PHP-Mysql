@@ -12,7 +12,15 @@ $product = new Product($db);
 $slug = isset($pathParts[1]) ? $pathParts[1] : '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    if ($slug) {
+    if (isset($_GET['id'])) {
+        $res = $product->readOneById($_GET['id']);
+        if ($res) {
+            echo json_encode($res);
+        } else {
+            http_response_code(404);
+            echo json_encode(["message" => "Product not found."]);
+        }
+    } elseif ($slug) {
         $res = $product->readOne($slug);
         if ($res) {
             echo json_encode($res);

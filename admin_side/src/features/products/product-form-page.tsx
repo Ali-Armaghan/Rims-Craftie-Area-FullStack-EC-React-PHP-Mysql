@@ -27,13 +27,6 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import apiClient from '@/lib/api-client'
 import { productSchema, type Product } from './types'
@@ -44,7 +37,6 @@ type Category = {
 }
 
 const emptyCategories: Category[] = []
-const emptyProducts: Product[] = []
 
 type ProductFormPageProps = {
   productId?: string
@@ -98,20 +90,19 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
   })
 
   const {
-    data: products = emptyProducts,
+    data: productToEdit,
+    isError: isProductError,
     isLoading: isProductLoading,
-  } = useQuery<Product[]>({
-    queryKey: ['products'],
+  } = useQuery<Product>({
+    queryKey: ['product', productId],
     enabled: isEdit,
     queryFn: async () => {
-      const response = await apiClient.get('/products')
+      const response = await apiClient.get('/products', {
+        params: { id: productId },
+      })
       return response.data
     },
   })
-
-  const productToEdit = products.find(
-    (product) => String(product.id) === productId
-  )
 
   const form = useForm<Product>({
     resolver: zodResolver(productSchema),
@@ -130,16 +121,28 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
 
   useEffect(() => {
     if (productToEdit) {
-      reset(normalizeProduct(productToEdit, categories))
+      const normalizedProduct = normalizeProduct(productToEdit, categories)
+      reset(normalizedProduct)
+      setValue('category_id', normalizedProduct.category_id, {
+        shouldDirty: false,
+        shouldValidate: true,
+      })
       return
     }
 
     if (categories.length && !getValues('category_id')) {
-      setValue('category_id', Number(categories[0].id))
+      setValue('category_id', Number(categories[0].id), {
+        shouldDirty: false,
+        shouldValidate: true,
+      })
     }
   }, [categories, getValues, productToEdit, reset, setValue])
 
   const selectedCategoryId = watch('category_id')
+  const categorySelectValue =
+    selectedCategoryId && Number(selectedCategoryId) > 0
+      ? String(selectedCategoryId)
+      : ''
   const selectedCategory = categories.find(
     (category) => String(category.id) === String(selectedCategoryId)
   )
@@ -176,7 +179,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
       </Header>
 
       <Main>
-        <div className='mx-auto w-full max-w-5xl'>
+        <div className='w-full'>
           <div className='mb-4 flex items-center gap-3'>
             <Button asChild variant='outline' size='sm'>
               <Link to='/products'>
@@ -208,7 +211,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
                 <div className='py-8 text-center text-muted-foreground'>
                   Loading product...
                 </div>
-              ) : isEdit && !productToEdit ? (
+              ) : isEdit && (isProductError || !productToEdit) ? (
                 <div className='py-8 text-center text-muted-foreground'>
                   Product not found.
                 </div>
@@ -254,49 +257,53 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Category</FormLabel>
-                        <Select
-                          value={field.value ? String(field.value) : ''}
-                          onValueChange={(val) => field.onChange(Number(val))}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue
-                                placeholder={
-                                  isCategoriesLoading
-                                    ? 'Loading categories...'
-                                    : 'Select category'
-                                }
-                              />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {isCategoriesError && (
-                              <SelectItem value='__error' disabled>
-                                Failed to load categories
-                              </SelectItem>
-                            )}
-                            {!isCategoriesLoading &&
-                              !isCategoriesError &&
-                              categories.length === 0 && (
-                                <SelectItem value='__empty' disabled>
-                                  No categories found
-                                </SelectItem>
-                              )}
+                        <FormControl>
+                          <select
+                            className='border-input bg-background ring-offset-background flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50'
+                            disabled={
+                              isCategoriesLoading ||
+                              isCategoriesError ||
+                              categories.length === 0
+                            }
+                            value={categorySelectValue}
+                            onChange={(event) => {
+                              const categoryId = Number(event.target.value)
+                              field.onChange(categoryId)
+                              setValue('category_id', categoryId, {
+                                shouldDirty: true,
+                                shouldValidate: true,
+                              })
+                            }}
+                          >
+                            <option value='' disabled>
+                              {isCategoriesLoading
+                                ? 'Loading categories...'
+                                : isCategoriesError
+                                  ? 'Failed to load categories'
+                                  : 'Select category'}
+                            </option>
                             {categories.map((category) => (
-                              <SelectItem
+                              <option
                                 key={category.id}
                                 value={String(category.id)}
                               >
                                 {category.name}
-                              </SelectItem>
+                              </option>
                             ))}
-                          </SelectContent>
-                        </Select>
-                        {selectedCategory && (
+                          </select>
+                        </FormControl>
+                        {!isCategoriesLoading &&
+                          !isCategoriesError &&
+                          categories.length === 0 && (
+                            <p className='text-xs text-muted-foreground'>
+                              No categories found in database
+                            </p>
+                          )}
+                        {/* {selectedCategory && (
                           <p className='text-xs text-muted-foreground'>
                             Selected: {selectedCategory.name}
                           </p>
-                        )}
+                        )} */}
                         <FormMessage />
                       </FormItem>
                     )}
