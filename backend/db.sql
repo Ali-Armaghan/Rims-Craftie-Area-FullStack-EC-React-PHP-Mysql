@@ -133,10 +133,24 @@ CREATE TABLE IF NOT EXISTS visitor_sessions (
     user_agent TEXT,
     referer_url TEXT,
     resale_code_used VARCHAR(20),
+    landing_page VARCHAR(255),
+    device_type VARCHAR(50),
+    browser VARCHAR(100),
+    os VARCHAR(100),
+    screen_resolution VARCHAR(50),
+    language VARCHAR(50),
+    timezone VARCHAR(100),
+    utm_source VARCHAR(100),
+    utm_medium VARCHAR(100),
+    utm_campaign VARCHAR(100),
+    page_count INT DEFAULT 0,
+    total_duration INT DEFAULT 0,
+    is_active TINYINT(1) DEFAULT 1,
     country VARCHAR(100),
     city VARCHAR(100),
     first_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    ended_at TIMESTAMP NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
@@ -144,22 +158,55 @@ CREATE TABLE IF NOT EXISTS visitor_sessions (
 CREATE TABLE IF NOT EXISTS page_views (
     id INT AUTO_INCREMENT PRIMARY KEY,
     session_id INT,
+    user_id INT,
     page_path VARCHAR(255) NOT NULL,
+    page_url TEXT,
     page_title VARCHAR(200),
+    referrer_url TEXT,
     stay_duration INT DEFAULT 0, -- in seconds
     entered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (session_id) REFERENCES visitor_sessions(id) ON DELETE CASCADE
+    last_ping_at TIMESTAMP NULL,
+    exited_at TIMESTAMP NULL,
+    exit_type ENUM('navigation', 'close', 'timeout') DEFAULT NULL,
+    FOREIGN KEY (session_id) REFERENCES visitor_sessions(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- 12. Live Traffic Table (Lightweight Heartbeat)
+-- 12. Visitor Events Table (clicks, custom actions, scroll, etc.)
+CREATE TABLE IF NOT EXISTS visitor_events (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    session_id INT,
+    page_view_id INT,
+    user_id INT,
+    event_type VARCHAR(50) NOT NULL,
+    event_name VARCHAR(100),
+    page_path VARCHAR(255),
+    event_data JSON,
+    occurred_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (session_id) REFERENCES visitor_sessions(id) ON DELETE CASCADE,
+    FOREIGN KEY (page_view_id) REFERENCES page_views(id) ON DELETE SET NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+-- 13. Live Traffic Table (Lightweight Heartbeat)
 CREATE TABLE IF NOT EXISTS live_traffic (
     session_id INT PRIMARY KEY,
     last_ping_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     current_page VARCHAR(255),
+    current_page_title VARCHAR(200),
+    current_page_view_id INT,
+    is_logged_in TINYINT(1) DEFAULT 0,
     FOREIGN KEY (session_id) REFERENCES visitor_sessions(id) ON DELETE CASCADE
 );
 
--- 13. Settings Table
+CREATE INDEX idx_visitor_sessions_user ON visitor_sessions(user_id);
+CREATE INDEX idx_visitor_sessions_active ON visitor_sessions(is_active, last_seen);
+CREATE INDEX idx_page_views_session ON page_views(session_id);
+CREATE INDEX idx_page_views_user ON page_views(user_id);
+CREATE INDEX idx_visitor_events_session ON visitor_events(session_id);
+CREATE INDEX idx_visitor_events_page_view ON visitor_events(page_view_id);
+
+-- 14. Settings Table
 CREATE TABLE IF NOT EXISTS settings (
     id INT AUTO_INCREMENT PRIMARY KEY,
     setting_key VARCHAR(50) UNIQUE NOT NULL,

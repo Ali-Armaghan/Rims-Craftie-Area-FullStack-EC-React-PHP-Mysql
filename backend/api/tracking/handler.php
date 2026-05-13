@@ -20,8 +20,8 @@ switch ($action) {
     case 'pageview':
         // Frontend sends: session_uuid, page_path, page_title
         if (!empty($data->session_uuid) && !empty($data->page_path)) {
-            $tracker->logPageView($data);
-            echo json_encode(["message" => "Page view logged."]);
+            $res = $tracker->logPageView($data);
+            echo json_encode(["message" => "Page view logged.", "data" => $res]);
         }
         break;
 
@@ -30,6 +30,27 @@ switch ($action) {
         if (!empty($data->session_uuid)) {
             $tracker->updateLiveStatus($data);
             echo json_encode(["message" => "Ping received."]);
+        }
+        break;
+
+    case 'end-page':
+        if (!empty($data->page_view_id)) {
+            $res = $tracker->endPageView($data);
+            echo json_encode(["success" => $res]);
+        }
+        break;
+
+    case 'end-session':
+        if (!empty($data->session_uuid)) {
+            $res = $tracker->endSession($data);
+            echo json_encode(["success" => $res]);
+        }
+        break;
+
+    case 'event':
+        if (!empty($data->session_uuid) && !empty($data->event_type)) {
+            $res = $tracker->logEvent($data);
+            echo json_encode(["success" => $res]);
         }
         break;
 
