@@ -43,14 +43,35 @@ type Category = {
   name: string
 }
 
+const emptyCategories: Category[] = []
+const emptyProducts: Product[] = []
+
 type ProductFormPageProps = {
   productId?: string
 }
 
-function normalizeProduct(product: Product): Product {
+function getProductCategoryId(product: Product, categories: Category[]) {
+  const categoryId = Number(product.category_id)
+
+  if (categoryId > 0) {
+    return categoryId
+  }
+
+  const categoryByName = categories.find(
+    (category) => category.name === product.category_name
+  )
+
+  if (categoryByName) {
+    return Number(categoryByName.id)
+  }
+
+  return Number(categories[0]?.id ?? 0)
+}
+
+function normalizeProduct(product: Product, categories: Category[]): Product {
   return {
     ...product,
-    category_id: Number(product.category_id),
+    category_id: getProductCategoryId(product, categories),
     price: Number(product.price),
     stock: Number(product.stock),
     images: Array.isArray(product.images) ? product.images : [],
@@ -65,7 +86,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
   const isEdit = Boolean(productId)
 
   const {
-    data: categories = [],
+    data: categories = emptyCategories,
     isError: isCategoriesError,
     isLoading: isCategoriesLoading,
   } = useQuery<Category[]>({
@@ -76,9 +97,10 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
     },
   })
 
-  const { data: products = [], isLoading: isProductLoading } = useQuery<
-    Product[]
-  >({
+  const {
+    data: products = emptyProducts,
+    isLoading: isProductLoading,
+  } = useQuery<Product[]>({
     queryKey: ['products'],
     enabled: isEdit,
     queryFn: async () => {
@@ -104,17 +126,23 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
       is_active: 1,
     },
   })
+  const { getValues, reset, setValue, watch } = form
 
   useEffect(() => {
     if (productToEdit) {
-      form.reset(normalizeProduct(productToEdit))
+      reset(normalizeProduct(productToEdit, categories))
       return
     }
 
-    if (categories.length && !form.getValues('category_id')) {
-      form.setValue('category_id', Number(categories[0].id))
+    if (categories.length && !getValues('category_id')) {
+      setValue('category_id', Number(categories[0].id))
     }
-  }, [categories, form, productToEdit])
+  }, [categories, getValues, productToEdit, reset, setValue])
+
+  const selectedCategoryId = watch('category_id')
+  const selectedCategory = categories.find(
+    (category) => String(category.id) === String(selectedCategoryId)
+  )
 
   const onSubmit = async (data: Product) => {
     setIsSaving(true)
@@ -264,6 +292,11 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
                             ))}
                           </SelectContent>
                         </Select>
+                        {selectedCategory && (
+                          <p className='text-xs text-muted-foreground'>
+                            Selected: {selectedCategory.name}
+                          </p>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
