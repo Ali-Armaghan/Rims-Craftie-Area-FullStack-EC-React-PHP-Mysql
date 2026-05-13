@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingBag, Menu, X, Search, Heart } from "lucide-react";
+import { ShoppingBag, Menu, X, Search, Heart, User } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navLinks = [
@@ -13,6 +14,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { totalItems } = useCart();
+  const { user, logout } = useAuth();
   const location = useLocation();
 
   useEffect(() => {
@@ -88,6 +90,27 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                   </span>
                 )}
               </Link>
+              {user ? (
+                <div className="hidden md:flex items-center gap-3">
+                  <span className="font-nav text-[10px] tracking-[0.15em] uppercase text-foreground/70">
+                    {user.name}
+                  </span>
+                  <button
+                    onClick={logout}
+                    className="font-nav text-[10px] tracking-[0.2em] uppercase text-foreground/70 hover:text-foreground transition-colors"
+                  >
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  to="/login"
+                  className="hidden md:inline-flex items-center gap-2 font-nav text-[10px] tracking-[0.2em] uppercase text-foreground/70 hover:text-foreground transition-colors"
+                >
+                  <User size={18} />
+                  Login
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -124,6 +147,34 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     {link.label}
                   </Link>
                 ))}
+                {user ? (
+                  <>
+                    <div className="font-body text-sm text-muted-foreground">
+                      Signed in as {user.name}
+                    </div>
+                    <button
+                      onClick={logout}
+                      className="text-left font-nav text-lg tracking-[0.2em] uppercase text-foreground/80 hover:text-foreground transition-colors"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      className="font-nav text-lg tracking-[0.2em] uppercase text-foreground/80 hover:text-foreground transition-colors"
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      to="/signup"
+                      className="font-nav text-lg tracking-[0.2em] uppercase text-foreground/80 hover:text-foreground transition-colors"
+                    >
+                      Sign Up
+                    </Link>
+                  </>
+                )}
               </nav>
             </motion.div>
           </>

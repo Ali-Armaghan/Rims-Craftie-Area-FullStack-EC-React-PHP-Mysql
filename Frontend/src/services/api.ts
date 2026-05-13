@@ -30,6 +30,27 @@ export interface OrderPayload {
     }[];
 }
 
+export type AuthUser = {
+    id: number | string;
+    name: string;
+    email: string;
+    resale_code?: string;
+    resale_balance?: string | number;
+};
+
+export type LoginPayload = {
+    email: string;
+    password: string;
+};
+
+export type SignupPayload = {
+    name: string;
+    email: string;
+    phone?: string;
+    password: string;
+    referred_by_code?: string;
+};
+
 
 /**
  * Product API service for the custom PHP backend.
@@ -184,6 +205,44 @@ export async function fetchFeaturedProducts() {
         console.error("Failed to fetch featured products:", error);
         return [];
     }
+}
+
+export async function loginCustomer(payload: LoginPayload): Promise<AuthUser> {
+    const response = await fetch(getBackendUrl('auth/login').toString(), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify(payload),
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok || !data.user) {
+        throw new Error(data.message || 'Invalid email or password');
+    }
+
+    return data.user;
+}
+
+export async function signupCustomer(payload: SignupPayload) {
+    const response = await fetch(getBackendUrl('auth/register').toString(), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify(payload),
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+        throw new Error(data.message || 'Unable to create account');
+    }
+
+    return data;
 }
 
 /**
