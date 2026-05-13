@@ -27,6 +27,37 @@ class Admin {
         $q4 = "SELECT COUNT(*) FROM live_traffic WHERE last_ping_at > DATE_SUB(NOW(), INTERVAL 2 MINUTE)";
         $stats['live_visitors'] = $this->conn->query($q4)->fetchColumn() ?: 0;
 
+        $monthlySales = array_fill(1, 12, 0);
+        $q5 = "SELECT MONTH(created_at) as month, COALESCE(SUM(total), 0) as total
+               FROM orders
+               WHERE status != 'cancelled' AND YEAR(created_at) = YEAR(CURDATE())
+               GROUP BY MONTH(created_at)";
+        $stmt = $this->conn->prepare($q5);
+        $stmt->execute();
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $monthlySales[(int)$row['month']] = (float)$row['total'];
+        }
+
+        $monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        $stats['monthly_sales'] = [];
+        foreach ($monthNames as $index => $name) {
+            $stats['monthly_sales'][] = [
+                'name' => $name,
+                'total' => $monthlySales[$index + 1]
+            ];
+        }
+
+        $q6 = "SELECT o.id, o.order_number, o.total, o.created_at,
+                      COALESCE(u.name, 'Guest') as customer_name,
+                      COALESCE(u.email, '') as customer_email
+               FROM orders o
+               LEFT JOIN users u ON o.user_id = u.id
+               ORDER BY o.created_at DESC
+               LIMIT 5";
+        $stmt = $this->conn->prepare($q6);
+        $stmt->execute();
+        $stats['recent_orders'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
         return $stats;
     }
 

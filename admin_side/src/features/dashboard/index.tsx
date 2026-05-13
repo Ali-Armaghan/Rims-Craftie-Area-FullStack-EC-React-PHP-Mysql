@@ -17,8 +17,32 @@ import { Analytics } from './components/analytics'
 import { Overview } from './components/overview'
 import { RecentSales } from './components/recent-sales'
 
+const emptyMonthlySales = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+].map((name) => ({ name, total: 0 }))
+
 export function Dashboard() {
-  const { data: stats = { total_sales: 0, total_orders: 0, total_users: 0, live_visitors: 0 } } = useQuery({
+  const {
+    data: stats = {
+      total_sales: 0,
+      total_orders: 0,
+      total_users: 0,
+      live_visitors: 0,
+      monthly_sales: emptyMonthlySales,
+      recent_orders: [],
+    },
+  } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
       const response = await apiClient.get('/admin/stats')
@@ -163,7 +187,7 @@ export function Dashboard() {
                   <CardTitle>Sales Overview</CardTitle>
                 </CardHeader>
                 <CardContent className='ps-2'>
-                  <Overview />
+                  <Overview data={stats.monthly_sales ?? emptyMonthlySales} />
                 </CardContent>
               </Card>
               <Card className='col-span-1 lg:col-span-3'>
@@ -174,7 +198,7 @@ export function Dashboard() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <RecentSales />
+                  <RecentSales orders={stats.recent_orders ?? []} />
                 </CardContent>
               </Card>
             </div>
