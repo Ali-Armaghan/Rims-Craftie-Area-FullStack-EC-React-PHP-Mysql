@@ -27,6 +27,10 @@ switch ($action) {
         echo json_encode($admin->getLiveTraffic());
         break;
 
+    case 'analytics':
+        echo json_encode($admin->getTrafficAnalytics());
+        break;
+
     case 'resale-management':
         echo json_encode($admin->getReSaleManagement());
         break;

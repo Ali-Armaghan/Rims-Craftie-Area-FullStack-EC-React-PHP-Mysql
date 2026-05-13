@@ -4,6 +4,7 @@ import { AuthUser } from "@/services/api";
 type AuthContextType = {
   user: AuthUser | null;
   login: (user: AuthUser) => void;
+  refreshUser: (user: AuthUser) => void;
   logout: () => void;
 };
 
@@ -26,6 +27,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     () => ({
       user,
       login: (nextUser) => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser));
+        setUser(nextUser);
+      },
+      refreshUser: (nextUser) => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser));
         setUser(nextUser);
       },

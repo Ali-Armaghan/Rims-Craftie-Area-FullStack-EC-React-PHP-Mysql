@@ -73,6 +73,14 @@ switch ($_SERVER['REQUEST_METHOD']) {
             break;
         }
 
+        $userCheck = $db->prepare("SELECT id FROM users WHERE id = ? LIMIT 1");
+        $userCheck->execute([$data['user_id']]);
+        if (!$userCheck->fetch(PDO::FETCH_ASSOC)) {
+            http_response_code(401);
+            echo json_encode(['message' => 'Invalid user session. Please login again.']);
+            break;
+        }
+
         $res = $order->create($data);
         http_response_code($res['success'] ? 201 : 500);
         echo json_encode($res);

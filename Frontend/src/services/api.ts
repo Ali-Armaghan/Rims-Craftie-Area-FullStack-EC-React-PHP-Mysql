@@ -92,6 +92,8 @@ export type SignupPayload = {
     referred_by_code?: string;
 };
 
+export type TrackingPayload = Record<string, unknown>;
+
 
 /**
  * Product API service for the custom PHP backend.
@@ -130,6 +132,44 @@ function getBackendUrl(path: string, params: Record<string, string | number | un
     });
 
     return url;
+}
+
+function postTracking(action: string, payload: TrackingPayload, keepalive = false) {
+    return fetch(getBackendUrl(`tracking/${action}`).toString(), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify(payload),
+        keepalive,
+    });
+}
+
+export async function initTrackingSession(payload: TrackingPayload) {
+    const response = await postTracking('init', payload);
+    return response.json();
+}
+
+export async function logTrackingPageView(payload: TrackingPayload) {
+    const response = await postTracking('pageview', payload);
+    return response.json();
+}
+
+export function pingTracking(payload: TrackingPayload) {
+    return postTracking('ping', payload).catch(() => undefined);
+}
+
+export function endTrackingPage(payload: TrackingPayload) {
+    return postTracking('end-page', payload, true).catch(() => undefined);
+}
+
+export function endTrackingSession(payload: TrackingPayload) {
+    return postTracking('end-session', payload, true).catch(() => undefined);
+}
+
+export function logTrackingEvent(payload: TrackingPayload) {
+    return postTracking('event', payload).catch(() => undefined);
 }
 
 function parseImages(images: BackendProduct['images']) {

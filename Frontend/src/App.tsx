@@ -18,9 +18,11 @@ import NotFound from "./pages/NotFound";
 import { AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import PageTransition from "./components/PageTransition";
+import { useVisitorTracking } from "@/hooks/useVisitorTracking";
 
 const AnimatedRoutes = () => {
   const location = useLocation();
+  useVisitorTracking();
 
   return (
     <AnimatePresence mode="wait">
