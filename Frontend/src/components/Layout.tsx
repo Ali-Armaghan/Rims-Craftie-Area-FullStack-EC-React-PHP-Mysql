@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingBag, Menu, X, Search, Heart, User } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, Menu, X, Search, Heart, User } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -91,24 +91,25 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 )}
               </Link>
               {user ? (
-                <div className="hidden md:flex items-center gap-3">
+                <div className="flex items-center gap-3">
                   <span className="font-nav text-[10px] tracking-[0.15em] uppercase text-foreground/70">
                     {user.name}
                   </span>
-                  <button
-                    onClick={logout}
-                    className="font-nav text-[10px] tracking-[0.2em] uppercase text-foreground/70 hover:text-foreground transition-colors"
+                  <Link
+                    to="/account"
+                    aria-label="Account dashboard"
+                    className="text-foreground/70 hover:text-foreground transition-colors"
                   >
-                    Logout
-                  </button>
+                    <LayoutDashboard size={20} />
+                  </Link>
                 </div>
               ) : (
                 <Link
                   to="/login"
-                  className="hidden md:inline-flex items-center gap-2 font-nav text-[10px] tracking-[0.2em] uppercase text-foreground/70 hover:text-foreground transition-colors"
+                  aria-label="Login"
+                  className="inline-flex items-center text-foreground/70 hover:text-foreground transition-colors"
                 >
-                  <User size={18} />
-                  Login
+                  <User size={20} />
                 </Link>
               )}
             </div>
@@ -152,6 +153,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     <div className="font-body text-sm text-muted-foreground">
                       Signed in as {user.name}
                     </div>
+                    <Link
+                      to="/account"
+                      className="font-nav text-lg tracking-[0.2em] uppercase text-foreground/80 hover:text-foreground transition-colors"
+                    >
+                      Dashboard
+                    </Link>
                     <button
                       onClick={logout}
                       className="text-left font-nav text-lg tracking-[0.2em] uppercase text-foreground/80 hover:text-foreground transition-colors"
