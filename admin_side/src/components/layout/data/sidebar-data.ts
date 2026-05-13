@@ -6,12 +6,6 @@ import {
   Percent,
   Activity,
   Users,
-  Settings,
-  UserCog,
-  Wrench,
-  Palette,
-  Bell,
-  Monitor,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 

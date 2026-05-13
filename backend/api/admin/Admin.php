@@ -62,7 +62,13 @@ class Admin {
     }
 
     public function getLiveTraffic() {
-        $query = "SELECT lt.*, vs.ip_address, vs.user_agent, u.name as user_name 
+        $query = "SELECT lt.session_id, lt.current_page, lt.current_page_title,
+                         lt.current_page_view_id, lt.is_logged_in, lt.last_ping_at,
+                         vs.session_uuid, vs.ip_address, vs.user_agent, vs.device_type,
+                         vs.browser, vs.os, vs.landing_page, vs.first_seen,
+                         vs.page_count, vs.total_duration,
+                         COALESCE(u.name, 'Guest') as user_name,
+                         COALESCE(u.email, '') as user_email
                   FROM live_traffic lt 
                   JOIN visitor_sessions vs ON lt.session_id = vs.id 
                   LEFT JOIN users u ON vs.user_id = u.id 
@@ -71,6 +77,61 @@ class Admin {
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getVisitorSessions() {
+        $query = "SELECT vs.id, vs.session_uuid, vs.user_id, vs.ip_address,
+                         vs.device_type, vs.browser, vs.os, vs.referer_url,
+                         vs.landing_page, vs.page_count, vs.total_duration,
+                         vs.is_active, vs.first_seen, vs.last_seen, vs.ended_at,
+                         COALESCE(u.name, 'Guest') as user_name,
+                         COALESCE(u.email, '') as user_email,
+                         COUNT(pv.id) as actual_page_views
+                  FROM visitor_sessions vs
+                  LEFT JOIN users u ON vs.user_id = u.id
+                  LEFT JOIN page_views pv ON pv.session_id = vs.id
+                  GROUP BY vs.id
+                  ORDER BY vs.last_seen DESC
+                  LIMIT 200";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getVisitorSessionDetails($session_id) {
+        $sessionQuery = "SELECT vs.*, COALESCE(u.name, 'Guest') as user_name,
+                                COALESCE(u.email, '') as user_email
+                         FROM visitor_sessions vs
+                         LEFT JOIN users u ON vs.user_id = u.id
+                         WHERE vs.id = ?";
+        $stmt = $this->conn->prepare($sessionQuery);
+        $stmt->execute([$session_id]);
+        $session = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$session) {
+            return null;
+        }
+
+        $pageQuery = "SELECT id, page_path, page_url, page_title, referrer_url,
+                             stay_duration, entered_at, exited_at, exit_type
+                      FROM page_views
+                      WHERE session_id = ?
+                      ORDER BY entered_at DESC";
+        $stmt = $this->conn->prepare($pageQuery);
+        $stmt->execute([$session_id]);
+        $session['page_views'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $eventQuery = "SELECT id, page_view_id, event_type, event_name,
+                              page_path, event_data, occurred_at
+                       FROM visitor_events
+                       WHERE session_id = ?
+                       ORDER BY occurred_at DESC
+                       LIMIT 100";
+        $stmt = $this->conn->prepare($eventQuery);
+        $stmt->execute([$session_id]);
+        $session['events'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return $session;
     }
 
     private function percentChange($current, $previous) {

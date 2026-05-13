@@ -27,6 +27,27 @@ switch ($action) {
         echo json_encode($admin->getLiveTraffic());
         break;
 
+    case 'visitor-sessions':
+        echo json_encode($admin->getVisitorSessions());
+        break;
+
+    case 'visitor-session':
+        if (empty($_GET['id'])) {
+            http_response_code(400);
+            echo json_encode(["message" => "Session id is required"]);
+            break;
+        }
+
+        $session = $admin->getVisitorSessionDetails($_GET['id']);
+        if (!$session) {
+            http_response_code(404);
+            echo json_encode(["message" => "Session not found"]);
+            break;
+        }
+
+        echo json_encode($session);
+        break;
+
     case 'analytics':
         echo json_encode($admin->getTrafficAnalytics());
         break;
