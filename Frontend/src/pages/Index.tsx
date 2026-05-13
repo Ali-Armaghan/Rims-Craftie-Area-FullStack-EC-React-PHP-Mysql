@@ -1,17 +1,31 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Diamond, Shield, Truck, Gift } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import HeroSlider from "@/components/HeroSlider";
 import ProductCard from "@/components/ProductCard";
 import { useFeaturedProducts } from "@/hooks/useFeaturedProducts";
 import ProductCardSkeleton from "@/components/skeletons/ProductCardSkeleton";
+import hero1 from "@/assets/hero1.png";
+import hero2 from "@/assets/hero2.png";
+import hero3 from "@/assets/hero3.png";
+import product1 from "@/assets/product1.png";
+import product2 from "@/assets/product2.png";
+import product3 from "@/assets/product3.png";
+import product4 from "@/assets/product4.png";
+import product5 from "@/assets/product5.png";
 
-const features = [
-  { icon: Diamond, title: "Ethically Sourced", desc: "Conflict-free gemstones" },
-  { icon: Shield, title: "Lifetime Warranty", desc: "Every piece guaranteed" },
-  { icon: Truck, title: "Free Shipping", desc: "On orders over $500" },
-  { icon: Gift, title: "Luxury Packaging", desc: "Signature gift boxes" },
+const categorySlides = [
+  { title: "Under 1499", image: product1 },
+  { title: "Laptop Bags", image: hero1 },
+  { title: "Crossbody", image: product2 },
+  { title: "Shoulder Bags", image: product3 },
+  { title: "HandBags", image: hero2 },
+  { title: "All Bags", image: product4 },
+  { title: "Premium Bags", image: hero3 },
+  { title: "Under 2499", image: product5 },
 ];
+
+const loopingCategorySlides = [...categorySlides, ...categorySlides, ...categorySlides];
 
 const Index = () => {
   const { products: popular, isLoading } = useFeaturedProducts();
@@ -20,25 +34,27 @@ const Index = () => {
     <>
       <HeroSlider />
 
-      {/* Features Bar */}
-      <section className="border-b border-border">
-        <div className="container py-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {features.map((f, i) => (
-              <motion.div
-                key={f.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="flex items-center gap-3"
+      {/* Category Slider */}
+      <section className="border-b border-border bg-background">
+        <div className="overflow-hidden py-6">
+          <div className="category-marquee flex w-max items-start gap-6 md:gap-8">
+            {loopingCategorySlides.map((category, i) => (
+              <Link
+                key={`${category.title}-${i}`}
+                to="/products"
+                className="flex w-24 shrink-0 flex-col items-center text-center sm:w-28 md:w-32"
               >
-                <f.icon size={20} className="text-primary flex-shrink-0" />
-                <div>
-                  <p className="font-nav text-[10px] tracking-[0.15em] uppercase text-foreground">{f.title}</p>
-                  <p className="font-body text-sm text-muted-foreground">{f.desc}</p>
+                <div className="h-20 w-20 overflow-hidden rounded-full bg-secondary sm:h-24 sm:w-24 md:h-28 md:w-28">
+                  <img
+                    src={category.image}
+                    alt={category.title}
+                    className="h-full w-full object-cover"
+                  />
                 </div>
-              </motion.div>
+                <span className="mt-3 font-nav text-xs text-foreground">
+                  {category.title}
+                </span>
+              </Link>
             ))}
           </div>
         </div>
