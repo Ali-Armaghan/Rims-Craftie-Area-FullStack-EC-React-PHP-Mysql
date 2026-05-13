@@ -143,9 +143,6 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
     selectedCategoryId && Number(selectedCategoryId) > 0
       ? String(selectedCategoryId)
       : ''
-  const selectedCategory = categories.find(
-    (category) => String(category.id) === String(selectedCategoryId)
-  )
 
   const onSubmit = async (data: Product) => {
     setIsSaving(true)

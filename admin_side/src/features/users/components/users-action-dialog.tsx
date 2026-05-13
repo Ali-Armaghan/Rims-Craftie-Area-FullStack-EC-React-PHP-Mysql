@@ -3,7 +3,9 @@
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { showSubmittedData } from '@/lib/show-submitted-data'
+import { useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import apiClient from '@/lib/api-client'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -105,6 +107,7 @@ export function UsersActionDialog({
   onOpenChange,
 }: UserActionDialogProps) {
   const isEdit = !!currentRow
+  const queryClient = useQueryClient()
   const form = useForm<UserForm>({
     resolver: zodResolver(formSchema),
     defaultValues: isEdit
@@ -127,10 +130,27 @@ export function UsersActionDialog({
         },
   })
 
-  const onSubmit = (values: UserForm) => {
-    form.reset()
-    showSubmittedData(values)
-    onOpenChange(false)
+  const onSubmit = async (values: UserForm) => {
+    if (isEdit) {
+      toast.error('User edit is not available yet')
+      return
+    }
+
+    try {
+      await apiClient.post('/auth/register', {
+        name: `${values.firstName} ${values.lastName}`.trim(),
+        email: values.email,
+        phone: values.phoneNumber,
+        password: values.password,
+      })
+
+      await queryClient.invalidateQueries({ queryKey: ['users'] })
+      toast.success('User created successfully')
+      form.reset()
+      onOpenChange(false)
+    } catch {
+      toast.error('Failed to create user. Email may already exist.')
+    }
   }
 
   const isPasswordTouched = !!form.formState.dirtyFields.password
@@ -316,8 +336,8 @@ export function UsersActionDialog({
           </Form>
         </div>
         <DialogFooter>
-          <Button type='submit' form='user-form'>
-            Save changes
+          <Button type='submit' form='user-form' disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? 'Saving...' : 'Save changes'}
           </Button>
         </DialogFooter>
       </DialogContent>
