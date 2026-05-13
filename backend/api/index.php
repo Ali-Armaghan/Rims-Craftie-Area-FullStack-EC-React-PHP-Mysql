@@ -47,6 +47,9 @@ switch ($module) {
     case 'admin':
         require_once __DIR__ . '/admin/handler.php';
         break;
+    case 'uploads':
+        require_once __DIR__ . '/uploads/handler.php';
+        break;
     default:
         http_response_code(404);
         echo json_encode(["message" => "Endpoint not found."]);
