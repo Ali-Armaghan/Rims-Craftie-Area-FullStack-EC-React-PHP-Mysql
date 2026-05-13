@@ -1,0 +1,117 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Marcellus&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 37 58% 95%;
+    --foreground: 30 15% 12%;
+
+    --card: 37 50% 97%;
+    --card-foreground: 30 15% 12%;
+
+    --popover: 37 50% 97%;
+    --popover-foreground: 30 15% 12%;
+
+    --primary: 35 72% 38%;
+    --primary-foreground: 37 58% 95%;
+
+    --secondary: 33 25% 88%;
+    --secondary-foreground: 30 15% 12%;
+
+    --muted: 35 20% 91%;
+    --muted-foreground: 30 10% 45%;
+
+    --accent: 345 35% 32%;
+    --accent-foreground: 37 58% 95%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 33 25% 85%;
+    --input: 33 25% 85%;
+    --ring: 35 72% 38%;
+
+    --radius: 0.25rem;
+
+    --gold: 35 72% 38%;
+    --gold-light: 37 60% 72%;
+    --gold-dark: 33 65% 25%;
+    --cream: 37 58% 95%;
+    --cream-dark: 35 30% 88%;
+    --burgundy: 345 35% 32%;
+    --charcoal: 30 15% 12%;
+
+    --sidebar-background: 37 50% 97%;
+    --sidebar-foreground: 30 15% 12%;
+    --sidebar-primary: 35 72% 38%;
+    --sidebar-primary-foreground: 37 58% 95%;
+    --sidebar-accent: 33 25% 88%;
+    --sidebar-accent-foreground: 30 15% 12%;
+    --sidebar-border: 33 25% 85%;
+    --sidebar-ring: 35 72% 38%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Cormorant Garamond', serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
+  }
+}
+
+@layer components {
+  .font-display {
+    font-family: 'Playfair Display', serif;
+  }
+
+  .font-body {
+    font-family: 'Cormorant Garamond', serif;
+  }
+
+  .font-nav {
+    font-family: 'Marcellus', serif;
+  }
+
+  .gold-gradient {
+    background: linear-gradient(135deg, hsl(35 72% 38%), hsl(37 60% 72%), hsl(35 72% 38%));
+  }
+
+  .gold-text {
+    background: linear-gradient(135deg, hsl(33 65% 25%), hsl(35 72% 38%), hsl(37 60% 72%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .gold-border {
+    border-color: hsl(35 72% 38% / 0.3);
+  }
+
+  .luxury-shadow {
+    box-shadow: 0 4px 30px hsl(35 72% 38% / 0.08);
+  }
+
+  .nav-link {
+    @apply relative font-nav text-sm tracking-[0.2em] uppercase;
+  }
+
+  .nav-link::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-full h-[1px] bg-primary scale-x-0 origin-right transition-transform duration-500;
+  }
+
+  .nav-link:hover::after {
+    @apply scale-x-100 origin-left;
+  }
+}
