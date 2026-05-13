@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
+import { Eye } from 'lucide-react'
 import { toast } from 'sonner'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { ProfileDropdown } from '@/components/profile-dropdown'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -27,8 +30,12 @@ type Order = {
   id: number
   order_number: string
   customer_name: string
+  customer_email?: string
   status: string
+  subtotal?: string
   total: string
+  shipping_address?: string
+  referred_by_code?: string | null
   commission_earned: string
   resale_credited: number
   created_at: string
@@ -107,6 +114,7 @@ export function Orders() {
                   <TableHead>Commission</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Date</TableHead>
+                  <TableHead className='text-right'>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -131,11 +139,22 @@ export function Orders() {
                       <TableCell className='text-muted-foreground text-sm'>
                         {new Date(order.created_at).toLocaleDateString()}
                       </TableCell>
+                      <TableCell className='text-right'>
+                        <Button variant='outline' size='icon' asChild>
+                          <Link
+                            to='/orders/$orderId'
+                            params={{ orderId: String(order.id) }}
+                            aria-label={`View ${order.order_number}`}
+                          >
+                            <Eye className='h-4 w-4' />
+                          </Link>
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} className='h-24 text-center'>
+                    <TableCell colSpan={7} className='h-24 text-center'>
                       No orders found.
                     </TableCell>
                   </TableRow>
