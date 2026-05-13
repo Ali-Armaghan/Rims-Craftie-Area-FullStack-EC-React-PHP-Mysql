@@ -218,3 +218,5 @@ CREATE TABLE IF NOT EXISTS settings (
 INSERT INTO settings (setting_key, setting_value) VALUES ('commission_rate', '5');
 INSERT INTO settings (setting_key, setting_value) VALUES ('min_payout_amount', '500');
 INSERT INTO settings (setting_key, setting_value) VALUES ('currency', 'PKR');
+INSERT INTO settings (setting_key, setting_value) VALUES ('sale_countdown_enabled', '0');
+INSERT INTO settings (setting_key, setting_value) VALUES ('sale_countdown_ends_at', '');

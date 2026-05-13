@@ -94,6 +94,11 @@ export type SignupPayload = {
 
 export type TrackingPayload = Record<string, unknown>;
 
+export type SaleCountdownSettings = {
+    enabled: boolean;
+    ends_at: string | null;
+};
+
 
 /**
  * Product API service for the custom PHP backend.
@@ -283,6 +288,24 @@ export async function fetchFeaturedProducts() {
     } catch (error) {
         console.error("Failed to fetch featured products:", error);
         return [];
+    }
+}
+
+export async function fetchSaleCountdown(): Promise<SaleCountdownSettings> {
+    try {
+        const response = await fetch(getBackendUrl('admin/sale-countdown').toString(), {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error fetching sale countdown: ${response.statusText}`);
+        }
+
+        return response.json();
+    } catch (error) {
+        console.error("Failed to fetch sale countdown:", error);
+        return { enabled: false, ends_at: null };
     }
 }
 

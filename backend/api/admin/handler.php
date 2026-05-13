@@ -52,6 +52,23 @@ switch ($action) {
         echo json_encode($admin->getTrafficAnalytics());
         break;
 
+    case 'sale-countdown':
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            echo json_encode($admin->getSaleCountdownSettings());
+            break;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' || $_SERVER['REQUEST_METHOD'] === 'PUT') {
+            $enabled = !empty($data->enabled);
+            $ends_at = isset($data->ends_at) ? $data->ends_at : null;
+            echo json_encode($admin->updateSaleCountdownSettings($enabled, $ends_at));
+            break;
+        }
+
+        http_response_code(405);
+        echo json_encode(["message" => "Method not allowed"]);
+        break;
+
     case 'resale-management':
         echo json_encode($admin->getReSaleManagement());
         break;

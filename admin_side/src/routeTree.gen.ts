@@ -29,6 +29,7 @@ import { Route as AuthenticatedProductsIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedOrdersIndexRouteImport } from './routes/_authenticated/orders/index'
 import { Route as AuthenticatedTrackingSessionsRouteImport } from './routes/_authenticated/tracking/sessions'
 import { Route as AuthenticatedTrackingLiveRouteImport } from './routes/_authenticated/tracking/live'
+import { Route as AuthenticatedSettingsSaleCountdownRouteImport } from './routes/_authenticated/settings/sale-countdown'
 import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes/_authenticated/settings/notifications'
 import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_authenticated/settings/display'
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
@@ -146,6 +147,12 @@ const AuthenticatedTrackingLiveRoute =
     path: '/tracking/live',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSettingsSaleCountdownRoute =
+  AuthenticatedSettingsSaleCountdownRouteImport.update({
+    id: '/sale-countdown',
+    path: '/sale-countdown',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
 const AuthenticatedSettingsNotificationsRoute =
   AuthenticatedSettingsNotificationsRouteImport.update({
     id: '/notifications',
@@ -229,6 +236,7 @@ export interface FileRoutesByFullPath {
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
+  '/settings/sale-countdown': typeof AuthenticatedSettingsSaleCountdownRoute
   '/tracking/live': typeof AuthenticatedTrackingLiveRoute
   '/tracking/sessions': typeof AuthenticatedTrackingSessionsRoute
   '/orders/': typeof AuthenticatedOrdersIndexRoute
@@ -259,6 +267,7 @@ export interface FileRoutesByTo {
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
+  '/settings/sale-countdown': typeof AuthenticatedSettingsSaleCountdownRoute
   '/tracking/live': typeof AuthenticatedTrackingLiveRoute
   '/tracking/sessions': typeof AuthenticatedTrackingSessionsRoute
   '/orders': typeof AuthenticatedOrdersIndexRoute
@@ -292,6 +301,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/_authenticated/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
+  '/_authenticated/settings/sale-countdown': typeof AuthenticatedSettingsSaleCountdownRoute
   '/_authenticated/tracking/live': typeof AuthenticatedTrackingLiveRoute
   '/_authenticated/tracking/sessions': typeof AuthenticatedTrackingSessionsRoute
   '/_authenticated/orders/': typeof AuthenticatedOrdersIndexRoute
@@ -325,6 +335,7 @@ export interface FileRouteTypes {
     | '/settings/appearance'
     | '/settings/display'
     | '/settings/notifications'
+    | '/settings/sale-countdown'
     | '/tracking/live'
     | '/tracking/sessions'
     | '/orders/'
@@ -355,6 +366,7 @@ export interface FileRouteTypes {
     | '/settings/appearance'
     | '/settings/display'
     | '/settings/notifications'
+    | '/settings/sale-countdown'
     | '/tracking/live'
     | '/tracking/sessions'
     | '/orders'
@@ -387,6 +399,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/appearance'
     | '/_authenticated/settings/display'
     | '/_authenticated/settings/notifications'
+    | '/_authenticated/settings/sale-countdown'
     | '/_authenticated/tracking/live'
     | '/_authenticated/tracking/sessions'
     | '/_authenticated/orders/'
@@ -553,6 +566,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTrackingLiveRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings/sale-countdown': {
+      id: '/_authenticated/settings/sale-countdown'
+      path: '/sale-countdown'
+      fullPath: '/settings/sale-countdown'
+      preLoaderRoute: typeof AuthenticatedSettingsSaleCountdownRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
     '/_authenticated/settings/notifications': {
       id: '/_authenticated/settings/notifications'
       path: '/notifications'
@@ -631,6 +651,7 @@ interface AuthenticatedSettingsRouteRouteChildren {
   AuthenticatedSettingsAppearanceRoute: typeof AuthenticatedSettingsAppearanceRoute
   AuthenticatedSettingsDisplayRoute: typeof AuthenticatedSettingsDisplayRoute
   AuthenticatedSettingsNotificationsRoute: typeof AuthenticatedSettingsNotificationsRoute
+  AuthenticatedSettingsSaleCountdownRoute: typeof AuthenticatedSettingsSaleCountdownRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
 }
 
@@ -641,6 +662,8 @@ const AuthenticatedSettingsRouteRouteChildren: AuthenticatedSettingsRouteRouteCh
     AuthenticatedSettingsDisplayRoute: AuthenticatedSettingsDisplayRoute,
     AuthenticatedSettingsNotificationsRoute:
       AuthenticatedSettingsNotificationsRoute,
+    AuthenticatedSettingsSaleCountdownRoute:
+      AuthenticatedSettingsSaleCountdownRoute,
     AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   }
 

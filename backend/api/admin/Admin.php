@@ -297,5 +297,43 @@ class Admin {
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function getSaleCountdownSettings() {
+        $keys = ['sale_countdown_enabled', 'sale_countdown_ends_at'];
+        $placeholders = implode(',', array_fill(0, count($keys), '?'));
+        $query = "SELECT setting_key, setting_value FROM settings WHERE setting_key IN ($placeholders)";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute($keys);
+
+        $settings = [
+            'enabled' => false,
+            'ends_at' => null
+        ];
+
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            if ($row['setting_key'] === 'sale_countdown_enabled') {
+                $settings['enabled'] = $row['setting_value'] === '1';
+            }
+
+            if ($row['setting_key'] === 'sale_countdown_ends_at') {
+                $settings['ends_at'] = $row['setting_value'];
+            }
+        }
+
+        return $settings;
+    }
+
+    public function updateSaleCountdownSettings($enabled, $ends_at) {
+        $query = "INSERT INTO settings (setting_key, setting_value)
+                  VALUES (?, ?)
+                  ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)";
+        $stmt = $this->conn->prepare($query);
+
+        $enabledValue = $enabled ? '1' : '0';
+        $stmt->execute(['sale_countdown_enabled', $enabledValue]);
+        $stmt->execute(['sale_countdown_ends_at', $ends_at]);
+
+        return $this->getSaleCountdownSettings();
+    }
 }
 ?>

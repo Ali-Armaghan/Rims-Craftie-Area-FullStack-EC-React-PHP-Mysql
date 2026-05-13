@@ -19,12 +19,33 @@ import { useProductReviews, useSubmitReview } from "@/hooks/useProductReviews";
 import { Star } from "lucide-react";
 import ProductDetailSkeleton from "@/components/skeletons/ProductDetailSkeleton";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useQuery } from "@tanstack/react-query";
+import { fetchSaleCountdown } from "@/services/api";
+
+const CountdownValue = ({ value }: { value: string }) => (
+  <span className="inline-flex min-w-[1.8ch] justify-center align-baseline">
+    <motion.span
+      key={value}
+      initial={{ y: 8, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.22, ease: "easeOut" }}
+      className="inline-block leading-normal"
+    >
+      {value}
+    </motion.span>
+  </span>
+);
 
 const ProductDetail = () => {
   const { id } = useParams();
   const { addToCart } = useCart();
   const { product, isLoading, error } = useProduct(id);
   const { data: reviews = [], isLoading: isLoadingReviews } = useProductReviews(id);
+  const { data: saleCountdown } = useQuery({
+    queryKey: ["sale-countdown"],
+    queryFn: fetchSaleCountdown,
+    refetchInterval: 60000,
+  });
   const submitReviewMutation = useSubmitReview();
   const navigate = useNavigate();
 
@@ -34,6 +55,7 @@ const ProductDetail = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [slideDirection, setSlideDirection] = useState(1);
   const [selectedOption, setSelectedOption] = useState("Large");
+  const [now, setNow] = useState(() => Date.now());
 
   // Review form state
   const [reviewForm, setReviewForm] = useState({
@@ -80,6 +102,11 @@ const ProductDetail = () => {
     return () => clearInterval(intervalId);
   }, [images.length]); // Intentionally removed currentImageIndex from deps to avoid rapid resetting if user clicks
 
+  useEffect(() => {
+    const intervalId = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
   // Early returns
   if (isLoading) {
     return <ProductDetailSkeleton />;
@@ -118,6 +145,23 @@ const ProductDetail = () => {
     { icon: ShieldCheck, title: "Secure Checkout", desc: "Protected payment process" },
     { icon: CreditCard, title: "Cash / Card", desc: "Flexible payment options" },
   ];
+  const saleEndsAt = saleCountdown?.ends_at
+    ? new Date(saleCountdown.ends_at).getTime()
+    : 0;
+  const saleRemaining = saleEndsAt - now;
+  const showSaleCountdown = Boolean(
+    saleCountdown?.enabled && saleEndsAt && saleRemaining > 0
+  );
+  const saleDays = Math.floor(saleRemaining / 86400000);
+  const saleHours = Math.floor((saleRemaining % 86400000) / 3600000);
+  const saleMinutes = Math.floor((saleRemaining % 3600000) / 60000);
+  const saleSeconds = Math.floor((saleRemaining % 60000) / 1000);
+  const saleCountdownParts = {
+    days: String(saleDays),
+    hours: String(saleHours).padStart(2, "0"),
+    minutes: String(saleMinutes).padStart(2, "0"),
+    seconds: String(saleSeconds).padStart(2, "0"),
+  };
 
   const handleNextImage = () => {
     setSlideDirection(1);
@@ -316,20 +360,49 @@ const ProductDetail = () => {
                 </span>
               </div>
 
-              <div className="mb-6 rounded-3xl border border-border/70 bg-card/50 p-5 shadow-sm">
-                <div className="mb-4 flex flex-wrap items-end gap-3">
-                  <span className="font-display text-4xl font-bold leading-none text-foreground md:text-[46px]">
-                  Rs. {product.price.toLocaleString()}
-                  </span>
-                  {product.originalPrice && (
-                    <span className="pb-1 font-body text-xl font-medium text-muted-foreground line-through decoration-muted-foreground/60 decoration-2">
-                    Rs. {product.originalPrice.toLocaleString()}
-                    </span>
+              <div className="mb-6 rounded-3xl border border-border/70 bg-card/50 px-5 py-4 shadow-sm">
+                <div className={`grid gap-4 ${showSaleCountdown ? "sm:grid-cols-[1fr_auto_1fr]" : ""} sm:items-stretch`}>
+                  <div className="flex min-w-0 flex-col justify-center">
+                    <div className="flex flex-wrap items-end gap-3">
+                      <span className="font-display text-4xl font-bold leading-none text-foreground md:text-[46px]">
+                        Rs. {product.price.toLocaleString()}
+                      </span>
+                      {product.originalPrice && (
+                        <span className="pb-1 font-body text-xl font-medium text-muted-foreground line-through decoration-muted-foreground/60 decoration-2">
+                          Rs. {product.originalPrice.toLocaleString()}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-3 line-clamp-2 font-body text-sm leading-snug text-muted-foreground">
+                      {product.shortDescription || product.description || "Premium product with carefully selected materials and refined finishing."}
+                    </p>
+                  </div>
+                  {showSaleCountdown && (
+                    <>
+                      <div className="hidden min-h-24 w-px bg-border sm:block" />
+                      <div className="flex min-w-0 flex-col justify-center py-1 sm:items-center sm:text-center">
+                        <p className="whitespace-nowrap font-nav text-xs font-bold uppercase leading-6 tracking-[0.2em] text-muted-foreground md:text-sm md:leading-7 md:tracking-[0.24em]">
+                          Sales ends in
+                        </p>
+                        <p className="mt-0 flex items-center justify-center font-sans text-2xl font-semibold tabular-nums leading-[1.25] text-foreground md:text-4xl">
+                          {saleDays > 0 && (
+                            <>
+                              <CountdownValue value={saleCountdownParts.days} />
+                              <span className="mx-1 text-sm font-medium uppercase text-muted-foreground md:text-lg">
+                                d
+                              </span>
+                            </>
+                          )}
+                          <CountdownValue value={saleCountdownParts.hours} />
+                          <span className="mx-1 text-muted-foreground">:</span>
+                          <CountdownValue value={saleCountdownParts.minutes} />
+                          <span className="mx-1 text-muted-foreground">:</span>
+                          <CountdownValue value={saleCountdownParts.seconds} />
+                        </p>
+                      </div>
+                    </>
                   )}
                 </div>
-                <p className="font-body text-sm leading-relaxed text-muted-foreground">
-                  {product.shortDescription || product.description || "Premium product with carefully selected materials and refined finishing."}
-                </p>
               </div>
 
               {product.variations && product.variations.length > 0 && (
