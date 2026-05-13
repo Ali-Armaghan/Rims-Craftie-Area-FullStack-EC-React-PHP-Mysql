@@ -1,6 +1,16 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  CreditCard,
+  Heart,
+  RotateCcw,
+  ShieldCheck,
+  ShoppingBag,
+  Truck,
+} from "lucide-react";
 import { useProduct } from "@/hooks/useProduct";
 import { useCart } from "@/context/CartContext";
 import ProductCard from "@/components/ProductCard";
@@ -95,6 +105,19 @@ const ProductDetail = () => {
   // Temporarily removing Related Products because the single product fetched doesn't have the whole catalog.
   // Can be reimplemented via a separate fetchFeaturedProducts() query if desired.
   const related: any[] = [];
+  const stockLeft = product.stockQuantity ?? 0;
+  const stockMessage =
+    product.inStock && stockLeft > 0 && stockLeft <= 10
+      ? `Only ${stockLeft} left in stock`
+      : product.inStock
+        ? "Ready to dispatch"
+        : "Currently unavailable";
+  const trustBadges = [
+    { icon: Truck, title: "Fast Delivery", desc: "Quick dispatch nationwide" },
+    { icon: RotateCcw, title: "Easy Returns", desc: "Hassle-free return support" },
+    { icon: ShieldCheck, title: "Secure Checkout", desc: "Protected payment process" },
+    { icon: CreditCard, title: "Cash / Card", desc: "Flexible payment options" },
+  ];
 
   const handleNextImage = () => {
     setSlideDirection(1);
@@ -174,96 +197,109 @@ const ProductDetail = () => {
         </div>
 
         <section className="container">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(420px,0.95fr)] lg:gap-14 items-start">
 
             {/* Left Column - Image Gallery */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6 }}
-              className="relative rounded-2xl overflow-hidden aspect-square lg:sticky lg:top-8 group bg-card"
-            >
-              <AnimatePresence initial={false} custom={slideDirection} mode="wait">
-                <motion.img
-                  key={currentImageIndex}
-                  src={images[currentImageIndex]}
-                  alt={product.name}
-                  custom={slideDirection}
-                  variants={slideVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  className="w-full h-full object-cover"
-                />
-              </AnimatePresence>
+            <div className="lg:sticky lg:top-8">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6 }}
+                className="relative aspect-square overflow-hidden rounded-[2rem] border border-border/70 bg-card/70 group"
+              >
+                {discountBadge && (
+                  <span className="absolute left-5 top-5 z-10 rounded-full bg-primary px-4 py-2 font-nav text-[10px] font-bold uppercase tracking-[0.18em] text-primary-foreground shadow">
+                    {discountBadge}
+                  </span>
+                )}
 
-              {/* Carousel Navigation Arrows */}
-              {images.length > 1 && (
-                <>
-                  <button
-                    onClick={handlePrevImage}
-                    className="absolute left-6 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:scale-110 active:scale-95 z-10 text-foreground"
-                    aria-label="Previous image"
-                  >
-                    <ChevronLeft size={20} strokeWidth={1.5} />
-                  </button>
-                  <button
-                    onClick={handleNextImage}
-                    className="absolute right-6 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:scale-110 active:scale-95 z-10 text-foreground"
-                    aria-label="Next image"
-                  >
-                    <ChevronRight size={20} strokeWidth={1.5} />
-                  </button>
-                </>
-              )}
+                <AnimatePresence initial={false} custom={slideDirection} mode="wait">
+                  <motion.img
+                    key={currentImageIndex}
+                    src={images[currentImageIndex]}
+                    alt={product.name}
+                    custom={slideDirection}
+                    variants={slideVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    className="h-full w-full object-contain p-5 md:p-8"
+                  />
+                </AnimatePresence>
 
-              {/* Carousel Indicators (Dots) */}
-              {images.length > 1 && (
-                <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-2.5 z-10">
-                  {images.map((_, idx) => (
+                {images.length > 1 && (
+                  <>
                     <button
-                      key={idx}
+                      onClick={handlePrevImage}
+                      className="absolute left-5 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 text-foreground shadow-md transition hover:bg-background"
+                      aria-label="Previous image"
+                    >
+                      <ChevronLeft size={20} strokeWidth={1.5} />
+                    </button>
+                    <button
+                      onClick={handleNextImage}
+                      className="absolute right-5 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 text-foreground shadow-md transition hover:bg-background"
+                      aria-label="Next image"
+                    >
+                      <ChevronRight size={20} strokeWidth={1.5} />
+                    </button>
+                  </>
+                )}
+              </motion.div>
+
+              {images.length > 1 && (
+                <div className="mt-4 grid grid-cols-5 gap-3">
+                  {images.slice(0, 5).map((image, idx) => (
+                    <button
+                      key={`${image}-${idx}`}
                       onClick={() => {
                         setSlideDirection(idx > currentImageIndex ? 1 : -1);
                         setCurrentImageIndex(idx);
                       }}
-                      className={`h-1.5 transition-all duration-300 rounded-full ${currentImageIndex === idx ? "w-4 bg-foreground" : "w-1.5 bg-foreground/30 hover:bg-foreground/50"
-                        }`}
+                      className={`aspect-square overflow-hidden rounded-2xl border bg-card transition ${
+                        currentImageIndex === idx
+                          ? "border-primary ring-2 ring-primary/20"
+                          : "border-border/60 hover:border-primary/50"
+                      }`}
                       aria-label={`View image ${idx + 1}`}
-                    />
+                    >
+                      <img
+                        src={image}
+                        alt={`${product.name} ${idx + 1}`}
+                        className="h-full w-full object-contain p-2"
+                      />
+                    </button>
                   ))}
                 </div>
               )}
-            </motion.div>
+            </div>
 
             {/* Right Column - Product Info */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="flex flex-col py-2"
+              className="flex flex-col"
             >
-              {/* Category / Brand Note & Stock */}
-              <div className="flex items-center gap-3 mb-4">
-                <p className="font-nav text-[11px] tracking-[0.2em] font-bold uppercase text-muted-foreground">
+              <div className="mb-4 flex flex-wrap items-center gap-3">
+                <span className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1 font-nav text-[10px] font-bold uppercase tracking-[0.22em] text-primary">
                   {product.category || "LUXURY"}
-                </p>
-                <span className="text-muted-foreground/50 text-[10px]">|</span>
-                <p className="font-nav text-[12px] tracking-[0.1em] font-extrabold uppercase text-foreground">
-                  {product.inStock
-                    ? (product.stockQuantity !== undefined ? `Stock Left: ${product.stockQuantity}` : "In Stock")
-                    : "Out of Stock"
-                  }
-                </p>
+                </span>
+                <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 font-body text-xs font-semibold ${
+                  product.inStock
+                    ? "bg-emerald-50 text-emerald-700"
+                    : "bg-destructive/10 text-destructive"
+                }`}>
+                  <CheckCircle2 size={13} />
+                  {stockMessage}
+                </span>
               </div>
 
-              {/* Title */}
-              <h1 className="font-display text-4xl lg:text-[44px] text-foreground mb-4 leading-[1.15]">
+              <h1 className="mb-4 font-display text-4xl leading-[1.08] text-foreground md:text-5xl">
                 {product.name}
               </h1>
 
-              {/* Stars & Reviews */}
-              <div className="flex items-center gap-2 mb-6">
+              <div className="mb-6 flex flex-wrap items-center gap-3">
                 <div className="flex text-[#ffb800]">
                   {"★★★★★".split("").map((star, i) => (
                     <span key={i} className="text-sm">
@@ -274,39 +310,39 @@ const ProductDetail = () => {
                 <span className="font-body text-sm text-muted-foreground ml-1">
                   {displayRating.toFixed(1)} ({displayReviewCount} reviews)
                 </span>
-              </div>
-
-              {/* Price Line */}
-              <div className="flex items-center gap-4 mb-8">
-                <span className="font-display text-[44px] font-bold text-foreground leading-none">
-                  Rs. {product.price.toLocaleString()}
+                <span className="hidden h-4 w-px bg-border sm:block" />
+                <span className="font-body text-sm text-muted-foreground">
+                  {product.inStock ? "Available for order" : "Out of stock"}
                 </span>
-                {product.originalPrice && (
-                  <>
-                    <span className="font-body text-[24px] font-medium text-muted-foreground line-through decoration-muted-foreground/60 decoration-2 leading-none self-end pb-1.5">
-                      Rs. {product.originalPrice.toLocaleString()}
-                    </span>
-                    {discountBadge && (
-                      <span className="bg-[#f0f0f0] text-[#111111] font-body text-[13px] uppercase px-3.5 py-1.5 rounded-full font-bold ml-1 self-center">
-                        {discountBadge}
-                      </span>
-                    )}
-                  </>
-                )}
               </div>
 
-              {/* Options */}
+              <div className="mb-6 rounded-3xl border border-border/70 bg-card/50 p-5 shadow-sm">
+                <div className="mb-4 flex flex-wrap items-end gap-3">
+                  <span className="font-display text-4xl font-bold leading-none text-foreground md:text-[46px]">
+                  Rs. {product.price.toLocaleString()}
+                  </span>
+                  {product.originalPrice && (
+                    <span className="pb-1 font-body text-xl font-medium text-muted-foreground line-through decoration-muted-foreground/60 decoration-2">
+                    Rs. {product.originalPrice.toLocaleString()}
+                    </span>
+                  )}
+                </div>
+                <p className="font-body text-sm leading-relaxed text-muted-foreground">
+                  {product.shortDescription || product.description || "Premium product with carefully selected materials and refined finishing."}
+                </p>
+              </div>
+
               {product.variations && product.variations.length > 0 && (
-                <div className="mb-8">
-                  <p className="font-nav text-[10px] tracking-[0.15em] font-bold uppercase text-[#1a1a1a] mb-3">Select Option</p>
+                <div className="mb-6">
+                  <p className="mb-3 font-nav text-[10px] font-bold uppercase tracking-[0.18em] text-foreground">Select Option</p>
                   <div className="flex flex-wrap gap-2.5">
                     {product.variations.map((opt) => (
                       <button
                         key={opt.id}
                         onClick={() => setSelectedOption(opt.name)}
-                        className={`px-8 py-2.5 font-body text-[13px] font-medium transition-colors border ${selectedOption === opt.name
-                          ? "bg-[#222222] border-[#222222] text-white"
-                          : "bg-white border-border text-[#222222] hover:border-[#222222]"
+                        className={`rounded-full border px-6 py-2.5 font-body text-sm font-semibold transition-colors ${selectedOption === opt.name
+                          ? "bg-primary border-primary text-primary-foreground"
+                          : "bg-background border-border text-foreground hover:border-primary"
                           }`}
                       >
                         {opt.name}
@@ -316,72 +352,98 @@ const ProductDetail = () => {
                 </div>
               )}
 
-              {/* Actions */}
-              <div className="flex flex-col gap-5 mb-12">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center border border-border">
+              <div className="mb-6 rounded-3xl border border-border bg-background p-5 shadow-sm">
+                <div className="mb-5 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
                     <button
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="w-12 h-12 flex items-center justify-center text-foreground hover:bg-secondary transition-colors"
-                      aria-label="Decrease quantity"
-                      disabled={!product.inStock || quantity <= 1}
+                      type="button"
+                      className="flex h-11 w-11 items-center justify-center rounded-full border border-border text-foreground transition hover:border-primary"
+                      aria-label="Add to wishlist"
                     >
-                      -
+                      <Heart size={18} />
                     </button>
-                    <span className="w-12 h-12 flex items-center justify-center font-display text-lg font-bold">
-                      {quantity}
-                    </span>
-                    <button
-                      onClick={() => {
-                        if (product.stockQuantity !== undefined) {
-                          setQuantity(Math.min(product.stockQuantity, quantity + 1));
-                        } else {
-                          setQuantity(quantity + 1);
-                        }
-                      }}
-                      className="w-12 h-12 flex items-center justify-center text-foreground hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      aria-label="Increase quantity"
-                      disabled={!product.inStock || (product.stockQuantity !== undefined && quantity >= product.stockQuantity)}
-                    >
-                      +
-                    </button>
+                    <div>
+                      <p className="font-nav text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                        Quantity
+                      </p>
+                      <p className="mt-1 font-body text-sm text-foreground">
+                        Select how many you need
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center overflow-hidden rounded-full border border-border">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="flex h-11 w-11 items-center justify-center text-foreground transition-colors hover:bg-secondary"
+                    aria-label="Decrease quantity"
+                    disabled={!product.inStock || quantity <= 1}
+                  >
+                    -
+                  </button>
+                  <span className="flex h-11 w-12 items-center justify-center font-display text-lg font-bold">
+                    {quantity}
+                  </span>
+                  <button
+                    onClick={() => {
+                      if (product.stockQuantity !== undefined) {
+                        setQuantity(Math.min(product.stockQuantity, quantity + 1));
+                      } else {
+                        setQuantity(quantity + 1);
+                      }
+                    }}
+                    className="flex h-11 w-11 items-center justify-center text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
+                    aria-label="Increase quantity"
+                    disabled={!product.inStock || (product.stockQuantity !== undefined && quantity >= product.stockQuantity)}
+                  >
+                    +
+                  </button>
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3">
+                <div className="grid gap-3">
                   <button
                     onClick={handleAdd}
                     disabled={!product.inStock}
-                    className={`w-full py-4 font-nav text-xs tracking-[0.2em] uppercase flex items-center justify-center gap-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${added
-                      ? "bg-[#ffb800] text-[#1a1a1a]"
-                      : "bg-[#222222] text-white hover:bg-black"
+                    className={`w-full rounded-full py-4 font-nav text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50 ${added
+                      ? "bg-[#ffb800] text-foreground"
+                      : "bg-primary text-primary-foreground hover:bg-primary/90"
                       }`}
                   >
                     <ShoppingBag size={15} strokeWidth={1.5} />
                     {added ? "Added ✓" : "Add to Cart"}
                   </button>
-                  <button
+                </div>
+
+                <button
                     onClick={handleBuyNow}
                     disabled={!product.inStock}
-                    className="w-full py-4 font-nav text-xs tracking-[0.2em] uppercase flex items-center justify-center transition-all bg-[#0a0a0a] text-white hover:bg-black/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="mt-3 flex w-full items-center justify-center rounded-full bg-foreground py-4 font-nav text-xs uppercase tracking-[0.2em] text-primary-foreground transition-all hover:bg-foreground/90 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Buy Now
                   </button>
-                </div>
-
-                {/* Short Description */}
-                {product.shortDescription && (
-                  <div className="mt-6 font-body text-sm text-muted-foreground leading-relaxed italic border-l-2 border-primary/20 pl-4 py-1">
-                    {product.shortDescription}
-                  </div>
-                )}
               </div>
 
-              {/* Separator */}
-              <hr className="border-border/60 mb-8" />
+              <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {trustBadges.map((badge) => (
+                  <div key={badge.title} className="flex gap-3 rounded-2xl border border-border/70 bg-card/40 p-4">
+                    <badge.icon className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                    <div>
+                      <p className="font-nav text-[10px] font-bold uppercase tracking-[0.18em] text-foreground">
+                        {badge.title}
+                      </p>
+                      <p className="mt-1 font-body text-xs text-muted-foreground">
+                        {badge.desc}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
 
-              {/* Details Grid (similar to Perfume Notes) */}
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-y-8 gap-x-6">
+              <div className="rounded-3xl border border-border/70 bg-card/40 p-5">
+                <h2 className="mb-4 font-nav text-[11px] font-bold uppercase tracking-[0.2em] text-foreground">
+                  Product Highlights
+                </h2>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-5">
                 {product.details && product.details.length > 0 ? (
                   product.details.map((detailStr, i) => {
                     // Try to parse out the WooCommerce "Name: Value" text safely
@@ -391,8 +453,8 @@ const ProductDetail = () => {
 
                     return (
                       <div key={i} className="flex flex-col gap-2 relative">
-                        <span className="font-nav text-[9px] tracking-[0.15em] font-bold uppercase text-[#c8a14d]">{label}</span>
-                        <span className="font-body text-xs text-[#222222] leading-relaxed pr-2">{value}</span>
+                        <span className="font-nav text-[9px] tracking-[0.15em] font-bold uppercase text-primary">{label}</span>
+                        <span className="font-body text-xs text-foreground leading-relaxed pr-2">{value}</span>
                       </div>
                     );
                   })
@@ -400,11 +462,12 @@ const ProductDetail = () => {
                   // Fallback content if Product object has no details map
                   <>
                     <div className="flex flex-col gap-2">
-                      <span className="font-nav text-[9px] tracking-[0.15em] font-bold uppercase text-[#c8a14d]">Material</span>
-                      <span className="font-body text-xs text-[#222222] leading-relaxed">{product.material || "Premium Quality"}</span>
+                      <span className="font-nav text-[9px] tracking-[0.15em] font-bold uppercase text-primary">Material</span>
+                      <span className="font-body text-xs text-foreground leading-relaxed">{product.material || "Premium Quality"}</span>
                     </div>
                   </>
                 )}
+              </div>
               </div>
 
             </motion.div>
