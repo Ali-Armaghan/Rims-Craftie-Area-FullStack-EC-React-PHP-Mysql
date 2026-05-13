@@ -2,6 +2,7 @@ import {
   LayoutDashboard,
   ShoppingBag,
   ShoppingCart,
+  Star,
   Percent,
   Activity,
   Users,
@@ -45,6 +46,11 @@ export const sidebarData: SidebarData = {
           title: 'Orders',
           url: '/orders',
           icon: ShoppingCart,
+        },
+        {
+          title: 'Reviews',
+          url: '/reviews',
+          icon: Star,
         },
         {
           title: 'ReSale',

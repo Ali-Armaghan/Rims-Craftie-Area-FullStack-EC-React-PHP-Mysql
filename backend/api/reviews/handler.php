@@ -10,13 +10,11 @@ switch ($_SERVER['REQUEST_METHOD']) {
     case 'GET':
         $product_id = isset($_GET['product_id']) ? $_GET['product_id'] : null;
 
-        if (!$product_id) {
-            http_response_code(400);
-            echo json_encode(["message" => "product_id is required."]);
-            break;
+        if ($product_id) {
+            echo json_encode($review->readByProduct($product_id));
+        } else {
+            echo json_encode($review->readAll());
         }
-
-        echo json_encode($review->readByProduct($product_id));
         break;
 
     case 'POST':
@@ -43,6 +41,48 @@ switch ($_SERVER['REQUEST_METHOD']) {
             http_response_code(503);
             echo json_encode(["message" => "Unable to create review."]);
         }
+        break;
+
+    case 'PUT':
+        $data = json_decode(file_get_contents("php://input"), true);
+
+        if (empty($data['id'])) {
+            http_response_code(400);
+            echo json_encode(["message" => "Review id is required."]);
+            break;
+        }
+
+        if (isset($data['status']) && count($data) <= 2) {
+            $updated = $review->updateStatus($data['id'], $data['status']);
+        } else {
+            if (
+                empty($data['product_id']) ||
+                empty($data['reviewer']) ||
+                empty($data['reviewer_email']) ||
+                empty($data['review']) ||
+                empty($data['rating'])
+            ) {
+                http_response_code(400);
+                echo json_encode(["message" => "Incomplete review data."]);
+                break;
+            }
+
+            $updated = $review->update($data['id'], $data);
+        }
+
+        echo json_encode(["success" => $updated]);
+        break;
+
+    case 'DELETE':
+        $id = isset($_GET['id']) ? $_GET['id'] : null;
+
+        if (!$id) {
+            http_response_code(400);
+            echo json_encode(["message" => "Review id is required."]);
+            break;
+        }
+
+        echo json_encode(["success" => $review->delete($id)]);
         break;
 
     default:
