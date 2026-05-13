@@ -19,9 +19,11 @@ export function ProductDeleteDialog() {
 
   const onDelete = async () => {
     try {
-      await apiClient.delete(`/products?id=${currentRow?.id}`)
+      await apiClient.delete('/products', {
+        params: { id: currentRow?.id },
+      })
       toast.success('Product deleted successfully')
-      queryClient.invalidateQueries({ queryKey: ['products'] })
+      await queryClient.invalidateQueries({ queryKey: ['products'] })
       setOpen(null)
     } catch {
       toast.error('Failed to delete product')

@@ -43,10 +43,26 @@ type Category = {
   name: string
 }
 
-export function ProductFormPage() {
+type ProductFormPageProps = {
+  productId?: string
+}
+
+function normalizeProduct(product: Product): Product {
+  return {
+    ...product,
+    category_id: Number(product.category_id),
+    price: Number(product.price),
+    stock: Number(product.stock),
+    images: Array.isArray(product.images) ? product.images : [],
+    is_active: Number(product.is_active),
+  }
+}
+
+export function ProductFormPage({ productId }: ProductFormPageProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [isSaving, setIsSaving] = useState(false)
+  const isEdit = Boolean(productId)
 
   const {
     data: categories = [],
@@ -59,6 +75,21 @@ export function ProductFormPage() {
       return response.data
     },
   })
+
+  const { data: products = [], isLoading: isProductLoading } = useQuery<
+    Product[]
+  >({
+    queryKey: ['products'],
+    enabled: isEdit,
+    queryFn: async () => {
+      const response = await apiClient.get('/products')
+      return response.data
+    },
+  })
+
+  const productToEdit = products.find(
+    (product) => String(product.id) === productId
+  )
 
   const form = useForm<Product>({
     resolver: zodResolver(productSchema),
@@ -75,21 +106,32 @@ export function ProductFormPage() {
   })
 
   useEffect(() => {
+    if (productToEdit) {
+      form.reset(normalizeProduct(productToEdit))
+      return
+    }
+
     if (categories.length && !form.getValues('category_id')) {
       form.setValue('category_id', Number(categories[0].id))
     }
-  }, [categories, form])
+  }, [categories, form, productToEdit])
 
   const onSubmit = async (data: Product) => {
     setIsSaving(true)
 
     try {
-      await apiClient.post('/products', data)
+      if (isEdit) {
+        await apiClient.put('/products', { ...data, id: Number(productId) })
+      } else {
+        await apiClient.post('/products', data)
+      }
       await queryClient.invalidateQueries({ queryKey: ['products'] })
-      toast.success('Product created successfully')
+      toast.success(
+        isEdit ? 'Product updated successfully' : 'Product created successfully'
+      )
       navigate({ to: '/products' })
     } catch {
-      toast.error('Failed to create product')
+      toast.error(isEdit ? 'Failed to update product' : 'Failed to create product')
     } finally {
       setIsSaving(false)
     }
@@ -107,32 +149,43 @@ export function ProductFormPage() {
 
       <Main>
         <div className='mx-auto w-full max-w-5xl'>
-        <div className='mb-4 flex items-center gap-3'>
-          <Button asChild variant='outline' size='sm'>
-            <Link to='/products'>
-              <ArrowLeft className='h-4 w-4' />
-              Back
-            </Link>
-          </Button>
-          <div>
-            <h2 className='text-2xl font-bold tracking-tight'>
-              Add Product
-            </h2>
-            <p className='text-muted-foreground'>
-              Create a new store product.
-            </p>
+          <div className='mb-4 flex items-center gap-3'>
+            <Button asChild variant='outline' size='sm'>
+              <Link to='/products'>
+                <ArrowLeft className='h-4 w-4' />
+                Back
+              </Link>
+            </Button>
+            <div>
+              <h2 className='text-2xl font-bold tracking-tight'>
+                {isEdit ? 'Edit Product' : 'Add Product'}
+              </h2>
+              <p className='text-muted-foreground'>
+                {isEdit
+                  ? 'Update product information.'
+                  : 'Create a new store product.'}
+              </p>
+            </div>
           </div>
-        </div>
 
-        <Card className='w-full'>
-          <CardHeader>
-            <CardTitle>Product Details</CardTitle>
-            <CardDescription>
-              Fill product information and save it to the backend.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
+          <Card className='w-full'>
+            <CardHeader>
+              <CardTitle>Product Details</CardTitle>
+              <CardDescription>
+                Fill product information and save it to the backend.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isProductLoading ? (
+                <div className='py-8 text-center text-muted-foreground'>
+                  Loading product...
+                </div>
+              ) : isEdit && !productToEdit ? (
+                <div className='py-8 text-center text-muted-foreground'>
+                  Product not found.
+                </div>
+              ) : (
+              <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
                 className='grid gap-4'
@@ -285,9 +338,10 @@ export function ProductFormPage() {
                   </Button>
                 </div>
               </form>
-            </Form>
-          </CardContent>
-        </Card>
+              </Form>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </Main>
     </>

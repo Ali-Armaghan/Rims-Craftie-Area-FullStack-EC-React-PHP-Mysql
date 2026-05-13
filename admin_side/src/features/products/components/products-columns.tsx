@@ -1,4 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table'
+import { Link } from '@tanstack/react-router'
 import { MoreHorizontal, Edit, Trash } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -26,13 +27,13 @@ function ProductRowActions({ product }: { product: Product }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end'>
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuItem
-          onClick={() => {
-            setCurrentRow(product)
-            setOpen('edit')
-          }}
-        >
-          <Edit className='mr-2 h-4 w-4' /> Edit
+        <DropdownMenuItem asChild>
+          <Link
+            to='/products/$productId/edit'
+            params={{ productId: String(product.id) }}
+          >
+            <Edit className='mr-2 h-4 w-4' /> Edit
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

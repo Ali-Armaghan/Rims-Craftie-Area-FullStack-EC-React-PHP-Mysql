@@ -22,7 +22,6 @@ import {
 } from '@tanstack/react-table'
 import { ProductsProvider } from './context/products-context'
 import { productsColumns } from './components/products-columns'
-import { ProductDialog } from './components/product-dialog'
 import { ProductDeleteDialog } from './components/product-delete-dialog'
 import apiClient from '@/lib/api-client'
 import type { Product } from './types'
@@ -118,7 +117,6 @@ function ProductsContent() {
         </div>
       </Main>
 
-      <ProductDialog />
       <ProductDeleteDialog />
     </>
   )
