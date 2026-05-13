@@ -53,7 +53,20 @@ CREATE TABLE IF NOT EXISTS products (
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
 );
 
--- 5. Orders Table
+-- 5. Product Reviews Table
+CREATE TABLE IF NOT EXISTS product_reviews (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    product_id INT NOT NULL,
+    reviewer VARCHAR(100) NOT NULL,
+    reviewer_email VARCHAR(150) NOT NULL,
+    review TEXT NOT NULL,
+    rating TINYINT NOT NULL,
+    status ENUM('approved', 'pending') DEFAULT 'approved',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+);
+
+-- 6. Orders Table
 CREATE TABLE IF NOT EXISTS orders (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
@@ -70,7 +83,7 @@ CREATE TABLE IF NOT EXISTS orders (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- 6. Order Items Table
+-- 7. Order Items Table
 CREATE TABLE IF NOT EXISTS order_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT,
@@ -83,7 +96,7 @@ CREATE TABLE IF NOT EXISTS order_items (
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
 );
 
--- 7. Payments Table
+-- 8. Payments Table
 CREATE TABLE IF NOT EXISTS payments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT,
@@ -98,7 +111,7 @@ CREATE TABLE IF NOT EXISTS payments (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- 8. ReSale Ledger (Balance History)
+-- 9. ReSale Ledger (Balance History)
 CREATE TABLE IF NOT EXISTS resale_ledger (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
@@ -111,7 +124,7 @@ CREATE TABLE IF NOT EXISTS resale_ledger (
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL
 );
 
--- 9. Visitor Sessions Table
+-- 10. Visitor Sessions Table
 CREATE TABLE IF NOT EXISTS visitor_sessions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     session_uuid VARCHAR(100) UNIQUE NOT NULL,
@@ -127,7 +140,7 @@ CREATE TABLE IF NOT EXISTS visitor_sessions (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- 10. Page Views Table
+-- 11. Page Views Table
 CREATE TABLE IF NOT EXISTS page_views (
     id INT AUTO_INCREMENT PRIMARY KEY,
     session_id INT,
@@ -138,7 +151,7 @@ CREATE TABLE IF NOT EXISTS page_views (
     FOREIGN KEY (session_id) REFERENCES visitor_sessions(id) ON DELETE CASCADE
 );
 
--- 11. Live Traffic Table (Lightweight Heartbeat)
+-- 12. Live Traffic Table (Lightweight Heartbeat)
 CREATE TABLE IF NOT EXISTS live_traffic (
     session_id INT PRIMARY KEY,
     last_ping_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -146,7 +159,7 @@ CREATE TABLE IF NOT EXISTS live_traffic (
     FOREIGN KEY (session_id) REFERENCES visitor_sessions(id) ON DELETE CASCADE
 );
 
--- 12. Settings Table
+-- 13. Settings Table
 CREATE TABLE IF NOT EXISTS settings (
     id INT AUTO_INCREMENT PRIMARY KEY,
     setting_key VARCHAR(50) UNIQUE NOT NULL,

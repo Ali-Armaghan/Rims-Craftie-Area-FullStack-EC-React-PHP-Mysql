@@ -221,14 +221,13 @@ export async function createOrder(orderData: OrderPayload) {
  */
 export async function fetchProductReviews(productId: string): Promise<ProductReview[]> {
     try {
-        const url = new URL(PROXY_URL, window.location.origin);
-        url.searchParams.append('endpoint', 'products/reviews');
-        url.searchParams.append('searchParams', new URLSearchParams({ product: productId }).toString());
-
-        const response = await fetch(url.toString(), {
+        const response = await fetch(
+            getBackendUrl('reviews', { product_id: productId }).toString(),
+            {
             method: 'GET',
             headers: { 'Accept': 'application/json' }
-        });
+            }
+        );
 
         if (!response.ok) {
             throw new Error(`Error fetching reviews: ${response.statusText}`);
@@ -247,10 +246,7 @@ export async function fetchProductReviews(productId: string): Promise<ProductRev
  */
 export async function submitProductReview(reviewData: { product_id: number; review: string; reviewer: string; reviewer_email: string; rating: number }) {
     try {
-        const url = new URL(PROXY_URL, window.location.origin);
-        url.searchParams.append('endpoint', 'products/reviews');
-
-        const response = await fetch(url.toString(), {
+        const response = await fetch(getBackendUrl('reviews').toString(), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
