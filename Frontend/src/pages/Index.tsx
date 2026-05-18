@@ -72,9 +72,9 @@ const Index = () => {
             <p className="font-nav text-[10px] tracking-[0.4em] uppercase text-primary mb-3">Curated for You</p>
             <h2 className="font-display text-3xl md:text-4xl text-foreground">Popular Pieces</h2>
           </motion.div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
             {isLoading ? (
-              [...Array(4)].map((_, i) => (
+              [...Array(5)].map((_, i) => (
                 <ProductCardSkeleton key={i} />
               ))
             ) : (

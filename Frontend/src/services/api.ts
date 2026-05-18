@@ -284,7 +284,7 @@ export async function fetchProduct(id: string): Promise<Product | null> {
 export async function fetchFeaturedProducts() {
     try {
         const products = await fetchProducts();
-        return products.slice(0, 4);
+        return products.slice(0, 5);
     } catch (error) {
         console.error("Failed to fetch featured products:", error);
         return [];
