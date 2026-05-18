@@ -1,10 +1,8 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
 import HeroSlider from "@/components/HeroSlider";
-import ProductCard from "@/components/ProductCard";
-import { useFeaturedProducts } from "@/hooks/useFeaturedProducts";
-import ProductCardSkeleton from "@/components/skeletons/ProductCardSkeleton";
+import HomeCategoryProductGrid from "@/components/HomeCategoryProductGrid";
+import { useHomeCategorySections } from "@/hooks/useHomeCategorySections";
 import hero1 from "@/assets/hero1.png";
 import hero2 from "@/assets/hero2.png";
 import hero3 from "@/assets/hero3.png";
@@ -28,7 +26,7 @@ const categorySlides = [
 const loopingCategorySlides = [...categorySlides, ...categorySlides, ...categorySlides];
 
 const Index = () => {
-  const { products: popular, isLoading } = useFeaturedProducts();
+  const { sections: homeSections, isLoading: homeSectionsLoading } = useHomeCategorySections();
 
   return (
     <>
@@ -60,44 +58,20 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Popular Products */}
-      <section className="w-full overflow-x-hidden py-16 md:py-20">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mb-8 px-3 text-center sm:px-4 md:mb-10 lg:px-5"
-        >
-          <p className="text-label mb-3">Curated for you</p>
-          <h2 className="font-display text-3xl md:text-4xl text-foreground">Popular Pieces</h2>
-        </motion.div>
-        <div className="w-full px-2 sm:px-3 lg:px-4">
-          <div className="grid w-full grid-cols-2 gap-1 sm:gap-1.5 lg:grid-cols-[repeat(5,minmax(0,1fr))] lg:gap-1.5">
-            {isLoading ? (
-              [...Array(5)].map((_, i) => (
-                <ProductCardSkeleton key={i} compact />
-              ))
-            ) : (
-              popular.map((p, i) => (
-                <ProductCard key={p.id} product={p} index={i} compact />
-              ))
-            )}
-          </div>
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="text-center mt-12"
-          >
-            <Link
-              to="/products"
-              className="inline-flex items-center gap-2 font-nav text-xs tracking-wide uppercase text-foreground border-b border-foreground pb-1 hover:text-primary hover:border-primary transition-colors"
-            >
-              View All Collections <ArrowRight size={14} />
-            </Link>
-          </motion.div>
-        </div>
-      </section>
+      <div className="w-full space-y-6 overflow-x-hidden pt-10 pb-4 md:space-y-8 md:pt-12 md:pb-6">
+        {homeSectionsLoading ? (
+          <HomeCategoryProductGrid title="Loading..." categoryName="" products={[]} isLoading />
+        ) : (
+          homeSections.map((section) => (
+            <HomeCategoryProductGrid
+              key={section.id}
+              title={section.name}
+              categoryName={section.name}
+              products={section.products}
+            />
+          ))
+        )}
+      </div>
 
       {/* Categories Banner */}
       <section className="py-20 bg-secondary/50">

@@ -5,6 +5,17 @@ class Category {
 
     public function __construct($db) {
         $this->conn = $db;
+        $this->ensureShowOnHomeColumn();
+    }
+
+    private function ensureShowOnHomeColumn() {
+        try {
+            $this->conn->query("SELECT show_on_home FROM " . $this->table_name . " LIMIT 1");
+        } catch (Exception $e) {
+            $this->conn->exec(
+                "ALTER TABLE " . $this->table_name . " ADD COLUMN show_on_home TINYINT(1) NOT NULL DEFAULT 0"
+            );
+        }
     }
 
     public function read() {
@@ -16,6 +27,37 @@ class Category {
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function readHomeSections($productLimit = 8) {
+        $query = "SELECT c.id, c.name, c.slug, c.show_on_home
+                  FROM " . $this->table_name . " c
+                  WHERE c.show_on_home = 1
+                  ORDER BY c.name ASC";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $limit = max(1, min((int)$productLimit, 24));
+        $productQuery = "SELECT p.*, c.name AS category_name,
+                                COALESCE(ROUND(AVG(r.rating), 1), 0) AS average_rating,
+                                COUNT(r.id) AS review_count
+                         FROM products p
+                         LEFT JOIN categories c ON p.category_id = c.id
+                         LEFT JOIN product_reviews r ON r.product_id = p.id AND r.status = 'approved'
+                         WHERE p.category_id = ? AND p.is_active = 1
+                         GROUP BY p.id
+                         ORDER BY p.created_at DESC
+                         LIMIT {$limit}";
+
+        $productStmt = $this->conn->prepare($productQuery);
+
+        foreach ($categories as &$category) {
+            $productStmt->execute([$category['id']]);
+            $category['products'] = $productStmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        return $categories;
     }
 
     public function readOne($id) {
@@ -35,13 +77,15 @@ class Category {
             : $this->makeSlug($name);
         $slug = $this->ensureUniqueSlug($slug);
         $parent_id = !empty($data['parent_id']) ? (int)$data['parent_id'] : null;
+        $show_on_home = !empty($data['show_on_home']) ? 1 : 0;
 
         $query = "INSERT INTO " . $this->table_name . "
-                  SET name=:name, slug=:slug, parent_id=:parent_id";
+                  SET name=:name, slug=:slug, parent_id=:parent_id, show_on_home=:show_on_home";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":name", $name);
         $stmt->bindParam(":slug", $slug);
         $stmt->bindParam(":parent_id", $parent_id, $parent_id === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
+        $stmt->bindParam(":show_on_home", $show_on_home, PDO::PARAM_INT);
 
         if ($stmt->execute()) {
             return $this->readOne($this->conn->lastInsertId());
@@ -62,18 +106,20 @@ class Category {
             : $this->makeSlug($name);
         $slug = $this->ensureUniqueSlug($slug, (int)$id);
         $parent_id = !empty($data['parent_id']) ? (int)$data['parent_id'] : null;
+        $show_on_home = !empty($data['show_on_home']) ? 1 : 0;
 
         if ($parent_id === (int)$id) {
             return false;
         }
 
         $query = "UPDATE " . $this->table_name . "
-                  SET name=:name, slug=:slug, parent_id=:parent_id
+                  SET name=:name, slug=:slug, parent_id=:parent_id, show_on_home=:show_on_home
                   WHERE id=:id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":name", $name);
         $stmt->bindParam(":slug", $slug);
         $stmt->bindParam(":parent_id", $parent_id, $parent_id === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
+        $stmt->bindParam(":show_on_home", $show_on_home, PDO::PARAM_INT);
         $stmt->bindParam(":id", $id, PDO::PARAM_INT);
 
         if ($stmt->execute()) {

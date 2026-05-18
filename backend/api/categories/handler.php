@@ -10,6 +10,12 @@ $data = json_decode(file_get_contents("php://input"), true);
 
 switch ($_SERVER['REQUEST_METHOD']) {
     case 'GET':
+        if (!empty($_GET['home'])) {
+            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 8;
+            echo json_encode($category->readHomeSections(max(1, min($limit, 24))));
+            break;
+        }
+
         if (!empty($_GET['id'])) {
             $item = $category->readOne($_GET['id']);
             if (!$item) {

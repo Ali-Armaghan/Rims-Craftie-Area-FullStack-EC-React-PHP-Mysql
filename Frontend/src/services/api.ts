@@ -291,6 +291,48 @@ export async function fetchFeaturedProducts() {
     }
 }
 
+export type HomeCategorySection = {
+    id: number;
+    name: string;
+    slug: string;
+    show_on_home: number;
+    products: Product[];
+};
+
+export async function fetchHomeCategorySections(limit = 8): Promise<HomeCategorySection[]> {
+    try {
+        const response = await fetch(
+            getBackendUrl('categories', { home: 1, limit }).toString(),
+            {
+                method: 'GET',
+                headers: { Accept: 'application/json' },
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(`Error fetching home categories: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        if (!Array.isArray(data)) {
+            return [];
+        }
+
+        return data.map((section: HomeCategorySection & { products: BackendProduct[] }) => ({
+            id: Number(section.id),
+            name: section.name,
+            slug: section.slug,
+            show_on_home: Number(section.show_on_home ?? 0),
+            products: Array.isArray(section.products)
+                ? section.products.map(mapBackendProduct)
+                : [],
+        }));
+    } catch (error) {
+        console.error('Failed to fetch home category sections:', error);
+        return [];
+    }
+}
+
 export async function fetchSaleCountdown(): Promise<SaleCountdownSettings> {
     try {
         const response = await fetch(getBackendUrl('admin/sale-countdown').toString(), {

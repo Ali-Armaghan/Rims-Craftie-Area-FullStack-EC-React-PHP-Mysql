@@ -1,12 +1,21 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import ProductCard from "@/components/ProductCard";
 import { useProducts } from "@/hooks/useProducts";
 import ProductCardSkeleton from "@/components/skeletons/ProductCardSkeleton";
 
 const Products = () => {
-  const [activeCategory, setActiveCategory] = useState("All");
+  const location = useLocation();
+  const categoryFromNav = (location.state as { category?: string } | null)?.category;
+  const [activeCategory, setActiveCategory] = useState(categoryFromNav ?? "All");
   const { products, categories, isLoading, error } = useProducts();
+
+  useEffect(() => {
+    if (categoryFromNav) {
+      setActiveCategory(categoryFromNav);
+    }
+  }, [categoryFromNav]);
 
   const filtered = activeCategory === "All" ? products : products.filter((p) => p.category === activeCategory);
 

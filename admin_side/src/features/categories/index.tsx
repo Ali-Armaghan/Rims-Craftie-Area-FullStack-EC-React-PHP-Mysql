@@ -33,6 +33,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
 import apiClient from '@/lib/api-client'
 
 type Category = {
@@ -42,6 +43,7 @@ type Category = {
   parent_id: number | null
   parent_name: string | null
   product_count: number
+  show_on_home: number | boolean
 }
 
 type CategoryForm = {
@@ -49,12 +51,14 @@ type CategoryForm = {
   name: string
   slug: string
   parent_id: string
+  show_on_home: boolean
 }
 
 const defaultForm: CategoryForm = {
   name: '',
   slug: '',
   parent_id: 'none',
+  show_on_home: false,
 }
 
 function slugify(value: string) {
@@ -91,6 +95,7 @@ function CategoryDialog({
         name: category.name,
         slug: category.slug,
         parent_id: category.parent_id ? String(category.parent_id) : 'none',
+        show_on_home: Boolean(Number(category.show_on_home)),
       })
       setSlugTouched(true)
     } else {
@@ -99,11 +104,11 @@ function CategoryDialog({
     }
   }, [open, category])
 
-  const updateField = (field: keyof CategoryForm, value: string) => {
+  const updateField = (field: keyof CategoryForm, value: string | boolean) => {
     setForm((current) => {
       const next = { ...current, [field]: value }
 
-      if (field === 'name' && !slugTouched) {
+      if (field === 'name' && typeof value === 'string' && !slugTouched) {
         next.slug = slugify(value)
       }
 
@@ -127,6 +132,7 @@ function CategoryDialog({
       name: form.name.trim(),
       slug: form.slug.trim() || slugify(form.name),
       parent_id: form.parent_id === 'none' ? null : Number(form.parent_id),
+      show_on_home: form.show_on_home,
     }
 
     try {
@@ -196,6 +202,24 @@ function CategoryDialog({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className='flex items-start gap-3 rounded-md border p-4'>
+            <Checkbox
+              id='show_on_home'
+              checked={form.show_on_home}
+              onCheckedChange={(checked) =>
+                updateField('show_on_home', checked === true)
+              }
+            />
+            <div className='grid gap-1 leading-none'>
+              <label htmlFor='show_on_home' className='text-sm font-medium'>
+                Show on home page
+              </label>
+              <p className='text-xs text-muted-foreground'>
+                Displays category name with up to 8 products on the storefront home page.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -291,6 +315,7 @@ export function Categories() {
                   <TableHead>Slug</TableHead>
                   <TableHead>Parent</TableHead>
                   <TableHead>Products</TableHead>
+                  <TableHead>Home page</TableHead>
                   <TableHead className='w-28 text-right'>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -308,6 +333,11 @@ export function Categories() {
                         {item.parent_name ?? '—'}
                       </TableCell>
                       <TableCell>{Number(item.product_count ?? 0)}</TableCell>
+                      <TableCell>
+                        <Badge variant={Number(item.show_on_home) ? 'default' : 'secondary'}>
+                          {Number(item.show_on_home) ? 'Visible' : 'Hidden'}
+                        </Badge>
+                      </TableCell>
                       <TableCell>
                         <div className='flex justify-end gap-2'>
                           <Button
@@ -330,7 +360,7 @@ export function Categories() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className='h-24 text-center'>
+                    <TableCell colSpan={6} className='h-24 text-center'>
                       No categories found.
                     </TableCell>
                   </TableRow>
