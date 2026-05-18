@@ -221,6 +221,7 @@ function mapBackendProduct(product: BackendProduct): Product {
         image,
         images: parsedImages.length ? parsedImages : [image],
         category: product.category_name || 'Uncategorized',
+        categoryId: product.category_id != null ? Number(product.category_id) : undefined,
         description: product.description || 'No description available',
         shortDescription: product.description || undefined,
         details: [],
@@ -296,9 +297,10 @@ export type StoreCategory = {
     name: string;
     slug: string;
     product_count?: number;
+    image?: string | null;
 };
 
-export async function fetchStoreCategories(limit = 4): Promise<StoreCategory[]> {
+export async function fetchStoreCategories(limit?: number): Promise<StoreCategory[]> {
     try {
         const response = await fetch(getBackendUrl('categories').toString(), {
             method: 'GET',
@@ -314,16 +316,25 @@ export async function fetchStoreCategories(limit = 4): Promise<StoreCategory[]> 
             return [];
         }
 
-        return data.slice(0, limit).map((category: StoreCategory) => ({
+        const mapped = data.map((category: StoreCategory & { image?: string | null }) => ({
             id: Number(category.id),
             name: category.name,
             slug: category.slug,
             product_count: Number(category.product_count ?? 0),
+            image: category.image ? resolveImageUrl(category.image) : null,
         }));
+
+        return typeof limit === 'number' ? mapped.slice(0, limit) : mapped;
     } catch (error) {
         console.error('Failed to fetch categories:', error);
         return [];
     }
+}
+
+export type MegaMenuCategory = StoreCategory;
+
+export async function fetchMegaMenuCategories(): Promise<MegaMenuCategory[]> {
+    return fetchStoreCategories();
 }
 
 export type HomeCategorySection = {

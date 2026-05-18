@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ChangeEvent } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Edit, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -45,6 +45,7 @@ type Category = {
   product_count: number
   show_on_home: number | boolean
   home_sort_order: number
+  image?: string | null
 }
 
 type CategoryForm = {
@@ -54,6 +55,7 @@ type CategoryForm = {
   parent_id: string
   show_on_home: boolean
   home_sort_order: string
+  image: string | null
 }
 
 const defaultForm: CategoryForm = {
@@ -62,6 +64,7 @@ const defaultForm: CategoryForm = {
   parent_id: 'none',
   show_on_home: false,
   home_sort_order: '0',
+  image: null,
 }
 
 function slugify(value: string) {
@@ -85,6 +88,8 @@ function CategoryDialog({
 }) {
   const queryClient = useQueryClient()
   const [form, setForm] = useState<CategoryForm>(defaultForm)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [slugTouched, setSlugTouched] = useState(false)
   const [saving, setSaving] = useState(false)
   const isEdit = Boolean(category)
@@ -100,13 +105,54 @@ function CategoryDialog({
         parent_id: category.parent_id ? String(category.parent_id) : 'none',
         show_on_home: Boolean(Number(category.show_on_home)),
         home_sort_order: String(category.home_sort_order ?? 0),
+        image: category.image ?? null,
       })
+      setImageFile(null)
+      setImagePreview(category.image ?? null)
       setSlugTouched(true)
     } else {
       setForm(defaultForm)
+      setImageFile(null)
+      setImagePreview(null)
       setSlugTouched(false)
     }
   }, [open, category])
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview?.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview)
+      }
+    }
+  }, [imagePreview])
+
+  const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    if (imagePreview?.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreview)
+    }
+
+    setImageFile(file)
+    setImagePreview(URL.createObjectURL(file))
+  }
+
+  const clearImage = () => {
+    if (imagePreview?.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreview)
+    }
+    setImageFile(null)
+    setImagePreview(null)
+    setForm((current) => ({ ...current, image: null }))
+  }
+
+  const uploadCategoryImage = async (file: File) => {
+    const formData = new FormData()
+    formData.append('image', file)
+    const response = await apiClient.post('/uploads/categories', formData)
+    return typeof response.data?.image === 'string' ? response.data.image : null
+  }
 
   const updateField = (field: keyof CategoryForm, value: string | boolean) => {
     setForm((current) => {
@@ -131,16 +177,27 @@ function CategoryDialog({
     }
 
     setSaving(true)
-    const payload = {
-      id: form.id,
-      name: form.name.trim(),
-      slug: form.slug.trim() || slugify(form.name),
-      parent_id: form.parent_id === 'none' ? null : Number(form.parent_id),
-      show_on_home: form.show_on_home,
-      home_sort_order: Number(form.home_sort_order) || 0,
-    }
 
     try {
+      let imageUrl = form.image
+      if (imageFile) {
+        imageUrl = await uploadCategoryImage(imageFile)
+        if (!imageUrl) {
+          toast.error('Failed to upload category image')
+          return
+        }
+      }
+
+      const payload = {
+        id: form.id,
+        name: form.name.trim(),
+        slug: form.slug.trim() || slugify(form.name),
+        parent_id: form.parent_id === 'none' ? null : Number(form.parent_id),
+        show_on_home: form.show_on_home,
+        home_sort_order: Number(form.home_sort_order) || 0,
+        image: imageUrl,
+      }
+
       if (isEdit) {
         await apiClient.put('/categories', payload)
         toast.success('Category updated')
@@ -149,6 +206,7 @@ function CategoryDialog({
         toast.success('Category created')
       }
       await queryClient.invalidateQueries({ queryKey: ['categories'] })
+      await queryClient.invalidateQueries({ queryKey: ['store-categories'] })
       onOpenChange(false)
     } catch {
       toast.error('Failed to save category')
@@ -187,6 +245,32 @@ function CategoryDialog({
               }}
               placeholder='e.g. handbags'
             />
+          </div>
+
+          <div className='grid gap-2'>
+            <label className='text-sm font-medium'>Menu image</label>
+            <p className='text-xs text-muted-foreground'>
+              Shown in the Collections dropdown on the storefront header.
+            </p>
+            {imagePreview ? (
+              <div className='relative w-full max-w-[140px]'>
+                <img
+                  src={imagePreview}
+                  alt='Category preview'
+                  className='aspect-square w-full border object-cover'
+                />
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  className='mt-2 w-full'
+                  onClick={clearImage}
+                >
+                  Remove image
+                </Button>
+              </div>
+            ) : null}
+            <Input type='file' accept='image/*' onChange={handleImageChange} />
           </div>
 
           <div className='grid gap-2'>
@@ -332,6 +416,7 @@ export function Categories() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className='w-16'>Image</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Slug</TableHead>
                   <TableHead>Parent</TableHead>
@@ -345,6 +430,17 @@ export function Categories() {
                 {categories.length ? (
                   categories.map((item) => (
                     <TableRow key={item.id}>
+                      <TableCell>
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            alt=''
+                            className='h-10 w-10 object-cover border'
+                          />
+                        ) : (
+                          <span className='text-xs text-muted-foreground'>—</span>
+                        )}
+                      </TableCell>
                       <TableCell className='font-medium'>{item.name}</TableCell>
                       <TableCell>
                         <Badge variant='outline' className='font-mono text-xs'>
@@ -385,7 +481,7 @@ export function Categories() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} className='h-24 text-center'>
+                    <TableCell colSpan={8} className='h-24 text-center'>
                       No categories found.
                     </TableCell>
                   </TableRow>

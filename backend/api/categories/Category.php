@@ -10,7 +10,7 @@ class Category {
 
     private function ensureCategoryColumns() {
         try {
-            $this->conn->query("SELECT show_on_home, home_sort_order FROM " . $this->table_name . " LIMIT 1");
+            $this->conn->query("SELECT show_on_home, home_sort_order, image FROM " . $this->table_name . " LIMIT 1");
         } catch (Exception $e) {
             try {
                 $this->conn->exec(
@@ -25,6 +25,45 @@ class Category {
                 );
             } catch (Exception $ignored) {
             }
+
+            try {
+                $this->conn->exec(
+                    "ALTER TABLE " . $this->table_name . " ADD COLUMN image VARCHAR(500) NULL DEFAULT NULL"
+                );
+            } catch (Exception $ignored) {
+            }
+        }
+    }
+
+    private function deleteLocalImage($imageUrl) {
+        if (!is_string($imageUrl) || trim($imageUrl) === '') {
+            return;
+        }
+
+        $path = parse_url($imageUrl, PHP_URL_PATH);
+        if (!$path || strpos($path, '/uploads/categories/') === false) {
+            return;
+        }
+
+        $fileName = basename($path);
+        if ($fileName === '' || $fileName === '.' || $fileName === '..') {
+            return;
+        }
+
+        $uploadDir = realpath(__DIR__ . '/../../uploads/categories');
+        if (!$uploadDir) {
+            return;
+        }
+
+        $filePath = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
+        $realFilePath = realpath($filePath);
+
+        if (
+            $realFilePath &&
+            strpos($realFilePath, $uploadDir) === 0 &&
+            is_file($realFilePath)
+        ) {
+            unlink($realFilePath);
         }
     }
 
@@ -89,16 +128,18 @@ class Category {
         $parent_id = !empty($data['parent_id']) ? (int)$data['parent_id'] : null;
         $show_on_home = !empty($data['show_on_home']) ? 1 : 0;
         $home_sort_order = isset($data['home_sort_order']) ? (int)$data['home_sort_order'] : 0;
+        $image = !empty($data['image']) ? trim($data['image']) : null;
 
         $query = "INSERT INTO " . $this->table_name . "
                   SET name=:name, slug=:slug, parent_id=:parent_id,
-                      show_on_home=:show_on_home, home_sort_order=:home_sort_order";
+                      show_on_home=:show_on_home, home_sort_order=:home_sort_order, image=:image";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":name", $name);
         $stmt->bindParam(":slug", $slug);
         $stmt->bindParam(":parent_id", $parent_id, $parent_id === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
         $stmt->bindParam(":show_on_home", $show_on_home, PDO::PARAM_INT);
         $stmt->bindParam(":home_sort_order", $home_sort_order, PDO::PARAM_INT);
+        $stmt->bindParam(":image", $image, $image === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
 
         if ($stmt->execute()) {
             return $this->readOne($this->conn->lastInsertId());
@@ -126,9 +167,17 @@ class Category {
             return false;
         }
 
+        $image = array_key_exists('image', $data)
+            ? (!empty($data['image']) ? trim($data['image']) : null)
+            : ($existing['image'] ?? null);
+
+        if (!empty($existing['image']) && $existing['image'] !== $image) {
+            $this->deleteLocalImage($existing['image']);
+        }
+
         $query = "UPDATE " . $this->table_name . "
                   SET name=:name, slug=:slug, parent_id=:parent_id,
-                      show_on_home=:show_on_home, home_sort_order=:home_sort_order
+                      show_on_home=:show_on_home, home_sort_order=:home_sort_order, image=:image
                   WHERE id=:id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":name", $name);
@@ -136,6 +185,7 @@ class Category {
         $stmt->bindParam(":parent_id", $parent_id, $parent_id === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
         $stmt->bindParam(":show_on_home", $show_on_home, PDO::PARAM_INT);
         $stmt->bindParam(":home_sort_order", $home_sort_order, PDO::PARAM_INT);
+        $stmt->bindParam(":image", $image, $image === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
         $stmt->bindParam(":id", $id, PDO::PARAM_INT);
 
         if ($stmt->execute()) {
@@ -158,6 +208,11 @@ class Category {
         $stmt->execute([$id]);
         if ((int)$stmt->fetchColumn() > 0) {
             return ['success' => false, 'message' => 'Reassign products before deleting this category.'];
+        }
+
+        $existing = $this->readOne($id);
+        if ($existing && !empty($existing['image'])) {
+            $this->deleteLocalImage($existing['image']);
         }
 
         $query = "DELETE FROM " . $this->table_name . " WHERE id = ?";

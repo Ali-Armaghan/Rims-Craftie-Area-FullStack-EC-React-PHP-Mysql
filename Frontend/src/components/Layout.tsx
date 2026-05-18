@@ -4,11 +4,14 @@ import { LayoutDashboard, ShoppingBag, Menu, X, Search, Heart, User } from "luci
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  CollectionsMegaMenuRoot,
+  CollectionsNavTrigger,
+  CollectionsMegaMenuPanel,
+  CollectionsMobileLinks,
+} from "@/components/CollectionsMegaMenu";
 
-const navLinks = [
-  { label: "Home", path: "/" },
-  { label: "Collections", path: "/products" },
-];
+const navLinks = [{ label: "Home", path: "/" }];
 
 const ANNOUNCEMENT_SLIDES = [
   "LIMITED TIME OFFER: 50% OFF ON ALL ORDERS",
@@ -69,9 +72,11 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       </div>
 
       {/* Navigation */}
+      <CollectionsMegaMenuRoot>
       <header
-        className={`sticky top-0 z-50 transition-all duration-500 ${scrolled ? "bg-background/95 backdrop-blur-md luxury-shadow" : "bg-background"
-          }`}
+        className={`sticky top-0 z-50 relative transition-all duration-500 ${
+          scrolled ? "bg-background/95 backdrop-blur-md luxury-shadow" : "bg-background"
+        }`}
       >
         {/* Top nav row */}
         <div className="border-b border-border/50">
@@ -83,6 +88,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                   {link.label}
                 </Link>
               ))}
+              <CollectionsNavTrigger />
             </nav>
 
             {/* Mobile menu button */}
@@ -146,7 +152,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </div>
           </div>
         </div>
+        <CollectionsMegaMenuPanel />
       </header>
+      </CollectionsMegaMenuRoot>
 
       {/* Mobile Menu */}
       <AnimatePresence>
@@ -179,6 +187,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     {link.label}
                   </Link>
                 ))}
+                <CollectionsMobileLinks onNavigate={() => setMobileOpen(false)} />
                 {user ? (
                   <>
                     <div className="font-body text-sm text-muted-foreground">

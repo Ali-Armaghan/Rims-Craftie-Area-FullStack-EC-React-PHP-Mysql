@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS categories (
     parent_id INT,
     show_on_home TINYINT(1) NOT NULL DEFAULT 0,
     home_sort_order INT NOT NULL DEFAULT 0,
+    image VARCHAR(500) NULL DEFAULT NULL,
     FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE SET NULL
 );
 
