@@ -5,24 +5,17 @@ import HomePromoBanners from "@/components/HomePromoBanners";
 import HomeCategoryProductGrid from "@/components/HomeCategoryProductGrid";
 import { useHomeCategorySections } from "@/hooks/useHomeCategorySections";
 import { useStoreCategories } from "@/hooks/useStoreCategories";
-import hero1 from "@/assets/hero1.png";
-import hero2 from "@/assets/hero2.png";
-import hero3 from "@/assets/hero3.png";
-import product1 from "@/assets/product1.png";
-import product2 from "@/assets/product2.png";
-import product3 from "@/assets/product3.png";
-import product4 from "@/assets/product4.png";
-import product5 from "@/assets/product5.png";
 
 const categorySlides = [
-  { title: "Under 1499", image: product1 },
-  { title: "Laptop Bags", image: hero1 },
-  { title: "Crossbody", image: product2 },
-  { title: "Shoulder Bags", image: product3 },
-  { title: "HandBags", image: hero2 },
-  { title: "All Bags", image: product4 },
-  { title: "Premium Bags", image: hero3 },
-  { title: "Under 2499", image: product5 },
+  { title: "Under 1499", image: "/sliders/1499_c11d8b4e-1884-4246-9895-4d0a5c7b016e-424378_300x300.avif" },
+  { title: "Laptop Bags", image: "/sliders/04-686859_300x300.avif" },
+  { title: "Crossbody", image: "/sliders/WhatsApp_Image_2022-01-03_at_6.33.11_PM-796593_300x300.avif" },
+  { title: "Shoulder Bags", image: "/sliders/WhatsApp_Image_2023-02-02_at_5.36.23_PM-771757_300x300.avif" },
+  { title: "HandBags", image: "/sliders/hand_6180fef1-bc90-403e-ab5e-a4b2de6ad0c8-680402_300x300.avif" },
+  { title: "All Bags", image: "/sliders/05-148189_300x300.avif" },
+  { title: "Premium Bags", image: "/sliders/7d58bbc0-6f73-4d0c-9897-dbdec998c397-909777_300x300.avif" },
+  { title: "Under 2499", image: "/sliders/13.1-619880_300x300.jpg" },
+  { title: "Sale", image: "/sliders/SAVE-20211214-065611-444689_300x300.avif" },
 ];
 
 const loopingCategorySlides = [...categorySlides, ...categorySlides, ...categorySlides];
