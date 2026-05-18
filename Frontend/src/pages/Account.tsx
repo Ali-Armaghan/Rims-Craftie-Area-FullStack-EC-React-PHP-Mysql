@@ -83,7 +83,7 @@ const Account = () => {
         className="grid gap-8 lg:grid-cols-[260px_1fr]"
       >
         <aside className="h-fit border border-border bg-background p-5">
-          <p className="font-nav text-[10px] tracking-[0.3em] uppercase text-primary mb-2">
+          <p className="font-nav text-xs tracking-wide uppercase text-primary mb-2">
             My Account
           </p>
           <h1 className="font-display text-2xl text-foreground mb-1">{user.name}</h1>
@@ -96,7 +96,7 @@ const Account = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-3 px-3 py-3 text-left font-nav text-xs tracking-[0.15em] uppercase transition-colors ${
+                  className={`flex items-center gap-3 px-3 py-3 text-left font-nav text-xs tracking-normal uppercase transition-colors ${
                     activeTab === tab.id
                       ? "bg-foreground text-primary-foreground"
                       : "text-foreground/70 hover:bg-secondary"
@@ -111,7 +111,7 @@ const Account = () => {
 
           <button
             onClick={logout}
-            className="mt-6 inline-flex w-full items-center justify-center gap-2 border border-border px-4 py-3 font-nav text-xs tracking-[0.2em] uppercase text-foreground"
+            className="mt-6 inline-flex w-full items-center justify-center gap-2 border border-border px-4 py-3 font-nav text-xs tracking-wide uppercase text-foreground"
           >
             <LogOut size={14} />
             Logout
@@ -122,7 +122,7 @@ const Account = () => {
           {activeTab === "overview" && (
             <div className="space-y-6">
               <div>
-                <p className="font-nav text-[10px] tracking-[0.4em] uppercase text-primary mb-3">
+                <p className="font-nav text-xs tracking-wide uppercase text-primary mb-3">
                   Dashboard
                 </p>
                 <h2 className="font-display text-4xl text-foreground">
@@ -132,19 +132,19 @@ const Account = () => {
 
               <div className="grid gap-4 md:grid-cols-4">
                 <div className="border border-border p-5">
-                  <p className="font-nav text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Orders</p>
+                  <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Orders</p>
                   <p className="font-display text-3xl text-foreground mt-2">{orders.length}</p>
                 </div>
                 <div className="border border-border p-5">
-                  <p className="font-nav text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Resale Code</p>
+                  <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Resale Code</p>
                   <p className="font-body text-lg text-foreground mt-2">{resale?.resale_code ?? user.resale_code ?? "N/A"}</p>
                 </div>
                 <div className="border border-border p-5">
-                  <p className="font-nav text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Balance</p>
+                  <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Balance</p>
                   <p className="font-display text-2xl text-foreground mt-2">{money(resale?.resale_balance ?? user.resale_balance)}</p>
                 </div>
                 <div className="border border-border p-5">
-                  <p className="font-nav text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Commission</p>
+                  <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Commission</p>
                   <p className="font-display text-2xl text-foreground mt-2">{money(resale?.total_commissions)}</p>
                 </div>
               </div>
@@ -212,11 +212,11 @@ const Account = () => {
                 ) : selectedOrder ? (
                   <div className="space-y-5">
                     <div>
-                      <p className="font-nav text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Status</p>
+                      <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Status</p>
                       <p className="font-body text-lg capitalize">{selectedOrder.status}</p>
                     </div>
                     <div>
-                      <p className="font-nav text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Shipping</p>
+                      <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Shipping</p>
                       <p className="font-body text-sm text-foreground">
                         {selectedShipping?.full_name}<br />
                         {selectedShipping?.address}<br />
@@ -224,7 +224,7 @@ const Account = () => {
                       </p>
                     </div>
                     <div>
-                      <p className="font-nav text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-2">Items</p>
+                      <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground mb-2">Items</p>
                       {selectedOrder.items?.map((item) => (
                         <div key={item.id} className="flex justify-between border-t border-border py-3 font-body text-sm">
                           <span>{item.product_name ?? item.name} x {item.quantity}</span>
@@ -249,19 +249,19 @@ const Account = () => {
               <h2 className="font-display text-3xl text-foreground">ReSale Dashboard</h2>
               <div className="grid gap-4 md:grid-cols-4">
                 <div className="border border-border p-5">
-                  <p className="font-nav text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Your Code</p>
+                  <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Your Code</p>
                   <p className="font-body text-xl text-foreground mt-2">{resale?.resale_code ?? user.resale_code}</p>
                 </div>
                 <div className="border border-border p-5">
-                  <p className="font-nav text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Referral Sales</p>
+                  <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Referral Sales</p>
                   <p className="font-display text-2xl text-foreground mt-2">{money(resale?.referral_sales)}</p>
                 </div>
                 <div className="border border-border p-5">
-                  <p className="font-nav text-[10px] tracking-[0.2em] uppercase text-muted-foreground">5% Commission</p>
+                  <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">5% Commission</p>
                   <p className="font-display text-2xl text-foreground mt-2">{money(resale?.total_commissions)}</p>
                 </div>
                 <div className="border border-border p-5">
-                  <p className="font-nav text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Earning Balance</p>
+                  <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Earning Balance</p>
                   <p className="font-display text-2xl text-foreground mt-2">{money(resale?.resale_balance ?? user.resale_balance)}</p>
                 </div>
               </div>

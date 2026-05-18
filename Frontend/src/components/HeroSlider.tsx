@@ -8,23 +8,23 @@ import hero3 from "@/assets/hero3.png";
 const slides = [
   {
     image: hero1,
-    subtitle: "New Collection 2026",
-    title: "Timeless\nElegance",
-    cta: "Discover Now",
+    subtitle: "New season 2026",
+    title: "Everyday\nHandbags",
+    cta: "Shop now",
     link: "/products",
   },
   {
     image: hero2,
-    subtitle: "Handcrafted Luxury",
-    title: "Golden\nHeritage",
-    cta: "Shop Bracelets",
+    subtitle: "Crossbody & shoulder",
+    title: "Style That\nMoves With You",
+    cta: "View bags",
     link: "/products",
   },
   {
     image: hero3,
-    subtitle: "Limited Edition",
-    title: "Diamond\nBrilliance",
-    cta: "View Collection",
+    subtitle: "Finishing touches",
+    title: "Accessories\nYou'll Love",
+    cta: "Explore all",
     link: "/products",
   },
 ];
@@ -68,15 +68,15 @@ const HeroSlider = () => {
             transition={{ duration: 0.8, delay: 0.3 }}
             className="max-w-xl"
           >
-            <p className="font-nav text-xs tracking-[0.4em] uppercase text-primary-foreground/80 mb-4">
+            <p className="font-body text-sm font-medium text-primary-foreground/90 mb-4">
               {slides[current].subtitle}
             </p>
-            <h2 className="font-display text-5xl md:text-7xl font-bold text-primary-foreground leading-[1.1] mb-8 whitespace-pre-line">
+            <h2 className="font-display text-4xl md:text-6xl font-semibold text-primary-foreground leading-[1.15] mb-8 whitespace-pre-line">
               {slides[current].title}
             </h2>
             <Link
               to={slides[current].link}
-              className="inline-block border border-primary-foreground/60 text-primary-foreground font-nav text-xs tracking-[0.3em] uppercase px-10 py-4 hover:bg-primary-foreground hover:text-foreground transition-all duration-500"
+              className="inline-block border border-primary-foreground/60 text-primary-foreground font-nav text-sm font-medium tracking-wide px-8 py-3 hover:bg-primary-foreground hover:text-foreground transition-all duration-500"
             >
               {slides[current].cta}
             </Link>

@@ -37,7 +37,7 @@ const Login = () => {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md border border-border bg-background p-8 shadow-sm"
       >
-        <p className="font-nav text-[10px] tracking-[0.4em] uppercase text-primary mb-3">
+        <p className="font-nav text-xs tracking-wide uppercase text-primary mb-3">
           Customer Account
         </p>
         <h1 className="font-display text-3xl text-foreground mb-2">Login</h1>
@@ -47,7 +47,7 @@ const Login = () => {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="font-nav text-[10px] tracking-[0.2em] uppercase text-foreground">
+            <label className="font-nav text-xs tracking-wide uppercase text-foreground">
               Email
             </label>
             <input
@@ -66,7 +66,7 @@ const Login = () => {
           </div>
 
           <div>
-            <label className="font-nav text-[10px] tracking-[0.2em] uppercase text-foreground">
+            <label className="font-nav text-xs tracking-wide uppercase text-foreground">
               Password
             </label>
             <input
@@ -87,7 +87,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-foreground py-4 font-nav text-xs tracking-[0.2em] uppercase text-primary-foreground transition-colors hover:bg-foreground/90 disabled:opacity-60"
+            className="w-full bg-foreground py-4 font-nav text-xs tracking-wide uppercase text-primary-foreground transition-colors hover:bg-foreground/90 disabled:opacity-60"
           >
             {isSubmitting ? "Signing In..." : "Login"}
           </button>

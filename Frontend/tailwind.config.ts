@@ -70,9 +70,9 @@ export default {
         },
       },
       fontFamily: {
-        display: ['"Playfair Display"', 'serif'],
-        body: ['"Cormorant Garamond"', 'serif'],
-        nav: ['"Marcellus"', 'serif'],
+        display: ['"Cormorant"', 'Georgia', 'serif'],
+        body: ['"DM Sans"', 'system-ui', 'sans-serif'],
+        nav: ['"DM Sans"', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -51,7 +51,7 @@ const Index = () => {
                     className="h-full w-full object-cover"
                   />
                 </div>
-                <span className="mt-3 font-nav text-xs text-foreground">
+                <span className="mt-3 font-body text-sm font-medium text-foreground">
                   {category.title}
                 </span>
               </Link>
@@ -69,7 +69,7 @@ const Index = () => {
             viewport={{ once: true }}
             className="text-center mb-14"
           >
-            <p className="font-nav text-[10px] tracking-[0.4em] uppercase text-primary mb-3">Curated for You</p>
+            <p className="text-label mb-3">Curated for you</p>
             <h2 className="font-display text-3xl md:text-4xl text-foreground">Popular Pieces</h2>
           </motion.div>
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
@@ -91,7 +91,7 @@ const Index = () => {
           >
             <Link
               to="/products"
-              className="inline-flex items-center gap-2 font-nav text-xs tracking-[0.2em] uppercase text-foreground border-b border-foreground pb-1 hover:text-primary hover:border-primary transition-colors"
+              className="inline-flex items-center gap-2 font-nav text-xs tracking-wide uppercase text-foreground border-b border-foreground pb-1 hover:text-primary hover:border-primary transition-colors"
             >
               View All Collections <ArrowRight size={14} />
             </Link>
@@ -108,11 +108,11 @@ const Index = () => {
             viewport={{ once: true }}
             className="text-center mb-14"
           >
-            <p className="font-nav text-[10px] tracking-[0.4em] uppercase text-primary mb-3">Explore</p>
+            <p className="text-label mb-3">Explore</p>
             <h2 className="font-display text-3xl md:text-4xl text-foreground">Shop by Category</h2>
           </motion.div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {["Rings", "Necklaces", "Earrings", "Bracelets"].map((cat, i) => (
+            {["Handbags", "Crossbody", "Shoulder Bags", "Accessories"].map((cat, i) => (
               <motion.div
                 key={cat}
                 initial={{ opacity: 0, y: 20 }}
@@ -141,11 +141,11 @@ const Index = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <p className="font-nav text-[10px] tracking-[0.4em] uppercase text-primary mb-8">Testimonials</p>
-            <blockquote className="font-display text-2xl md:text-3xl text-foreground italic leading-relaxed mb-8">
-              "The Éternité ring exceeded every expectation. The craftsmanship is extraordinary — a true heirloom piece that will be cherished for generations."
+            <p className="text-label mb-8">What our customers say</p>
+            <blockquote className="font-display text-2xl md:text-3xl text-foreground leading-relaxed mb-8">
+              &ldquo;Beautiful bag, exactly as shown. The leather feels premium and it goes with everything in my wardrobe.&rdquo;
             </blockquote>
-            <p className="font-nav text-xs tracking-[0.2em] uppercase text-muted-foreground">— Victoria S., London</p>
+            <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">— Victoria S., London</p>
           </motion.div>
         </div>
       </section>
@@ -158,16 +158,16 @@ const Index = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <p className="font-nav text-[10px] tracking-[0.4em] uppercase text-gold-light mb-4">The Art of Gifting</p>
+            <p className="text-label text-gold-light mb-4">Gift-ready packaging</p>
             <h2 className="font-display text-3xl md:text-4xl text-primary-foreground mb-6">
-              Make Every Moment Precious
+              Carry Style Every Day
             </h2>
-            <p className="font-body text-lg text-primary-foreground/60 max-w-lg mx-auto mb-8">
-              Each piece arrives in our signature gift box, ready to create unforgettable memories.
+            <p className="font-body text-base md:text-lg text-primary-foreground/75 max-w-lg mx-auto mb-8">
+              Thoughtful details, everyday practicality, and finishes made to last season after season.
             </p>
             <Link
               to="/products"
-              className="inline-block border border-primary-foreground/40 text-primary-foreground font-nav text-xs tracking-[0.3em] uppercase px-10 py-4 hover:bg-primary-foreground hover:text-foreground transition-all duration-500"
+              className="inline-block border border-primary-foreground/40 text-primary-foreground font-nav text-xs tracking-wide uppercase px-10 py-4 hover:bg-primary-foreground hover:text-foreground transition-all duration-500"
             >
               Shop Gift Guide
             </Link>

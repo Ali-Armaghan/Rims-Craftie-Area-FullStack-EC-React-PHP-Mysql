@@ -14,7 +14,7 @@ const Cart = () => {
         <p className="font-body text-lg text-muted-foreground mb-8">Discover our exquisite collections</p>
         <Link
           to="/products"
-          className="inline-block bg-foreground text-primary-foreground font-nav text-xs tracking-[0.2em] uppercase px-10 py-4 hover:bg-foreground/90 transition-colors"
+          className="inline-block bg-foreground text-primary-foreground font-nav text-xs tracking-wide uppercase px-10 py-4 hover:bg-foreground/90 transition-colors"
         >
           Continue Shopping
         </Link>
@@ -39,7 +39,7 @@ const Cart = () => {
                   <div className="flex justify-between">
                     <div>
                       <h3 className="font-display text-lg text-foreground">{item.product.name}</h3>
-                      <p className="font-nav text-[10px] tracking-wider text-muted-foreground">{item.product.material}</p>
+                      <p className="font-nav text-xs tracking-wider text-muted-foreground">{item.product.material}</p>
                     </div>
                     <button onClick={() => removeFromCart(item.product.id)} className="text-muted-foreground hover:text-foreground transition-colors">
                       <X size={18} />
@@ -64,7 +64,7 @@ const Cart = () => {
 
           {/* Summary */}
           <div className="bg-card p-8 h-fit">
-            <h3 className="font-nav text-xs tracking-[0.2em] uppercase text-foreground mb-6">Order Summary</h3>
+            <h3 className="font-nav text-xs tracking-wide uppercase text-foreground mb-6">Order Summary</h3>
             <div className="space-y-3 border-b border-border pb-6 mb-6">
               <div className="flex justify-between font-body text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
@@ -83,7 +83,7 @@ const Cart = () => {
             </div>
             <Link
               to="/checkout"
-              className="block w-full text-center bg-foreground text-primary-foreground py-4 font-nav text-xs tracking-[0.2em] uppercase hover:bg-foreground/90 transition-colors"
+              className="block w-full text-center bg-foreground text-primary-foreground py-4 font-nav text-xs tracking-wide uppercase hover:bg-foreground/90 transition-colors"
             >
               Proceed to Checkout
             </Link>

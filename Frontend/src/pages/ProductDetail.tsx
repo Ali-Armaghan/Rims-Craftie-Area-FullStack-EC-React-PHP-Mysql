@@ -252,7 +252,7 @@ const ProductDetail = () => {
                 className="relative aspect-square overflow-hidden rounded-[2rem] border border-border/70 bg-card/70 group"
               >
                 {discountBadge && (
-                  <span className="absolute left-5 top-5 z-10 rounded-full bg-primary px-4 py-2 font-nav text-[10px] font-bold uppercase tracking-[0.18em] text-primary-foreground shadow">
+                  <span className="absolute left-5 top-5 z-10 rounded-full bg-primary px-4 py-2 font-nav text-xs font-bold uppercase tracking-normal text-primary-foreground shadow">
                     {discountBadge}
                   </span>
                 )}
@@ -326,7 +326,7 @@ const ProductDetail = () => {
               className="flex flex-col"
             >
               <div className="mb-4 flex flex-wrap items-center gap-3">
-                <span className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1 font-nav text-[10px] font-bold uppercase tracking-[0.22em] text-primary">
+                <span className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1 font-nav text-xs font-bold uppercase tracking-normal text-primary">
                   {product.category || "LUXURY"}
                 </span>
                 <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 font-body text-xs font-semibold ${
@@ -381,7 +381,7 @@ const ProductDetail = () => {
                     <>
                       <div className="hidden min-h-24 w-px bg-border sm:block" />
                       <div className="flex min-w-0 flex-col justify-center py-1 sm:items-center sm:text-center">
-                        <p className="whitespace-nowrap font-nav text-xs font-bold uppercase leading-6 tracking-[0.2em] text-muted-foreground md:text-sm md:leading-7 md:tracking-[0.24em]">
+                        <p className="whitespace-nowrap font-nav text-xs font-bold uppercase leading-6 tracking-wide text-muted-foreground md:text-sm md:leading-7 md:tracking-normal">
                           Sales ends in
                         </p>
                         <p className="mt-0 flex items-center justify-center font-sans text-2xl font-semibold tabular-nums leading-[1.25] text-foreground md:text-4xl">
@@ -407,7 +407,7 @@ const ProductDetail = () => {
 
               {product.variations && product.variations.length > 0 && (
                 <div className="mb-6">
-                  <p className="mb-3 font-nav text-[10px] font-bold uppercase tracking-[0.18em] text-foreground">Select Option</p>
+                  <p className="mb-3 font-nav text-xs font-bold uppercase tracking-normal text-foreground">Select Option</p>
                   <div className="flex flex-wrap gap-2.5">
                     {product.variations.map((opt) => (
                       <button
@@ -436,7 +436,7 @@ const ProductDetail = () => {
                       <Heart size={18} />
                     </button>
                     <div>
-                      <p className="font-nav text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                      <p className="font-nav text-xs font-bold uppercase tracking-wide text-muted-foreground">
                         Quantity
                       </p>
                       <p className="mt-1 font-body text-sm text-foreground">
@@ -477,7 +477,7 @@ const ProductDetail = () => {
                   <button
                     onClick={handleAdd}
                     disabled={!product.inStock}
-                    className={`w-full rounded-full py-4 font-nav text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50 ${added
+                    className={`w-full rounded-full py-4 font-nav text-xs uppercase tracking-wide flex items-center justify-center gap-2 transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50 ${added
                       ? "bg-[#ffb800] text-foreground"
                       : "bg-primary text-primary-foreground hover:bg-primary/90"
                       }`}
@@ -490,7 +490,7 @@ const ProductDetail = () => {
                 <button
                     onClick={handleBuyNow}
                     disabled={!product.inStock}
-                  className="mt-3 flex w-full items-center justify-center rounded-full bg-foreground py-4 font-nav text-xs uppercase tracking-[0.2em] text-primary-foreground transition-all hover:bg-foreground/90 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="mt-3 flex w-full items-center justify-center rounded-full bg-foreground py-4 font-nav text-xs uppercase tracking-wide text-primary-foreground transition-all hover:bg-foreground/90 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Buy Now
                   </button>
@@ -501,7 +501,7 @@ const ProductDetail = () => {
                   <div key={badge.title} className="flex gap-3 rounded-2xl border border-border/70 bg-card/40 p-4">
                     <badge.icon className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                     <div>
-                      <p className="font-nav text-[10px] font-bold uppercase tracking-[0.18em] text-foreground">
+                      <p className="font-nav text-xs font-bold uppercase tracking-normal text-foreground">
                         {badge.title}
                       </p>
                       <p className="mt-1 font-body text-xs text-muted-foreground">
@@ -513,7 +513,7 @@ const ProductDetail = () => {
               </div>
 
               <div className="rounded-3xl border border-border/70 bg-card/40 p-5">
-                <h2 className="mb-4 font-nav text-[11px] font-bold uppercase tracking-[0.2em] text-foreground">
+                <h2 className="mb-4 font-nav text-[11px] font-bold uppercase tracking-wide text-foreground">
                   Product Highlights
                 </h2>
               <div className="grid grid-cols-2 gap-x-6 gap-y-5">
@@ -526,7 +526,7 @@ const ProductDetail = () => {
 
                     return (
                       <div key={i} className="flex flex-col gap-2 relative">
-                        <span className="font-nav text-[9px] tracking-[0.15em] font-bold uppercase text-primary">{label}</span>
+                        <span className="font-nav text-xs tracking-normal font-bold uppercase text-primary">{label}</span>
                         <span className="font-body text-xs text-foreground leading-relaxed pr-2">{value}</span>
                       </div>
                     );
@@ -535,7 +535,7 @@ const ProductDetail = () => {
                   // Fallback content if Product object has no details map
                   <>
                     <div className="flex flex-col gap-2">
-                      <span className="font-nav text-[9px] tracking-[0.15em] font-bold uppercase text-primary">Material</span>
+                      <span className="font-nav text-xs tracking-normal font-bold uppercase text-primary">Material</span>
                       <span className="font-body text-xs text-foreground leading-relaxed">{product.material || "Premium Quality"}</span>
                     </div>
                   </>
@@ -573,7 +573,7 @@ const ProductDetail = () => {
                     <div key={rev.id} className="border-b border-border/40 pb-6 last:border-0">
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-nav text-xs font-bold tracking-wider uppercase text-foreground">{rev.reviewer}</span>
-                        <span className="font-body text-[10px] text-muted-foreground">{new Date(rev.date_created).toLocaleDateString()}</span>
+                        <span className="font-body text-xs text-muted-foreground">{new Date(rev.date_created).toLocaleDateString()}</span>
                       </div>
                       <div className="flex text-[#ffb800] mb-3">
                         {[...Array(5)].map((_, i) => (
@@ -591,10 +591,10 @@ const ProductDetail = () => {
 
             {/* Right: Add Review */}
             <div className="lg:col-span-5 bg-card/30 p-8 rounded-xl border border-border/40">
-              <h3 className="font-nav text-xs tracking-[0.2em] uppercase text-foreground mb-6">Write a Review</h3>
+              <h3 className="font-nav text-xs tracking-wide uppercase text-foreground mb-6">Write a Review</h3>
               <form onSubmit={handleReviewSubmit} className="space-y-4">
                 <div>
-                  <label className="block font-nav text-[10px] tracking-wider uppercase text-muted-foreground mb-2">Rating</label>
+                  <label className="block font-nav text-xs tracking-wider uppercase text-muted-foreground mb-2">Rating</label>
                   <div className="flex gap-2">
                     {[1, 2, 3, 4, 5].map((num) => (
                       <button
@@ -640,7 +640,7 @@ const ProductDetail = () => {
                 <button
                   type="submit"
                   disabled={submitReviewMutation.isPending}
-                  className="w-full bg-foreground text-primary-foreground py-4 font-nav text-[10px] tracking-[0.2em] uppercase hover:bg-foreground/90 transition-colors disabled:opacity-50"
+                  className="w-full bg-foreground text-primary-foreground py-4 font-nav text-xs tracking-wide uppercase hover:bg-foreground/90 transition-colors disabled:opacity-50"
                 >
                   {submitReviewMutation.isPending ? "Submitting..." : "Submit Review"}
                 </button>

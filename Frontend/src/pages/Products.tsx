@@ -16,8 +16,8 @@ const Products = () => {
       <section className="py-16 text-center border-b border-border">
         <div className="container">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <p className="font-nav text-[10px] tracking-[0.4em] uppercase text-primary mb-3">Our Collections</p>
-            <h1 className="font-display text-4xl md:text-5xl text-foreground mb-8">Fine Jewellery</h1>
+            <p className="text-label mb-3">Our collections</p>
+            <h1 className="font-display text-4xl md:text-5xl text-foreground mb-8">Bags &amp; Accessories</h1>
           </motion.div>
           {/* Category filters */}
           <div className="flex flex-wrap justify-center gap-4">
@@ -25,7 +25,7 @@ const Products = () => {
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`font-nav text-[10px] tracking-[0.2em] uppercase px-5 py-2 border transition-all duration-300 ${activeCategory === cat
+                className={`font-nav text-xs tracking-wide uppercase px-5 py-2 border transition-all duration-300 ${activeCategory === cat
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border text-muted-foreground hover:border-primary hover:text-primary"
                   }`}

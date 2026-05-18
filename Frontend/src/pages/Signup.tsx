@@ -56,7 +56,7 @@ const Signup = () => {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-xl border border-border bg-background p-8 shadow-sm"
       >
-        <p className="font-nav text-[10px] tracking-[0.4em] uppercase text-primary mb-3">
+        <p className="font-nav text-xs tracking-wide uppercase text-primary mb-3">
           Join D Benza
         </p>
         <h1 className="font-display text-3xl text-foreground mb-2">
@@ -68,7 +68,7 @@ const Signup = () => {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="font-nav text-[10px] tracking-[0.2em] uppercase text-foreground">
+            <label className="font-nav text-xs tracking-wide uppercase text-foreground">
               Full Name
             </label>
             <input
@@ -82,7 +82,7 @@ const Signup = () => {
 
           <div className="grid gap-5 md:grid-cols-2">
             <div>
-              <label className="font-nav text-[10px] tracking-[0.2em] uppercase text-foreground">
+              <label className="font-nav text-xs tracking-wide uppercase text-foreground">
                 Email
               </label>
               <input
@@ -95,7 +95,7 @@ const Signup = () => {
               />
             </div>
             <div>
-              <label className="font-nav text-[10px] tracking-[0.2em] uppercase text-foreground">
+              <label className="font-nav text-xs tracking-wide uppercase text-foreground">
                 Phone
               </label>
               <input
@@ -109,7 +109,7 @@ const Signup = () => {
 
           <div className="grid gap-5 md:grid-cols-2">
             <div>
-              <label className="font-nav text-[10px] tracking-[0.2em] uppercase text-foreground">
+              <label className="font-nav text-xs tracking-wide uppercase text-foreground">
                 Password
               </label>
               <input
@@ -123,7 +123,7 @@ const Signup = () => {
               />
             </div>
             <div>
-              <label className="font-nav text-[10px] tracking-[0.2em] uppercase text-foreground">
+              <label className="font-nav text-xs tracking-wide uppercase text-foreground">
                 Confirm Password
               </label>
               <input
@@ -141,7 +141,7 @@ const Signup = () => {
           </div>
 
           <div>
-            <label className="font-nav text-[10px] tracking-[0.2em] uppercase text-foreground">
+            <label className="font-nav text-xs tracking-wide uppercase text-foreground">
               Referral Code
             </label>
             <input
@@ -157,7 +157,7 @@ const Signup = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-foreground py-4 font-nav text-xs tracking-[0.2em] uppercase text-primary-foreground transition-colors hover:bg-foreground/90 disabled:opacity-60"
+            className="w-full bg-foreground py-4 font-nav text-xs tracking-wide uppercase text-primary-foreground transition-colors hover:bg-foreground/90 disabled:opacity-60"
           >
             {isSubmitting ? "Creating..." : "Create Account"}
           </button>

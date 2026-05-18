@@ -28,7 +28,7 @@ const ProductCard = ({ product, index = 0 }: { product: Product; index?: number 
         </Link>
       </div>
       <Link to={`/product/${product.id}`}>
-        <h3 className="mb-2 min-h-6 font-display text-base font-semibold uppercase tracking-[0.18em] text-foreground md:text-lg">
+        <h3 className="mb-2 min-h-6 font-display text-lg font-semibold leading-snug text-foreground md:text-xl">
           {product.name}
         </h3>
         {reviewCount > 0 ? (
@@ -50,7 +50,7 @@ const ProductCard = ({ product, index = 0 }: { product: Product; index?: number 
           </div>
         )}
         <div className="flex items-end justify-center gap-2">
-          <span className="font-nav text-base font-bold tracking-wide text-foreground md:text-lg">
+          <span className="font-body text-base font-semibold text-foreground md:text-lg">
             Rs. {product.price.toLocaleString()}
           </span>
         </div>

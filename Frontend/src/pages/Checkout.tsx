@@ -92,7 +92,7 @@ const Checkout = () => {
           <p className="font-body text-lg text-muted-foreground mb-8">Your order has been placed successfully.</p>
           <Link
             to="/"
-            className="inline-block bg-foreground text-primary-foreground font-nav text-xs tracking-[0.2em] uppercase px-10 py-4"
+            className="inline-block bg-foreground text-primary-foreground font-nav text-xs tracking-wide uppercase px-10 py-4"
           >
             Return Home
           </Link>
@@ -121,7 +121,7 @@ const Checkout = () => {
         </p>
         <Link
           to="/login"
-          className="inline-block bg-foreground text-primary-foreground font-nav text-xs tracking-[0.2em] uppercase px-10 py-4"
+          className="inline-block bg-foreground text-primary-foreground font-nav text-xs tracking-wide uppercase px-10 py-4"
         >
           Login to Checkout
         </Link>
@@ -131,7 +131,7 @@ const Checkout = () => {
 
   return (
     <section className="container py-16">
-      <Link to="/cart" className="inline-flex items-center gap-2 font-nav text-xs tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground transition-colors mb-8">
+      <Link to="/cart" className="inline-flex items-center gap-2 font-nav text-xs tracking-normal uppercase text-muted-foreground hover:text-foreground transition-colors mb-8">
         <ArrowLeft size={14} /> Back to Bag
       </Link>
 
@@ -142,7 +142,7 @@ const Checkout = () => {
           {/* Form */}
           <div className="space-y-8">
             <div>
-              <h3 className="font-nav text-xs tracking-[0.2em] uppercase text-foreground mb-4">Contact Information</h3>
+              <h3 className="font-nav text-xs tracking-wide uppercase text-foreground mb-4">Contact Information</h3>
               <div className="space-y-4">
                 <input type="text" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="Contact Number (Required)" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
                 <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="Email Address (Optional)" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
@@ -150,7 +150,7 @@ const Checkout = () => {
             </div>
 
             <div>
-              <h3 className="font-nav text-xs tracking-[0.2em] uppercase text-foreground mb-4">Shipping Address</h3>
+              <h3 className="font-nav text-xs tracking-wide uppercase text-foreground mb-4">Shipping Address</h3>
               <div className="space-y-4">
                 <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange} placeholder="Full Name" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
                 <input type="text" name="address" value={formData.address} onChange={handleInputChange} placeholder="Address" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
@@ -164,7 +164,7 @@ const Checkout = () => {
             </div>
 
             <div>
-              <h3 className="font-nav text-xs tracking-[0.2em] uppercase text-foreground mb-4">Payment Method</h3>
+              <h3 className="font-nav text-xs tracking-wide uppercase text-foreground mb-4">Payment Method</h3>
               <div className="bg-secondary/50 p-6 rounded-md border border-border">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-4 h-4 rounded-full border-4 border-foreground bg-background"></div>
@@ -179,7 +179,7 @@ const Checkout = () => {
             <button
               onClick={handlePlaceOrder}
               disabled={isSubmitting}
-              className="w-full bg-foreground text-primary-foreground py-4 font-nav text-xs tracking-[0.2em] uppercase flex items-center justify-center gap-2 hover:bg-foreground/90 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full bg-foreground text-primary-foreground py-4 font-nav text-xs tracking-wide uppercase flex items-center justify-center gap-2 hover:bg-foreground/90 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>
@@ -195,7 +195,7 @@ const Checkout = () => {
 
           {/* Order Summary */}
           <div className="bg-card p-8 h-fit">
-            <h3 className="font-nav text-xs tracking-[0.2em] uppercase text-foreground mb-6">Your Order</h3>
+            <h3 className="font-nav text-xs tracking-wide uppercase text-foreground mb-6">Your Order</h3>
             <div className="space-y-4 border-b border-border pb-6 mb-6">
               {items.map((item) => (
                 <div key={item.product.id} className="flex gap-4">

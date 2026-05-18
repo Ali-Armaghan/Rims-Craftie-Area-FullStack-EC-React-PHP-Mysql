@@ -32,8 +32,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     <div className="min-h-screen flex flex-col">
       {/* Announcement Bar */}
       <div className="bg-foreground py-2 text-center">
-        <p className="font-nav text-xs tracking-[0.3em] uppercase text-primary-foreground">
-          Free Shipping On All Orders
+        <p className="font-nav text-sm font-medium tracking-wide text-primary-foreground">
+          Free shipping on all orders
         </p>
       </div>
 
@@ -62,11 +62,11 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             {/* Center Logo */}
             <Link to="/" className="absolute left-1/2 -translate-x-1/2">
               <div className="text-center">
-                <h1 className="font-display text-2xl md:text-3xl font-semibold tracking-wider text-foreground">
+                <h1 className="font-display text-2xl md:text-3xl font-semibold text-foreground">
                   D BENZA
                 </h1>
-                <p className="font-nav text-[9px] tracking-[0.4em] text-muted-foreground -mt-0.5">
-                  FINE JEWELLERY
+                <p className="font-nav text-xs tracking-wide text-muted-foreground -mt-0.5">
+                  Bags &amp; Accessories
                 </p>
               </div>
             </Link>
@@ -92,7 +92,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               </Link>
               {user ? (
                 <div className="flex items-center gap-3">
-                  <span className="font-nav text-[10px] tracking-[0.15em] uppercase text-foreground/70">
+                  <span className="font-nav text-xs tracking-normal uppercase text-foreground/70">
                     {user.name}
                   </span>
                   <Link
@@ -143,7 +143,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                   <Link
                     key={link.label}
                     to={link.path}
-                    className="font-nav text-lg tracking-[0.2em] uppercase text-foreground/80 hover:text-foreground transition-colors"
+                    className="font-nav text-lg tracking-wide uppercase text-foreground/80 hover:text-foreground transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -155,13 +155,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     </div>
                     <Link
                       to="/account"
-                      className="font-nav text-lg tracking-[0.2em] uppercase text-foreground/80 hover:text-foreground transition-colors"
+                      className="font-nav text-lg tracking-wide uppercase text-foreground/80 hover:text-foreground transition-colors"
                     >
                       Dashboard
                     </Link>
                     <button
                       onClick={logout}
-                      className="text-left font-nav text-lg tracking-[0.2em] uppercase text-foreground/80 hover:text-foreground transition-colors"
+                      className="text-left font-nav text-lg tracking-wide uppercase text-foreground/80 hover:text-foreground transition-colors"
                     >
                       Logout
                     </button>
@@ -170,13 +170,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                   <>
                     <Link
                       to="/login"
-                      className="font-nav text-lg tracking-[0.2em] uppercase text-foreground/80 hover:text-foreground transition-colors"
+                      className="font-nav text-lg tracking-wide uppercase text-foreground/80 hover:text-foreground transition-colors"
                     >
                       Login
                     </Link>
                     <Link
                       to="/signup"
-                      className="font-nav text-lg tracking-[0.2em] uppercase text-foreground/80 hover:text-foreground transition-colors"
+                      className="font-nav text-lg tracking-wide uppercase text-foreground/80 hover:text-foreground transition-colors"
                     >
                       Sign Up
                     </Link>
@@ -197,12 +197,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
             <div>
               <h3 className="font-display text-xl mb-4">D Benze</h3>
-              <p className="font-body text-sm text-primary-foreground/60 leading-relaxed">
-                Crafting timeless pieces since 1987. Each creation is a testament to our dedication to exceptional artistry.
+              <p className="font-body text-sm text-primary-foreground/70 leading-relaxed">
+                Stylish handbags and accessories for every occasion — quality you can see and feel.
               </p>
             </div>
             <div>
-              <h4 className="font-nav text-xs tracking-[0.2em] uppercase mb-4">Quick Links</h4>
+              <h4 className="font-nav text-xs tracking-wide uppercase mb-4">Quick Links</h4>
               <div className="flex flex-col gap-2">
                 {["New Arrivals", "Bestsellers", "Gift Guide", "Care Guide"].map((l) => (
                   <span key={l} className="font-body text-sm text-primary-foreground/60 hover:text-primary-foreground cursor-pointer transition-colors">{l}</span>
@@ -210,7 +210,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               </div>
             </div>
             <div>
-              <h4 className="font-nav text-xs tracking-[0.2em] uppercase mb-4">Customer Care</h4>
+              <h4 className="font-nav text-xs tracking-wide uppercase mb-4">Customer Care</h4>
               <div className="flex flex-col gap-2">
                 {["Shipping & Returns", "Size Guide", "FAQs", "Book Appointment"].map((l) => (
                   <span key={l} className="font-body text-sm text-primary-foreground/60 hover:text-primary-foreground cursor-pointer transition-colors">{l}</span>
@@ -218,7 +218,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               </div>
             </div>
             <div>
-              <h4 className="font-nav text-xs tracking-[0.2em] uppercase mb-4">Newsletter</h4>
+              <h4 className="font-nav text-xs tracking-wide uppercase mb-4">Newsletter</h4>
               <p className="font-body text-sm text-primary-foreground/60 mb-4">Be the first to discover new collections.</p>
               <div className="flex">
                 <input
@@ -233,7 +233,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </div>
           </div>
           <div className="border-t border-primary-foreground/10 mt-12 pt-8 text-center">
-            <p className="font-body text-xs text-primary-foreground/40">© 2026 D Benze Fine Jewellery. All rights reserved.</p>
+            <p className="font-body text-xs text-primary-foreground/50">© 2026 D Benza Bags &amp; Accessories. All rights reserved.</p>
           </div>
         </div>
       </footer>
