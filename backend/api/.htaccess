@@ -1,15 +1,16 @@
-# API router — must live in public_html/backend/api/
+# Hostinger / LiteSpeed — keep this file inside public_html/backend/api/
 DirectoryIndex index.php
+
+# Authorization header (do NOT use RewriteRule .* here — causes 403 on LiteSpeed)
+<IfModule mod_setenvif.c>
+  SetEnvIf Authorization "(.+)" HTTP_AUTHORIZATION=$1
+</IfModule>
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
-  # If API is in a subfolder and routes 404, uncomment and set your path:
+  # If /backend/api/products returns 404, uncomment ONE line for your path:
   # RewriteBase /backend/api/
-
-  # Pass Authorization header to PHP (Bearer / JWT)
-  RewriteCond %{HTTP:Authorization} .
-  RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d

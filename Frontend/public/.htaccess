@@ -1,18 +1,17 @@
-# Storefront (React SPA) — copy to public_html root with index.html + assets/
-DirectoryIndex index.html
+# Hostinger / LiteSpeed — put in public_html WITH index.html (from npm run build)
+DirectoryIndex index.html index.php
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
-  RewriteBase /
 
-  # Do not rewrite backend API or uploaded images
+  # API + uploads: do not send to React
   RewriteRule ^backend/ - [L]
 
-  # Serve real files and folders as-is
+  # Existing files/folders
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
-  # All other routes → React
-  RewriteRule ^ index.html [L]
+  # React SPA (only if index.html exists in this folder)
+  RewriteRule . /index.html [L]
 </IfModule>
