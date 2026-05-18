@@ -63,7 +63,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             <Link to="/" className="absolute left-1/2 -translate-x-1/2">
               <div className="text-center">
                 <h1 className="font-display text-2xl md:text-3xl font-semibold text-foreground">
-                  D BENZA
+                  ATEEQO
                 </h1>
                 <p className="font-nav text-xs tracking-wide text-muted-foreground -mt-0.5">
                   Bags &amp; Accessories
@@ -196,7 +196,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         <div className="container py-16">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
             <div>
-              <h3 className="font-display text-xl mb-4">D Benze</h3>
+              <h3 className="font-display text-xl mb-4">Ateeqo</h3>
               <p className="font-body text-sm text-primary-foreground/70 leading-relaxed">
                 Stylish handbags and accessories for every occasion — quality you can see and feel.
               </p>
@@ -233,7 +233,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </div>
           </div>
           <div className="border-t border-primary-foreground/10 mt-12 pt-8 text-center">
-            <p className="font-body text-xs text-primary-foreground/50">© 2026 D Benza Bags &amp; Accessories. All rights reserved.</p>
+            <p className="font-body text-xs text-primary-foreground/50">© 2026 Ateeqo Bags &amp; Accessories. All rights reserved.</p>
           </div>
         </div>
       </footer>

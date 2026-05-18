@@ -8,14 +8,14 @@ import { useStoreCategories } from "@/hooks/useStoreCategories";
 
 const categorySlides = [
   { title: "Under 1499", image: "/sliders/1499_c11d8b4e-1884-4246-9895-4d0a5c7b016e-424378_300x300.avif" },
-  { title: "Laptop Bags", image: "/sliders/04-686859_300x300.avif" },
-  { title: "Crossbody", image: "/sliders/WhatsApp_Image_2022-01-03_at_6.33.11_PM-796593_300x300.avif" },
-  { title: "Shoulder Bags", image: "/sliders/WhatsApp_Image_2023-02-02_at_5.36.23_PM-771757_300x300.avif" },
+  { title: "Under 1999", image: "/sliders/04-686859_300x300.avif" },
+  { title: "Under 2499", image: "/sliders/05-148189_300x300.avif" },
+  { title: "Laptop Bags", image: "/sliders/13.1-619880_300x300.jpg" },
+  { title: "Shoulder Bags", image: "/sliders/7d58bbc0-6f73-4d0c-9897-dbdec998c397-909777_300x300.avif" },
   { title: "HandBags", image: "/sliders/hand_6180fef1-bc90-403e-ab5e-a4b2de6ad0c8-680402_300x300.avif" },
-  { title: "All Bags", image: "/sliders/05-148189_300x300.avif" },
-  { title: "Premium Bags", image: "/sliders/7d58bbc0-6f73-4d0c-9897-dbdec998c397-909777_300x300.avif" },
-  { title: "Under 2499", image: "/sliders/13.1-619880_300x300.jpg" },
-  { title: "Sale", image: "/sliders/SAVE-20211214-065611-444689_300x300.avif" },
+  { title: "Crossbody", image: "/sliders/SAVE-20211214-065611-444689_300x300.avif" },
+  { title: "All Bags", image: "/sliders/WhatsApp_Image_2022-01-03_at_6.33.11_PM-796593_300x300.avif" },
+  { title: "Premium Bags", image: "/sliders/WhatsApp_Image_2023-02-02_at_5.36.23_PM-771757_300x300.avif" },
 ];
 
 const loopingCategorySlides = [...categorySlides, ...categorySlides, ...categorySlides];

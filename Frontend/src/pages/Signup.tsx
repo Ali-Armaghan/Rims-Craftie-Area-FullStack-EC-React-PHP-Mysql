@@ -57,7 +57,7 @@ const Signup = () => {
         className="w-full max-w-xl border border-border bg-background p-8 shadow-sm"
       >
         <p className="font-nav text-xs tracking-wide uppercase text-primary mb-3">
-          Join D Benza
+          Join Ateeqo
         </p>
         <h1 className="font-display text-3xl text-foreground mb-2">
           Create Account
