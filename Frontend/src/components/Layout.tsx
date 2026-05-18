@@ -10,9 +10,17 @@ const navLinks = [
   { label: "Collections", path: "/products" },
 ];
 
+const ANNOUNCEMENT_SLIDES = [
+  "LIMITED TIME OFFER: 50% OFF ON ALL ORDERS",
+  "FREE DELIVERY ON ORDERS ABOVE RS. 2,999",
+  "NEW ARRIVALS — SHOP HANDBAGS & ACCESSORIES",
+  "USE YOUR RESALE CODE AT CHECKOUT FOR REWARDS",
+];
+
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [announcementIndex, setAnnouncementIndex] = useState(0);
   const { totalItems } = useCart();
   const { user, logout } = useAuth();
   const location = useLocation();
@@ -28,13 +36,36 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     window.scrollTo(0, 0);
   }, [location]);
 
+  useEffect(() => {
+    const timer = setInterval(
+      () => setAnnouncementIndex((i) => (i + 1) % ANNOUNCEMENT_SLIDES.length),
+      2500
+    );
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col overflow-x-hidden">
       {/* Announcement Bar */}
-      <div className="bg-foreground py-2 text-center">
-        <p className="font-nav text-sm font-medium tracking-wide text-primary-foreground">
-        LIMITED TIME OFER
-        </p>
+      <div
+        className="bg-foreground py-2 text-center"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        <div className="relative mx-auto flex h-5 max-w-4xl items-center justify-center overflow-hidden px-4">
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={announcementIndex}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.35, ease: "easeInOut" }}
+              className="absolute inset-x-4 font-nav text-sm font-medium tracking-wide text-primary-foreground"
+            >
+              {ANNOUNCEMENT_SLIDES[announcementIndex]}
+            </motion.p>
+          </AnimatePresence>
+        </div>
       </div>
 
       {/* Navigation */}
