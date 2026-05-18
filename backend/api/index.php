@@ -51,8 +51,21 @@ switch ($module) {
         require_once __DIR__ . '/uploads/handler.php';
         break;
     default:
+        if ($module === '') {
+            http_response_code(200);
+            echo json_encode([
+                "message" => "Ateeqo API is running",
+                "status" => "ok",
+                "examples" => [
+                    "GET /api/index.php?path=products",
+                    "GET /api/products",
+                    "GET /api/ping.php",
+                ],
+            ]);
+            break;
+        }
         http_response_code(404);
-        echo json_encode(["message" => "Endpoint not found."]);
+        echo json_encode(["message" => "Endpoint not found.", "path" => $path]);
         break;
 }
 ?>
