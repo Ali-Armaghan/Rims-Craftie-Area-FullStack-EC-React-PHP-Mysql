@@ -98,8 +98,10 @@ const HomePromoBanners = () => {
         </div>
 
         <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-[2fr_1fr_1fr] sm:gap-2">
-          {BOTTOM_BANNERS.map((slot) => (
-            <BannerTile key={slot.id} slot={slot} />
+          {BOTTOM_BANNERS.map((slot, index) => (
+            <div key={slot.id} className={index >= 1 ? "hidden md:block" : undefined}>
+              <BannerTile slot={slot} />
+            </div>
           ))}
         </div>
       </div>
