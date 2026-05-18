@@ -80,46 +80,57 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       >
         {/* Top nav row */}
         <div className="border-b border-border/50">
-          <div className="container flex items-center justify-between py-4">
-            {/* Left nav links (desktop) */}
-            <nav className="hidden lg:flex items-center gap-8">
-              {navLinks.map((link) => (
-                <Link key={link.label} to={link.path} className="nav-link text-foreground/80 hover:text-foreground">
-                  {link.label}
-                </Link>
-              ))}
-              <CollectionsNavTrigger />
-            </nav>
-
-            {/* Mobile menu button */}
-            <button onClick={() => setMobileOpen(true)} className="lg:hidden text-foreground">
-              <Menu size={24} />
-            </button>
+          <div className="container relative flex items-center py-3 lg:py-4">
+            <div className="z-10 flex w-[4.5rem] shrink-0 items-center justify-start sm:w-20 lg:w-auto lg:flex-1">
+              <button
+                type="button"
+                onClick={() => setMobileOpen(true)}
+                className="lg:hidden text-foreground"
+                aria-label="Open menu"
+              >
+                <Menu size={22} />
+              </button>
+              <nav className="hidden lg:flex items-center gap-8">
+                {navLinks.map((link) => (
+                  <Link key={link.label} to={link.path} className="nav-link text-foreground/80 hover:text-foreground">
+                    {link.label}
+                  </Link>
+                ))}
+                <CollectionsNavTrigger />
+              </nav>
+            </div>
 
             {/* Center Logo */}
-            <Link to="/" className="absolute left-1/2 -translate-x-1/2">
+            <Link
+              to="/"
+              className="z-0 min-w-0 flex-1 px-1 lg:absolute lg:left-1/2 lg:flex-none lg:-translate-x-1/2 lg:px-0"
+            >
               <div className="text-center">
-                <h1 className="font-display text-2xl md:text-3xl font-semibold text-foreground">
+                <h1 className="truncate font-display text-xl font-semibold text-foreground sm:text-2xl md:text-3xl">
                   ATEEQO
                 </h1>
-                <p className="font-nav text-xs tracking-wide text-muted-foreground -mt-0.5">
+                <p className="font-nav text-[10px] tracking-wide text-muted-foreground -mt-0.5 sm:text-xs">
                   Bags &amp; Accessories
                 </p>
               </div>
             </Link>
 
-            {/* Empty space for flex layout balance if needed, or just let Icons float right */}
-            <div className="hidden lg:flex flex-1"></div>
-
-            {/* Icons */}
-            <div className="flex items-center gap-5">
-              <button className="hidden md:block text-foreground/70 hover:text-foreground transition-colors">
+            <div className="z-10 flex w-[4.5rem] shrink-0 items-center justify-end gap-2 sm:w-24 sm:gap-2.5 lg:w-auto lg:gap-5">
+              <button
+                type="button"
+                className="hidden md:block text-foreground/70 hover:text-foreground transition-colors"
+                aria-label="Search"
+              >
                 <Search size={20} />
               </button>
-              <button className="hidden md:block text-foreground/70 hover:text-foreground transition-colors">
+              <button
+                type="button"
+                className="hidden md:block text-foreground/70 hover:text-foreground transition-colors"
+                aria-label="Wishlist"
+              >
                 <Heart size={20} />
               </button>
-              <Link to="/cart" className="relative text-foreground/70 hover:text-foreground transition-colors">
+              <Link to="/cart" className="relative text-foreground/70 hover:text-foreground transition-colors" aria-label="Cart">
                 <ShoppingBag size={20} />
                 {totalItems > 0 && (
                   <span className="absolute -top-2 -right-2 w-5 h-5 bg-primary text-primary-foreground text-[10px] font-nav flex items-center justify-center rounded-full">
@@ -128,8 +139,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 )}
               </Link>
               {user ? (
-                <div className="flex items-center gap-3">
-                  <span className="font-nav text-xs tracking-normal uppercase text-foreground/70">
+                <div className="flex items-center gap-2 lg:gap-3">
+                  <span className="hidden max-w-[7rem] truncate font-nav text-xs uppercase tracking-normal text-foreground/70 lg:inline">
                     {user.name}
                   </span>
                   <Link
