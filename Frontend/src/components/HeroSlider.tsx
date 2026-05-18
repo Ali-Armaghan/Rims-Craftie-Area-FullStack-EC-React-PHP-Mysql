@@ -24,7 +24,7 @@ const HeroSlider = () => {
   }, []);
 
   return (
-    <section className="relative h-[85vh] overflow-hidden">
+    <section className="relative h-[42vh] min-h-[180px] sm:h-[48vh] md:h-[62vh] lg:h-[80vh] overflow-hidden">
       <AnimatePresence mode="wait">
         <motion.div
           key={current}
@@ -44,7 +44,7 @@ const HeroSlider = () => {
         </motion.div>
       </AnimatePresence>
 
-      <div className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 gap-3">
+      <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2 sm:bottom-6 md:bottom-8 md:gap-3">
         {slides.map((_, i) => (
           <button
             key={i}

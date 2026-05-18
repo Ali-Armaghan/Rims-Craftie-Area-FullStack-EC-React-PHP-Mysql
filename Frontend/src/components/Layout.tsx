@@ -16,8 +16,8 @@ const navLinks = [{ label: "Home", path: "/" }];
 const ANNOUNCEMENT_SLIDES = [
   "LIMITED TIME OFFER: 50% OFF ON ALL ORDERS",
   "FREE DELIVERY ON ORDERS ABOVE RS. 2,999",
-  "NEW ARRIVALS — SHOP HANDBAGS & ACCESSORIES",
-  "USE YOUR RESALE CODE AT CHECKOUT FOR REWARDS",
+  "NEW ARRIVALS — SHOP HANDBAGS",
+  "USE RESALE CODE FOR REWARDS",
 ];
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
