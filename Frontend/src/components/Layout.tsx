@@ -29,7 +29,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   }, [location]);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex min-h-screen flex-col overflow-x-hidden">
       {/* Announcement Bar */}
       <div className="bg-foreground py-2 text-center">
         <p className="font-nav text-sm font-medium tracking-wide text-primary-foreground">
@@ -189,7 +189,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       </AnimatePresence>
 
       {/* Main */}
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 overflow-x-hidden">{children}</main>
 
       {/* Footer */}
       <footer className="bg-foreground text-primary-foreground">

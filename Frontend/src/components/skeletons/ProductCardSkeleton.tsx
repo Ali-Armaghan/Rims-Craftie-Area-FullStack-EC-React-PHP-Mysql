@@ -1,25 +1,17 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
-const ProductCardSkeleton = () => {
+const ProductCardSkeleton = ({ compact = false }: { compact?: boolean }) => {
   return (
-    <div className="flex flex-col gap-4">
-      {/* Image Placeholder */}
-      <div className="relative aspect-square overflow-hidden rounded-sm">
-        <Skeleton className="w-full h-full" />
+    <div className={cn("flex w-full min-w-0 flex-col", compact ? "gap-1.5" : "gap-4")}>
+      <div className="aspect-square w-full overflow-hidden rounded-sm">
+        <Skeleton className="h-full w-full" />
       </div>
-      
-      {/* Text Content Placeholders */}
+
       <div className="space-y-2">
-        {/* Title */}
-        <Skeleton className="h-6 w-3/4" />
-        {/* Category */}
-        <Skeleton className="h-4 w-1/4" />
-        
-        {/* Price Row */}
-        <div className="flex items-center gap-2 mt-1">
-          <Skeleton className="h-7 w-24" />
-          <Skeleton className="h-5 w-20" />
-        </div>
+        <Skeleton className={cn("w-3/4", compact ? "h-4" : "h-6")} />
+        <Skeleton className="h-3 w-1/2" />
+        <Skeleton className={cn(compact ? "h-5 w-20" : "h-7 w-24")} />
       </div>
     </div>
   );

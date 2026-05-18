@@ -35,7 +35,7 @@ const Index = () => {
       <HeroSlider />
 
       {/* Category Slider */}
-      <section className="border-b border-border bg-background">
+      <section className="overflow-x-hidden border-b border-border bg-background">
         <div className="overflow-hidden py-6">
           <div className="category-marquee flex w-max items-start gap-6 md:gap-8">
             {loopingCategorySlides.map((category, i) => (
@@ -61,25 +61,25 @@ const Index = () => {
       </section>
 
       {/* Popular Products */}
-      <section className="py-20">
-        <div className="container">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-14"
-          >
-            <p className="text-label mb-3">Curated for you</p>
-            <h2 className="font-display text-3xl md:text-4xl text-foreground">Popular Pieces</h2>
-          </motion.div>
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
+      <section className="w-full overflow-x-hidden py-16 md:py-20">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-8 px-3 text-center sm:px-4 md:mb-10 lg:px-5"
+        >
+          <p className="text-label mb-3">Curated for you</p>
+          <h2 className="font-display text-3xl md:text-4xl text-foreground">Popular Pieces</h2>
+        </motion.div>
+        <div className="w-full px-2 sm:px-3 lg:px-4">
+          <div className="grid w-full grid-cols-2 gap-1 sm:gap-1.5 lg:grid-cols-[repeat(5,minmax(0,1fr))] lg:gap-1.5">
             {isLoading ? (
               [...Array(5)].map((_, i) => (
-                <ProductCardSkeleton key={i} />
+                <ProductCardSkeleton key={i} compact />
               ))
             ) : (
               popular.map((p, i) => (
-                <ProductCard key={p.id} product={p} index={i} />
+                <ProductCard key={p.id} product={p} index={i} compact />
               ))
             )}
           </div>

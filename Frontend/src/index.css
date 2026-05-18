@@ -6,51 +6,51 @@
 
 @layer base {
   :root {
-    --background: 69 27% 90%;
+    --background: 0 0% 100%;
     --foreground: 97 13% 20%;
 
-    --card: 69 27% 94%;
+    --card: 0 0% 100%;
     --card-foreground: 97 13% 20%;
 
-    --popover: 69 27% 94%;
+    --popover: 0 0% 100%;
     --popover-foreground: 97 13% 20%;
 
     --primary: 97 13% 20%;
-    --primary-foreground: 69 27% 90%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 71 20% 83%;
+    --secondary: 0 0% 96%;
     --secondary-foreground: 97 13% 20%;
 
-    --muted: 70 18% 84%;
+    --muted: 0 0% 96%;
     --muted-foreground: 97 10% 38%;
 
     --accent: 97 13% 20%;
-    --accent-foreground: 69 27% 90%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 70 18% 78%;
-    --input: 70 18% 78%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
     --ring: 97 13% 20%;
 
     --radius: 0.25rem;
 
     --gold: 97 13% 20%;
-    --gold-light: 69 27% 90%;
+    --gold-light: 0 0% 100%;
     --gold-dark: 97 13% 15%;
-    --cream: 69 27% 90%;
-    --cream-dark: 70 18% 78%;
+    --cream: 0 0% 100%;
+    --cream-dark: 0 0% 94%;
     --burgundy: 97 13% 20%;
     --charcoal: 97 13% 20%;
 
-    --sidebar-background: 69 27% 94%;
+    --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 97 13% 20%;
     --sidebar-primary: 97 13% 20%;
-    --sidebar-primary-foreground: 69 27% 90%;
-    --sidebar-accent: 71 20% 83%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 96%;
     --sidebar-accent-foreground: 97 13% 20%;
-    --sidebar-border: 70 18% 78%;
+    --sidebar-border: 0 0% 90%;
     --sidebar-ring: 97 13% 20%;
   }
 }
@@ -58,6 +58,12 @@
 @layer base {
   * {
     @apply border-border;
+  }
+
+  html,
+  body {
+    overflow-x: hidden;
+    max-width: 100%;
   }
 
   body {
@@ -112,7 +118,7 @@
   }
 
   .gold-gradient {
-    background: linear-gradient(135deg, #323a2d, #eaecde, #323a2d);
+    background: linear-gradient(135deg, #323a2d, #ffffff, #323a2d);
   }
 
   .gold-text {
