@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../helpers.php';
+
 class Category {
     private $conn;
     private $table_name = "categories";
@@ -75,7 +77,8 @@ class Category {
                   ORDER BY c.home_sort_order ASC, c.name ASC";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return array_map('normalize_category_row', $rows);
     }
 
     public function readHomeSections($productLimit = 8) {
@@ -103,7 +106,8 @@ class Category {
 
         foreach ($categories as &$category) {
             $productStmt->execute([$category['id']]);
-            $category['products'] = $productStmt->fetchAll(PDO::FETCH_ASSOC);
+            $products = $productStmt->fetchAll(PDO::FETCH_ASSOC);
+            $category['products'] = array_map('normalize_product_row', $products);
         }
 
         return $categories;
@@ -116,7 +120,8 @@ class Category {
                   WHERE c.id = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ? normalize_category_row($row) : $row;
     }
 
     public function create($data) {

@@ -1,6 +1,8 @@
 <?php
 // api/products/Product.php
 
+require_once __DIR__ . '/../helpers.php';
+
 class Product {
     private $conn;
     private $table_name = "products";
@@ -97,7 +99,8 @@ class Product {
         }
         
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return array_map('normalize_product_row', $rows);
     }
 
     public function readOne($slug) {
@@ -110,7 +113,8 @@ class Product {
                   WHERE p.slug = ? GROUP BY p.id LIMIT 0,1";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([$slug]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ? normalize_product_row($row) : $row;
     }
 
     public function readOneById($id) {
@@ -123,7 +127,8 @@ class Product {
                   WHERE p.id = ? GROUP BY p.id LIMIT 0,1";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ? normalize_product_row($row) : $row;
     }
 
     // Admin Methods

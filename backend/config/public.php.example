@@ -1,0 +1,7 @@
+<?php
+// Copy to public.php on Hostinger (optional but recommended for Vercel + API subdomain)
+
+return [
+    // Base URL where /uploads/... files are served (no trailing slash)
+    'upload_origin' => 'https://backendateeqo.socialdiggers.com',
+];

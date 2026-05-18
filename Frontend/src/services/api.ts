@@ -197,6 +197,17 @@ function parseImages(images: BackendProduct['images']) {
 }
 
 function resolveImageUrl(image: string) {
+    if (!image?.trim()) {
+        return image;
+    }
+
+    // Rewrite stored localhost/xampp URLs to live API host (Vercel + Hostinger API)
+    const uploadsPath = image.match(/\/uploads\/(?:categories|products)\/[^\s?#]+/i);
+    if (uploadsPath && API_BASE_URL) {
+        const backendOrigin = new URL(API_BASE_URL).origin;
+        return `${backendOrigin}${uploadsPath[0]}`;
+    }
+
     if (/^(https?:)?\/\//i.test(image) || image.startsWith('data:')) {
         return image;
     }
