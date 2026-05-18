@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import HeroSlider from "@/components/HeroSlider";
+import HomePromoBanners from "@/components/HomePromoBanners";
 import HomeCategoryProductGrid from "@/components/HomeCategoryProductGrid";
 import { useHomeCategorySections } from "@/hooks/useHomeCategorySections";
+import { useStoreCategories } from "@/hooks/useStoreCategories";
 import hero1 from "@/assets/hero1.png";
 import hero2 from "@/assets/hero2.png";
 import hero3 from "@/assets/hero3.png";
@@ -27,10 +29,13 @@ const loopingCategorySlides = [...categorySlides, ...categorySlides, ...category
 
 const Index = () => {
   const { sections: homeSections, isLoading: homeSectionsLoading } = useHomeCategorySections();
+  const { categories: shopCategories, isLoading: shopCategoriesLoading } = useStoreCategories(4);
 
   return (
     <>
       <HeroSlider />
+
+      
 
       {/* Category Slider */}
       <section className="overflow-x-hidden border-b border-border bg-background">
@@ -58,6 +63,8 @@ const Index = () => {
         </div>
       </section>
 
+      <HomePromoBanners />
+      
       <div className="w-full space-y-6 overflow-x-hidden pt-10 pb-4 md:space-y-8 md:pt-12 md:pb-6">
         {homeSectionsLoading ? (
           <HomeCategoryProductGrid title="Loading..." categoryName="" products={[]} isLoading />
@@ -86,23 +93,39 @@ const Index = () => {
             <h2 className="font-display text-3xl md:text-4xl text-foreground">Shop by Category</h2>
           </motion.div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {["Handbags", "Crossbody", "Shoulder Bags", "Accessories"].map((cat, i) => (
-              <motion.div
-                key={cat}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-              >
-                <Link
-                  to="/products"
-                  className="block p-10 text-center border border-border bg-background hover:border-primary hover:luxury-shadow transition-all duration-500 group"
+            {shopCategoriesLoading ? (
+              [...Array(4)].map((_, i) => (
+                <div
+                  key={`skeleton-${i}`}
+                  className="h-32 animate-pulse rounded-sm border border-border bg-background"
+                />
+              ))
+            ) : shopCategories.length > 0 ? (
+              shopCategories.map((cat, i) => (
+                <motion.div
+                  key={cat.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
                 >
-                  <h3 className="font-display text-xl text-foreground group-hover:text-primary transition-colors">{cat}</h3>
-                  <p className="font-body text-sm text-muted-foreground mt-1">Discover →</p>
-                </Link>
-              </motion.div>
-            ))}
+                  <Link
+                    to="/products"
+                    state={{ category: cat.name }}
+                    className="group block border border-border bg-background p-10 text-center transition-all duration-500 hover:border-primary hover:luxury-shadow"
+                  >
+                    <h3 className="font-display text-xl text-foreground transition-colors group-hover:text-primary">
+                      {cat.name}
+                    </h3>
+                    <p className="mt-1 font-body text-sm text-muted-foreground">Discover →</p>
+                  </Link>
+                </motion.div>
+              ))
+            ) : (
+              <p className="col-span-full py-8 text-center text-sm text-muted-foreground">
+                No categories found. Add categories in admin panel.
+              </p>
+            )}
           </div>
         </div>
       </section>

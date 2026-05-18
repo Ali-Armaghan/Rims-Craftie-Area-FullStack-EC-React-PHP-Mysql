@@ -33,7 +33,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       {/* Announcement Bar */}
       <div className="bg-foreground py-2 text-center">
         <p className="font-nav text-sm font-medium tracking-wide text-primary-foreground">
-          Free shipping on all orders
+        LIMITED TIME OFER
         </p>
       </div>
 

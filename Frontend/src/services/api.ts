@@ -291,6 +291,41 @@ export async function fetchFeaturedProducts() {
     }
 }
 
+export type StoreCategory = {
+    id: number;
+    name: string;
+    slug: string;
+    product_count?: number;
+};
+
+export async function fetchStoreCategories(limit = 4): Promise<StoreCategory[]> {
+    try {
+        const response = await fetch(getBackendUrl('categories').toString(), {
+            method: 'GET',
+            headers: { Accept: 'application/json' },
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error fetching categories: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        if (!Array.isArray(data)) {
+            return [];
+        }
+
+        return data.slice(0, limit).map((category: StoreCategory) => ({
+            id: Number(category.id),
+            name: category.name,
+            slug: category.slug,
+            product_count: Number(category.product_count ?? 0),
+        }));
+    } catch (error) {
+        console.error('Failed to fetch categories:', error);
+        return [];
+    }
+}
+
 export type HomeCategorySection = {
     id: number;
     name: string;
