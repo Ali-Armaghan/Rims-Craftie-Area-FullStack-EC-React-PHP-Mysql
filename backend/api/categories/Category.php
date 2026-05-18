@@ -5,16 +5,26 @@ class Category {
 
     public function __construct($db) {
         $this->conn = $db;
-        $this->ensureShowOnHomeColumn();
+        $this->ensureCategoryColumns();
     }
 
-    private function ensureShowOnHomeColumn() {
+    private function ensureCategoryColumns() {
         try {
-            $this->conn->query("SELECT show_on_home FROM " . $this->table_name . " LIMIT 1");
+            $this->conn->query("SELECT show_on_home, home_sort_order FROM " . $this->table_name . " LIMIT 1");
         } catch (Exception $e) {
-            $this->conn->exec(
-                "ALTER TABLE " . $this->table_name . " ADD COLUMN show_on_home TINYINT(1) NOT NULL DEFAULT 0"
-            );
+            try {
+                $this->conn->exec(
+                    "ALTER TABLE " . $this->table_name . " ADD COLUMN show_on_home TINYINT(1) NOT NULL DEFAULT 0"
+                );
+            } catch (Exception $ignored) {
+            }
+
+            try {
+                $this->conn->exec(
+                    "ALTER TABLE " . $this->table_name . " ADD COLUMN home_sort_order INT NOT NULL DEFAULT 0"
+                );
+            } catch (Exception $ignored) {
+            }
         }
     }
 
@@ -23,17 +33,17 @@ class Category {
                          (SELECT COUNT(*) FROM products WHERE category_id = c.id) AS product_count
                   FROM " . $this->table_name . " c
                   LEFT JOIN " . $this->table_name . " p ON c.parent_id = p.id
-                  ORDER BY c.name ASC";
+                  ORDER BY c.home_sort_order ASC, c.name ASC";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function readHomeSections($productLimit = 8) {
-        $query = "SELECT c.id, c.name, c.slug, c.show_on_home
+        $query = "SELECT c.id, c.name, c.slug, c.show_on_home, c.home_sort_order
                   FROM " . $this->table_name . " c
                   WHERE c.show_on_home = 1
-                  ORDER BY c.name ASC";
+                  ORDER BY c.home_sort_order ASC, c.name ASC";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -78,14 +88,17 @@ class Category {
         $slug = $this->ensureUniqueSlug($slug);
         $parent_id = !empty($data['parent_id']) ? (int)$data['parent_id'] : null;
         $show_on_home = !empty($data['show_on_home']) ? 1 : 0;
+        $home_sort_order = isset($data['home_sort_order']) ? (int)$data['home_sort_order'] : 0;
 
         $query = "INSERT INTO " . $this->table_name . "
-                  SET name=:name, slug=:slug, parent_id=:parent_id, show_on_home=:show_on_home";
+                  SET name=:name, slug=:slug, parent_id=:parent_id,
+                      show_on_home=:show_on_home, home_sort_order=:home_sort_order";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":name", $name);
         $stmt->bindParam(":slug", $slug);
         $stmt->bindParam(":parent_id", $parent_id, $parent_id === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
         $stmt->bindParam(":show_on_home", $show_on_home, PDO::PARAM_INT);
+        $stmt->bindParam(":home_sort_order", $home_sort_order, PDO::PARAM_INT);
 
         if ($stmt->execute()) {
             return $this->readOne($this->conn->lastInsertId());
@@ -107,19 +120,22 @@ class Category {
         $slug = $this->ensureUniqueSlug($slug, (int)$id);
         $parent_id = !empty($data['parent_id']) ? (int)$data['parent_id'] : null;
         $show_on_home = !empty($data['show_on_home']) ? 1 : 0;
+        $home_sort_order = isset($data['home_sort_order']) ? (int)$data['home_sort_order'] : 0;
 
         if ($parent_id === (int)$id) {
             return false;
         }
 
         $query = "UPDATE " . $this->table_name . "
-                  SET name=:name, slug=:slug, parent_id=:parent_id, show_on_home=:show_on_home
+                  SET name=:name, slug=:slug, parent_id=:parent_id,
+                      show_on_home=:show_on_home, home_sort_order=:home_sort_order
                   WHERE id=:id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":name", $name);
         $stmt->bindParam(":slug", $slug);
         $stmt->bindParam(":parent_id", $parent_id, $parent_id === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
         $stmt->bindParam(":show_on_home", $show_on_home, PDO::PARAM_INT);
+        $stmt->bindParam(":home_sort_order", $home_sort_order, PDO::PARAM_INT);
         $stmt->bindParam(":id", $id, PDO::PARAM_INT);
 
         if ($stmt->execute()) {

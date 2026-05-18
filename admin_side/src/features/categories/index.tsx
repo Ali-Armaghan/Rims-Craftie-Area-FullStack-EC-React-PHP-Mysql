@@ -44,6 +44,7 @@ type Category = {
   parent_name: string | null
   product_count: number
   show_on_home: number | boolean
+  home_sort_order: number
 }
 
 type CategoryForm = {
@@ -52,6 +53,7 @@ type CategoryForm = {
   slug: string
   parent_id: string
   show_on_home: boolean
+  home_sort_order: string
 }
 
 const defaultForm: CategoryForm = {
@@ -59,6 +61,7 @@ const defaultForm: CategoryForm = {
   slug: '',
   parent_id: 'none',
   show_on_home: false,
+  home_sort_order: '0',
 }
 
 function slugify(value: string) {
@@ -96,6 +99,7 @@ function CategoryDialog({
         slug: category.slug,
         parent_id: category.parent_id ? String(category.parent_id) : 'none',
         show_on_home: Boolean(Number(category.show_on_home)),
+        home_sort_order: String(category.home_sort_order ?? 0),
       })
       setSlugTouched(true)
     } else {
@@ -133,6 +137,7 @@ function CategoryDialog({
       slug: form.slug.trim() || slugify(form.name),
       parent_id: form.parent_id === 'none' ? null : Number(form.parent_id),
       show_on_home: form.show_on_home,
+      home_sort_order: Number(form.home_sort_order) || 0,
     }
 
     try {
@@ -221,6 +226,22 @@ function CategoryDialog({
               </p>
             </div>
           </div>
+
+          {form.show_on_home && (
+            <div className='grid gap-2'>
+              <label className='text-sm font-medium'>Home page order</label>
+              <Input
+                type='number'
+                min={0}
+                value={form.home_sort_order}
+                onChange={(event) => updateField('home_sort_order', event.target.value)}
+                placeholder='1 = first, 2 = second…'
+              />
+              <p className='text-xs text-muted-foreground'>
+                Lower number appears first. Example: Handbags = 1, Crossbody = 2.
+              </p>
+            </div>
+          )}
         </div>
 
         <DialogFooter>
@@ -294,7 +315,7 @@ export function Categories() {
           <div>
             <h2 className='text-2xl font-bold tracking-tight'>Categories</h2>
             <p className='text-muted-foreground'>
-              Create and manage product categories for your store.
+              Manage categories. Use home order (1, 2, 3…) to control sequence on the storefront home page.
             </p>
           </div>
           <Button onClick={openAddDialog}>
@@ -316,6 +337,7 @@ export function Categories() {
                   <TableHead>Parent</TableHead>
                   <TableHead>Products</TableHead>
                   <TableHead>Home page</TableHead>
+                  <TableHead>Home order</TableHead>
                   <TableHead className='w-28 text-right'>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -337,6 +359,9 @@ export function Categories() {
                         <Badge variant={Number(item.show_on_home) ? 'default' : 'secondary'}>
                           {Number(item.show_on_home) ? 'Visible' : 'Hidden'}
                         </Badge>
+                      </TableCell>
+                      <TableCell className='text-muted-foreground'>
+                        {Number(item.show_on_home) ? Number(item.home_sort_order ?? 0) : '—'}
                       </TableCell>
                       <TableCell>
                         <div className='flex justify-end gap-2'>
@@ -360,7 +385,7 @@ export function Categories() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} className='h-24 text-center'>
+                    <TableCell colSpan={7} className='h-24 text-center'>
                       No categories found.
                     </TableCell>
                   </TableRow>
