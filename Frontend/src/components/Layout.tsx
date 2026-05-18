@@ -28,6 +28,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
 
+  const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (location.pathname === "/") {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", onScroll);
@@ -100,10 +107,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               </nav>
             </div>
 
-            {/* Center Logo */}
+            {/* Center Logo — z-30 so side nav does not block clicks */}
             <Link
               to="/"
-              className="z-0 min-w-0 flex-1 px-1 lg:absolute lg:left-1/2 lg:flex-none lg:-translate-x-1/2 lg:px-0"
+              onClick={handleLogoClick}
+              aria-label="Ateeqo home"
+              className="relative z-30 min-w-0 flex-1 px-1 pointer-events-auto lg:absolute lg:left-1/2 lg:flex-none lg:-translate-x-1/2 lg:px-0"
             >
               <div className="text-center">
                 <h1 className="truncate font-display text-xl font-semibold text-foreground sm:text-2xl md:text-3xl">
