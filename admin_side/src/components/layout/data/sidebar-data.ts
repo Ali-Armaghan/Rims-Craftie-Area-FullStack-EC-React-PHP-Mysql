@@ -7,6 +7,7 @@ import {
   Activity,
   Users,
   Timer,
+  FolderTree,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -36,6 +37,11 @@ export const sidebarData: SidebarData = {
           title: 'Products',
           url: '/products',
           icon: ShoppingBag,
+        },
+        {
+          title: 'Categories',
+          url: '/categories',
+          icon: FolderTree,
         },
         {
           title: 'Orders',

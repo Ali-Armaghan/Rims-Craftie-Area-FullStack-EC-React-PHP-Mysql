@@ -1,0 +1,352 @@
+import { useEffect, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Edit, Plus, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { Header } from '@/components/layout/header'
+import { Main } from '@/components/layout/main'
+import { ProfileDropdown } from '@/components/profile-dropdown'
+import { Search } from '@/components/search'
+import { ThemeSwitch } from '@/components/theme-switch'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import apiClient from '@/lib/api-client'
+
+type Category = {
+  id: number
+  name: string
+  slug: string
+  parent_id: number | null
+  parent_name: string | null
+  product_count: number
+}
+
+type CategoryForm = {
+  id?: number
+  name: string
+  slug: string
+  parent_id: string
+}
+
+const defaultForm: CategoryForm = {
+  name: '',
+  slug: '',
+  parent_id: 'none',
+}
+
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+function CategoryDialog({
+  open,
+  category,
+  categories,
+  onOpenChange,
+}: {
+  open: boolean
+  category: Category | null
+  categories: Category[]
+  onOpenChange: (open: boolean) => void
+}) {
+  const queryClient = useQueryClient()
+  const [form, setForm] = useState<CategoryForm>(defaultForm)
+  const [slugTouched, setSlugTouched] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const isEdit = Boolean(category)
+
+  useEffect(() => {
+    if (!open) return
+
+    if (category) {
+      setForm({
+        id: category.id,
+        name: category.name,
+        slug: category.slug,
+        parent_id: category.parent_id ? String(category.parent_id) : 'none',
+      })
+      setSlugTouched(true)
+    } else {
+      setForm(defaultForm)
+      setSlugTouched(false)
+    }
+  }, [open, category])
+
+  const updateField = (field: keyof CategoryForm, value: string) => {
+    setForm((current) => {
+      const next = { ...current, [field]: value }
+
+      if (field === 'name' && !slugTouched) {
+        next.slug = slugify(value)
+      }
+
+      return next
+    })
+  }
+
+  const parentOptions = categories.filter(
+    (item) => !category || item.id !== category.id
+  )
+
+  const saveCategory = async () => {
+    if (!form.name.trim()) {
+      toast.error('Category name is required')
+      return
+    }
+
+    setSaving(true)
+    const payload = {
+      id: form.id,
+      name: form.name.trim(),
+      slug: form.slug.trim() || slugify(form.name),
+      parent_id: form.parent_id === 'none' ? null : Number(form.parent_id),
+    }
+
+    try {
+      if (isEdit) {
+        await apiClient.put('/categories', payload)
+        toast.success('Category updated')
+      } else {
+        await apiClient.post('/categories', payload)
+        toast.success('Category created')
+      }
+      await queryClient.invalidateQueries({ queryKey: ['categories'] })
+      onOpenChange(false)
+    } catch {
+      toast.error('Failed to save category')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className='sm:max-w-lg'>
+        <DialogHeader>
+          <DialogTitle>{isEdit ? 'Edit Category' : 'Add Category'}</DialogTitle>
+          <DialogDescription>
+            Manage category name, URL slug, and optional parent category.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className='grid gap-4'>
+          <div className='grid gap-2'>
+            <label className='text-sm font-medium'>Name</label>
+            <Input
+              value={form.name}
+              onChange={(event) => updateField('name', event.target.value)}
+              placeholder='e.g. Handbags'
+            />
+          </div>
+
+          <div className='grid gap-2'>
+            <label className='text-sm font-medium'>Slug</label>
+            <Input
+              value={form.slug}
+              onChange={(event) => {
+                setSlugTouched(true)
+                updateField('slug', event.target.value)
+              }}
+              placeholder='e.g. handbags'
+            />
+          </div>
+
+          <div className='grid gap-2'>
+            <label className='text-sm font-medium'>Parent Category</label>
+            <Select
+              value={form.parent_id}
+              onValueChange={(value) => updateField('parent_id', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder='None (top level)' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='none'>None (top level)</SelectItem>
+                {parentOptions.map((item) => (
+                  <SelectItem key={item.id} value={String(item.id)}>
+                    {item.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant='outline' onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={saveCategory} disabled={saving}>
+            {saving ? 'Saving...' : 'Save Category'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+export function Categories() {
+  const queryClient = useQueryClient()
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
+
+  const { data: categories = [], isLoading } = useQuery<Category[]>({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const response = await apiClient.get('/categories')
+      return response.data
+    },
+  })
+
+  const openAddDialog = () => {
+    setSelectedCategory(null)
+    setDialogOpen(true)
+  }
+
+  const openEditDialog = (item: Category) => {
+    setSelectedCategory(item)
+    setDialogOpen(true)
+  }
+
+  const deleteCategory = async (item: Category) => {
+    if (!window.confirm(`Delete category "${item.name}"?`)) return
+
+    try {
+      const response = await apiClient.delete('/categories', {
+        params: { id: item.id },
+      })
+
+      if (response.data?.success === false) {
+        toast.error(response.data?.message ?? 'Failed to delete category')
+        return
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ['categories'] })
+      toast.success('Category deleted')
+    } catch {
+      toast.error('Failed to delete category')
+    }
+  }
+
+  return (
+    <>
+      <Header fixed>
+        <Search />
+        <div className='ms-auto flex items-center space-x-4'>
+          <ThemeSwitch />
+          <ProfileDropdown />
+        </div>
+      </Header>
+
+      <Main>
+        <div className='mb-4 flex items-center justify-between gap-4'>
+          <div>
+            <h2 className='text-2xl font-bold tracking-tight'>Categories</h2>
+            <p className='text-muted-foreground'>
+              Create and manage product categories for your store.
+            </p>
+          </div>
+          <Button onClick={openAddDialog}>
+            <Plus className='mr-2 h-4 w-4' /> Add Category
+          </Button>
+        </div>
+
+        <div className='rounded-md border'>
+          {isLoading ? (
+            <div className='p-8 text-center text-muted-foreground'>
+              Loading categories...
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Slug</TableHead>
+                  <TableHead>Parent</TableHead>
+                  <TableHead>Products</TableHead>
+                  <TableHead className='w-28 text-right'>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {categories.length ? (
+                  categories.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className='font-medium'>{item.name}</TableCell>
+                      <TableCell>
+                        <Badge variant='outline' className='font-mono text-xs'>
+                          {item.slug}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className='text-muted-foreground'>
+                        {item.parent_name ?? '—'}
+                      </TableCell>
+                      <TableCell>{Number(item.product_count ?? 0)}</TableCell>
+                      <TableCell>
+                        <div className='flex justify-end gap-2'>
+                          <Button
+                            variant='outline'
+                            size='icon'
+                            onClick={() => openEditDialog(item)}
+                          >
+                            <Edit className='h-4 w-4' />
+                          </Button>
+                          <Button
+                            variant='destructive'
+                            size='icon'
+                            onClick={() => deleteCategory(item)}
+                          >
+                            <Trash2 className='h-4 w-4' />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className='h-24 text-center'>
+                      No categories found.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </div>
+      </Main>
+
+      <CategoryDialog
+        open={dialogOpen}
+        category={selectedCategory}
+        categories={categories}
+        onOpenChange={setDialogOpen}
+      />
+    </>
+  )
+}
