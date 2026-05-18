@@ -7,24 +7,24 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 97 13% 20%;
+    --foreground: 30 68% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 97 13% 20%;
+    --card-foreground: 30 68% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 97 13% 20%;
+    --popover-foreground: 30 68% 11%;
 
-    --primary: 97 13% 20%;
+    --primary: 30 68% 11%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 96%;
-    --secondary-foreground: 97 13% 20%;
+    --secondary-foreground: 30 68% 11%;
 
     --muted: 0 0% 96%;
-    --muted-foreground: 97 10% 38%;
+    --muted-foreground: 30 18% 42%;
 
-    --accent: 97 13% 20%;
+    --accent: 30 68% 11%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
@@ -32,26 +32,26 @@
 
     --border: 0 0% 90%;
     --input: 0 0% 90%;
-    --ring: 97 13% 20%;
+    --ring: 30 68% 11%;
 
     --radius: 0.25rem;
 
-    --gold: 97 13% 20%;
+    --gold: 30 68% 11%;
     --gold-light: 0 0% 100%;
-    --gold-dark: 97 13% 15%;
+    --gold-dark: 30 68% 8%;
     --cream: 0 0% 100%;
     --cream-dark: 0 0% 94%;
-    --burgundy: 97 13% 20%;
-    --charcoal: 97 13% 20%;
+    --burgundy: 30 68% 11%;
+    --charcoal: 30 68% 11%;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 97 13% 20%;
-    --sidebar-primary: 97 13% 20%;
+    --sidebar-foreground: 30 68% 11%;
+    --sidebar-primary: 30 68% 11%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 96%;
-    --sidebar-accent-foreground: 97 13% 20%;
+    --sidebar-accent-foreground: 30 68% 11%;
     --sidebar-border: 0 0% 90%;
-    --sidebar-ring: 97 13% 20%;
+    --sidebar-ring: 30 68% 11%;
   }
 }
 
@@ -118,22 +118,22 @@
   }
 
   .gold-gradient {
-    background: linear-gradient(135deg, #323a2d, #ffffff, #323a2d);
+    background: linear-gradient(135deg, #2f1c09, #ffffff, #2f1c09);
   }
 
   .gold-text {
-    background: linear-gradient(135deg, #323a2d, #4c5844, #323a2d);
+    background: linear-gradient(135deg, #2f1c09, #5a3a1a, #2f1c09);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .gold-border {
-    border-color: hsl(97 13% 20% / 0.3);
+    border-color: hsl(30 68% 11% / 0.3);
   }
 
   .luxury-shadow {
-    box-shadow: 0 4px 30px hsl(97 13% 20% / 0.08);
+    box-shadow: 0 4px 30px hsl(30 68% 11% / 0.08);
   }
 
   .category-marquee {
