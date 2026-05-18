@@ -1,0 +1,5 @@
+# Block direct access to config folder only (does not affect api/ or uploads/)
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^config(/|$) - [F,L]
+</IfModule>

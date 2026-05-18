@@ -1,10 +1,17 @@
-RewriteEngine On
+# API router — must live in public_html/backend/api/
+DirectoryIndex index.php
 
-# Handle Authorization Header
-RewriteCond %{HTTP:Authorization} .
-RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+<IfModule mod_rewrite.c>
+  RewriteEngine On
 
-# Route everything else to index.php
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ index.php?path=$1 [QSA,L]
+  # If API is in a subfolder and routes 404, uncomment and set your path:
+  # RewriteBase /backend/api/
+
+  # Pass Authorization header to PHP (Bearer / JWT)
+  RewriteCond %{HTTP:Authorization} .
+  RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.*)$ index.php?path=$1 [QSA,L]
+</IfModule>
