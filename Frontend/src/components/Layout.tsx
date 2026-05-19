@@ -10,6 +10,7 @@ import {
   CollectionsMegaMenuPanel,
   CollectionsMobileLinks,
 } from "@/components/CollectionsMegaMenu";
+import PurchaseNotificationToast from "@/components/PurchaseNotificationToast";
 
 const navLinks = [{ label: "Home", path: "/" }];
 
@@ -250,6 +251,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Main */}
       <main className="flex-1 overflow-x-hidden">{children}</main>
+
+      <PurchaseNotificationToast />
 
       {/* Footer */}
       <footer className="bg-foreground text-primary-foreground">
