@@ -538,7 +538,9 @@ const ProductDetail = () => {
                 <button
                     onClick={handleBuyNow}
                     disabled={!product.inStock}
-                  className="mt-3 flex w-full items-center justify-center rounded-full bg-foreground py-4 font-nav text-xs uppercase tracking-wide text-primary-foreground transition-all hover:bg-foreground/90 disabled:cursor-not-allowed disabled:opacity-50"
+                  className={`mt-3 flex w-full items-center justify-center rounded-full bg-foreground py-4 font-nav text-xs uppercase tracking-wide text-primary-foreground transition-colors hover:bg-foreground/90 disabled:cursor-not-allowed disabled:opacity-50 ${
+                    product.inStock ? "animate-buy-now-shake" : ""
+                  }`}
                   >
                     Buy Now
                   </button>
