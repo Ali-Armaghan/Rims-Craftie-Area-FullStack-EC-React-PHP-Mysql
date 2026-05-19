@@ -6,10 +6,12 @@ import {
   ChevronRight,
   CreditCard,
   Heart,
+  PackageCheck,
   RotateCcw,
   ShieldCheck,
   ShoppingBag,
   Truck,
+  type LucideIcon,
 } from "lucide-react";
 import { useProduct } from "@/hooks/useProduct";
 import { useCart } from "@/context/CartContext";
@@ -21,6 +23,56 @@ import ProductDetailSkeleton from "@/components/skeletons/ProductDetailSkeleton"
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSaleCountdown } from "@/services/api";
+
+function formatDeliveryStepDate(date: Date) {
+  return date.toLocaleDateString("en-PK", {
+    day: "numeric",
+    month: "short",
+  });
+}
+
+type DeliveryStep = {
+  label: string;
+  icon: LucideIcon;
+  date: string;
+  iconClass: string;
+  ringClass: string;
+  glow?: boolean;
+};
+
+function buildDeliverySteps(): DeliveryStep[] {
+  const today = new Date();
+  const addDays = (days: number) => {
+    const next = new Date(today);
+    next.setDate(today.getDate() + days);
+    return next;
+  };
+
+  return [
+    {
+      label: "Order",
+      icon: ShoppingBag,
+      date: formatDeliveryStepDate(today),
+      iconClass: "text-amber-600",
+      ringClass: "border-amber-300/70 bg-amber-50",
+      glow: true,
+    },
+    {
+      label: "Shipped",
+      icon: Truck,
+      date: formatDeliveryStepDate(addDays(1)),
+      iconClass: "text-sky-600",
+      ringClass: "border-sky-300/60 bg-sky-50",
+    },
+    {
+      label: "Delivered",
+      icon: PackageCheck,
+      date: formatDeliveryStepDate(addDays(3)),
+      iconClass: "text-emerald-600",
+      ringClass: "border-emerald-300/60 bg-emerald-50",
+    },
+  ];
+}
 
 const CountdownValue = ({ value }: { value: string }) => (
   <span className="inline-flex min-w-[1.8ch] justify-center align-baseline">
@@ -83,6 +135,8 @@ const ProductDetail = () => {
     if (!id) return 8;
     return Math.floor(Math.random() * 19) + 1;
   }, [id]);
+
+  const deliverySteps = useMemo(() => buildDeliverySteps(), []);
 
   // Reset states when 'id' changes
   useEffect(() => {
@@ -488,6 +542,45 @@ const ProductDetail = () => {
                   >
                     Buy Now
                   </button>
+              </div>
+
+              <div className="mb-6 rounded-2xl border border-border/60 bg-muted/25 px-3 py-3 sm:px-4">
+                <div className="relative grid grid-cols-3 gap-1">
+                  <div
+                    className="pointer-events-none absolute left-[18%] right-[18%] top-[18px] hidden h-px bg-border sm:block"
+                    aria-hidden
+                  />
+                  {deliverySteps.map((step) => (
+                    <div key={step.label} className="relative z-10 flex flex-col items-center gap-1 text-center">
+                      <span
+                        className={`relative flex h-9 w-9 items-center justify-center rounded-full border shadow-sm ${step.ringClass} ${
+                          step.glow
+                            ? "animate-pulse shadow-[0_0_0_2px_rgba(245,158,11,0.45),0_0_6px_4px_rgba(251,191,36,0.22),0_0_20px_6px_rgba(245,158,11,0.18)]"
+                            : ""
+                        }`}
+                      >
+                        {step.glow && (
+                          <span
+                            className="pointer-events-none absolute -inset-1.5 rounded-full bg-amber-400/20 blur-md"
+                            aria-hidden
+                          />
+                        )}
+                        <step.icon
+                          size={16}
+                          strokeWidth={1.75}
+                          className={`relative z-10 ${step.iconClass}`}
+                          aria-hidden
+                        />
+                      </span>
+                      <span className="font-nav text-[10px] font-bold uppercase tracking-wide text-foreground">
+                        {step.label}
+                      </span>
+                      <span className="font-body text-[11px] leading-none text-muted-foreground">
+                        {step.date}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
