@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, ShoppingBag, Menu, X, Search, Heart, User } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, Menu, X, Heart, User } from "lucide-react";
+import NavSearch from "@/components/NavSearch";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -82,7 +83,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       {/* Navigation */}
       <CollectionsMegaMenuRoot>
       <header
-        className={`sticky top-0 z-50 relative transition-all duration-500 ${
+        className={`top-0 z-50 relative transition-all duration-500 ${
           scrolled ? "bg-background/95 backdrop-blur-md luxury-shadow" : "bg-background"
         }`}
       >
@@ -126,13 +127,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </Link>
 
             <div className="z-10 flex w-[4.5rem] shrink-0 items-center justify-end gap-2 sm:w-24 sm:gap-2.5 lg:w-auto lg:gap-5">
-              <button
-                type="button"
-                className="hidden md:block text-foreground/70 hover:text-foreground transition-colors"
-                aria-label="Search"
-              >
-                <Search size={20} />
-              </button>
+              <NavSearch className="inline-flex items-center justify-center" />
               <button
                 type="button"
                 className="hidden md:block text-foreground/70 hover:text-foreground transition-colors"
@@ -198,6 +193,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               <button onClick={() => setMobileOpen(false)} className="self-end mb-8 text-foreground">
                 <X size={24} />
               </button>
+              <div className="mb-6">
+                <NavSearch
+                  className="mb-3 inline-flex"
+                  onNavigate={() => setMobileOpen(false)}
+                />
+                <p className="font-body text-xs text-muted-foreground">Tap to search products</p>
+              </div>
               <nav className="flex flex-col gap-6">
                 {navLinks.map((link) => (
                   <Link

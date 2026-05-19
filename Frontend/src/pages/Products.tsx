@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import ProductCard from "@/components/ProductCard";
 import { useProducts } from "@/hooks/useProducts";
@@ -7,6 +7,8 @@ import ProductCardSkeleton from "@/components/skeletons/ProductCardSkeleton";
 
 const Products = () => {
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const searchQuery = (searchParams.get("q") ?? "").trim();
   const categoryFromNav = (location.state as { category?: string } | null)?.category;
   const [activeCategory, setActiveCategory] = useState(categoryFromNav ?? "All");
   const { products, categories, isLoading, error } = useProducts();
@@ -17,7 +19,21 @@ const Products = () => {
     }
   }, [categoryFromNav]);
 
-  const filtered = activeCategory === "All" ? products : products.filter((p) => p.category === activeCategory);
+  const filtered = useMemo(() => {
+    const byCategory =
+      activeCategory === "All" ? products : products.filter((p) => p.category === activeCategory);
+
+    if (!searchQuery) return byCategory;
+
+    const term = searchQuery.toLowerCase();
+    return byCategory.filter(
+      (p) =>
+        p.name.toLowerCase().includes(term) ||
+        p.category.toLowerCase().includes(term) ||
+        (p.description?.toLowerCase().includes(term) ?? false) ||
+        (p.shortDescription?.toLowerCase().includes(term) ?? false)
+    );
+  }, [products, activeCategory, searchQuery]);
 
   return (
     <>
@@ -26,7 +42,18 @@ const Products = () => {
         <div className="container">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <p className="text-label mb-3">Our collections</p>
-            <h1 className="mb-8 font-display text-4xl text-foreground md:text-5xl">Bags &amp; Accessories</h1>
+            <h1
+              className={`font-display text-4xl text-foreground md:text-5xl ${
+                searchQuery ? "mb-4" : "mb-8"
+              }`}
+            >
+              Bags &amp; Accessories
+            </h1>
+            {searchQuery && (
+              <p className="mb-8 font-body text-sm text-muted-foreground">
+                Showing results for &ldquo;<span className="font-medium text-foreground">{searchQuery}</span>&rdquo;
+              </p>
+            )}
           </motion.div>
           {/* Category filters */}
           <div className="flex flex-wrap justify-center gap-4">
@@ -61,7 +88,9 @@ const Products = () => {
               </div>
             ) : filtered.length === 0 ? (
               <div className="col-span-full py-20 text-center font-nav text-sm uppercase tracking-wide text-muted-foreground">
-                No products found in this category.
+                {searchQuery
+                  ? `No products found for "${searchQuery}".`
+                  : "No products found in this category."}
               </div>
             ) : (
               filtered.map((p, i) => (
