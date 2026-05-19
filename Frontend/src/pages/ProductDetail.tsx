@@ -1,7 +1,7 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  CheckCircle2,
+  AlertTriangle,
   ChevronLeft,
   ChevronRight,
   CreditCard,
@@ -79,6 +79,11 @@ const ProductDetail = () => {
 
   const images = product?.images?.length ? product.images : (product ? [product.image] : []);
 
+  const lowStockCount = useMemo(() => {
+    if (!id) return 8;
+    return Math.floor(Math.random() * 19) + 1;
+  }, [id]);
+
   // Reset states when 'id' changes
   useEffect(() => {
     setCurrentImageIndex(0);
@@ -132,13 +137,6 @@ const ProductDetail = () => {
   // Temporarily removing Related Products because the single product fetched doesn't have the whole catalog.
   // Can be reimplemented via a separate fetchFeaturedProducts() query if desired.
   const related: any[] = [];
-  const stockLeft = product.stockQuantity ?? 0;
-  const stockMessage =
-    product.inStock && stockLeft > 0 && stockLeft <= 10
-      ? `Only ${stockLeft} left in stock`
-      : product.inStock
-        ? "Ready to dispatch"
-        : "Currently unavailable";
   const trustBadges = [
     { icon: Truck, title: "Fast Delivery", desc: "Quick dispatch nationwide" },
     { icon: RotateCcw, title: "Easy Returns", desc: "Hassle-free return support" },
@@ -325,19 +323,21 @@ const ProductDetail = () => {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="flex flex-col"
             >
-              <div className="mb-4 flex flex-wrap items-center gap-3">
+              <motion.div className="mb-4 flex flex-wrap items-center gap-3">
                 <span className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1 font-nav text-xs font-bold uppercase tracking-normal text-primary">
                   {product.category || "LUXURY"}
                 </span>
-                <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 font-body text-xs font-semibold ${
-                  product.inStock
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "bg-destructive/10 text-destructive"
-                }`}>
-                  <CheckCircle2 size={13} />
-                  {stockMessage}
-                </span>
-              </div>
+                {product.inStock ? (
+                  <span className="inline-flex animate-pulse items-center gap-1.5 rounded-full border border-red-500/60 bg-red-600 px-3 py-1 font-nav text-xs font-bold uppercase tracking-wide text-white">
+                    <AlertTriangle size={13} className="shrink-0" />
+                    Only {lowStockCount} left
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-3 py-1 font-body text-xs font-semibold text-destructive">
+                    Out of stock
+                  </span>
+                )}
+              </motion.div>
 
               <h1 className="mb-4 font-display text-4xl leading-[1.08] text-foreground md:text-5xl">
                 {product.name}
@@ -457,16 +457,10 @@ const ProductDetail = () => {
                     {quantity}
                   </span>
                   <button
-                    onClick={() => {
-                      if (product.stockQuantity !== undefined) {
-                        setQuantity(Math.min(product.stockQuantity, quantity + 1));
-                      } else {
-                        setQuantity(quantity + 1);
-                      }
-                    }}
+                    onClick={() => setQuantity(Math.min(lowStockCount, quantity + 1))}
                     className="flex h-11 w-11 items-center justify-center text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
                     aria-label="Increase quantity"
-                    disabled={!product.inStock || (product.stockQuantity !== undefined && quantity >= product.stockQuantity)}
+                    disabled={!product.inStock || quantity >= lowStockCount}
                   >
                     +
                   </button>
