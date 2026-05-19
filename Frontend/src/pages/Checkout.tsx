@@ -1,15 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useCart } from "@/context/CartContext";
 import { Lock, ArrowLeft, Loader2 } from "lucide-react";
-import { createOrder, OrderPayload } from "@/services/api";
+import { createOrder, loginCustomer, OrderPayload, signupCustomer } from "@/services/api";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 
 const Checkout = () => {
   const { items, totalPrice, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const [placed, setPlaced] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -28,14 +28,37 @@ const Checkout = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handlePlaceOrder = async () => {
-    if (!user) {
-      toast.error('Please login before placing an order.');
-      return;
-    }
+  useEffect(() => {
+    if (!user) return;
+    setFormData((prev) => ({
+      ...prev,
+      fullName: prev.fullName || user.name,
+      email: prev.email || user.email,
+    }));
+  }, [user]);
 
-    // Basic validation
-    if (!formData.fullName || !formData.phone || !formData.address || !formData.city || !formData.state) {
+  const resolveOrderUserId = async () => {
+    if (user) return Number(user.id);
+
+    const phoneDigits = formData.phone.replace(/\D/g, "");
+    const accountEmail = `guest.${phoneDigits}.${Date.now()}@orders.ateeqo.local`;
+    const password = `Guest${phoneDigits.slice(-4)}${Date.now().toString(36)}`;
+
+    await signupCustomer({
+      name: formData.fullName,
+      email: accountEmail,
+      phone: formData.phone,
+      password,
+      referred_by_code: formData.referralCode || undefined,
+    });
+
+    const authUser = await loginCustomer({ email: accountEmail, password });
+    login(authUser);
+    return Number(authUser.id);
+  };
+
+  const handlePlaceOrder = async () => {
+    if (!formData.fullName || !formData.phone || !formData.address || !formData.city) {
       toast.error('Please fill in all required fields.');
       return;
     }
@@ -43,8 +66,10 @@ const Checkout = () => {
     setIsSubmitting(true);
 
     try {
+      const userId = await resolveOrderUserId();
+
       const orderPayload: OrderPayload = {
-        user_id: Number(user.id),
+        user_id: userId,
         subtotal: totalPrice,
         total: totalPrice,
         referred_by_code: formData.referralCode || undefined,
@@ -52,8 +77,8 @@ const Checkout = () => {
           full_name: formData.fullName,
           address: formData.address,
           city: formData.city,
-          state: formData.state,
-          zip: formData.zip,
+          state: formData.state.trim() || "N/A",
+          zip: formData.zip.trim() || "",
           country: 'PK',
           email: formData.email || 'no-email@cod.com',
           phone: formData.phone,
@@ -112,23 +137,6 @@ const Checkout = () => {
 
   const shipping = 0; // FREE shipping for COD in Pakistan
 
-  if (!user) {
-    return (
-      <div className="container py-32 text-center">
-        <h2 className="font-display text-2xl text-foreground mb-3">Login Required</h2>
-        <p className="font-body text-muted-foreground mb-6">
-          Please login to place an order and track it from your dashboard.
-        </p>
-        <Link
-          to="/login"
-          className="inline-block bg-foreground text-primary-foreground font-nav text-xs tracking-wide uppercase px-10 py-4"
-        >
-          Login to Checkout
-        </Link>
-      </div>
-    );
-  }
-
   return (
     <section className="container py-16">
       <Link to="/cart" className="inline-flex items-center gap-2 font-nav text-xs tracking-normal uppercase text-muted-foreground hover:text-foreground transition-colors mb-8">
@@ -136,7 +144,18 @@ const Checkout = () => {
       </Link>
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="font-display text-3xl text-foreground mb-12">Checkout</h1>
+        <h1 className="font-display text-3xl text-foreground mb-3">Checkout</h1>
+        <p className="font-body text-sm text-muted-foreground mb-10">
+          No login required — place your order as a guest.{" "}
+          {!user && (
+            <>
+              Already have an account?{" "}
+              <Link to="/login" className="text-primary underline underline-offset-4">
+                Login
+              </Link>
+            </>
+          )}
+        </p>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
           {/* Form */}
@@ -156,8 +175,8 @@ const Checkout = () => {
                 <input type="text" name="address" value={formData.address} onChange={handleInputChange} placeholder="Address" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
                 <div className="grid grid-cols-3 gap-4">
                   <input type="text" name="city" value={formData.city} onChange={handleInputChange} placeholder="City" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
-                  <input type="text" name="state" value={formData.state} onChange={handleInputChange} placeholder="State" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
-                  <input type="text" name="zip" value={formData.zip} onChange={handleInputChange} placeholder="ZIP" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
+                  <input type="text" name="state" value={formData.state} onChange={handleInputChange} placeholder="State (Optional)" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
+                  <input type="text" name="zip" value={formData.zip} onChange={handleInputChange} placeholder="ZIP (Optional)" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
                 </div>
                 <input type="text" name="referralCode" value={formData.referralCode} onChange={handleInputChange} placeholder="Referral / ReSale Code (Optional)" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
               </div>
