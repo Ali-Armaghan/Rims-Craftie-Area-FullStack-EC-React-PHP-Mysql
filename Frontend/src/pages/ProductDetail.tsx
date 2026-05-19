@@ -546,10 +546,11 @@ const ProductDetail = () => {
                   </button>
               </div>
 
-              <div className="mb-6 rounded-2xl border border-border/60 bg-muted/25 px-3 py-3 sm:px-4">
+              <div className="delivery-steps-card mb-6">
+                <div className="delivery-steps-card__inner">
                 <div className="relative grid grid-cols-3 gap-1">
                   <div
-                    className="pointer-events-none absolute left-[18%] right-[18%] top-[18px] hidden h-px bg-border sm:block"
+                    className="delivery-steps-line pointer-events-none absolute left-[18%] right-[18%] top-[18px] hidden h-[2px] sm:block"
                     aria-hidden
                   />
                   {deliverySteps.map((step) => (
@@ -582,6 +583,7 @@ const ProductDetail = () => {
                       </span>
                     </div>
                   ))}
+                </div>
                 </div>
               </div>
 

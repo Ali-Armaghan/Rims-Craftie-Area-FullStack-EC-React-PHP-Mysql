@@ -152,6 +152,58 @@
   .nav-link:hover::after {
     @apply scale-x-100 origin-left;
   }
+
+  .delivery-steps-card {
+    @apply relative isolate overflow-hidden rounded-2xl bg-white p-[1.5px];
+  }
+
+  .delivery-steps-card::before {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    inset: -80%;
+    background: conic-gradient(
+      from 0deg,
+      hsl(30 68% 11% / 0.5) 0deg,
+      hsl(38 72% 48% / 0.6) 28deg,
+      transparent 56deg,
+      transparent 360deg
+    );
+    animation: delivery-border-spin 2.8s linear infinite;
+  }
+
+  .delivery-steps-card__inner {
+    @apply relative z-[1] rounded-[calc(1rem-1.5px)] border border-border/30 bg-white px-3 py-3 sm:px-4;
+  }
+
+  .delivery-steps-line {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--border)) 0%,
+      hsl(var(--border)) 35%,
+      hsl(30 68% 11% / 0.55) 50%,
+      hsl(38 72% 48% / 0.7) 55%,
+      hsl(var(--border)) 70%,
+      hsl(var(--border)) 100%
+    );
+    background-size: 220% 100%;
+    animation: delivery-line-sweep 2.8s linear infinite;
+  }
+}
+
+@keyframes delivery-border-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes delivery-line-sweep {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
 }
 
 @keyframes category-marquee {
