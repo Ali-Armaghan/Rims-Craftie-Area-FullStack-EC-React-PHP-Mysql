@@ -13,7 +13,10 @@ import {
 } from "@/components/CollectionsMegaMenu";
 import PurchaseNotificationToast from "@/components/PurchaseNotificationToast";
 
-const navLinks = [{ label: "Home", path: "/" }];
+const navLinks = [
+  { label: "Home", path: "/" },
+  { label: "Rewards", path: "/rewards" },
+];
 
 const ANNOUNCEMENT_SLIDES = [
   "LIMITED TIME OFFER: 50% OFF ON ALL ORDERS",
