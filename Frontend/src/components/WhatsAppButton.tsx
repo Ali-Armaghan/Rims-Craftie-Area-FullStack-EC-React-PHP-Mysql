@@ -13,17 +13,28 @@ const WhatsAppIcon = () => (
 
 const WhatsAppButton = () => {
   return (
-    <a
-      href={WHATSAPP_URL}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="Chat on WhatsApp at 03000000000"
-      className="whatsapp-float fixed bottom-5 right-5 z-[90] flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_4px_20px_rgba(37,211,102,0.45)] transition-shadow hover:shadow-[0_6px_24px_rgba(37,211,102,0.55)] sm:bottom-6 sm:right-6 sm:h-[3.75rem] sm:w-[3.75rem]"
-    >
-      <span className="flex items-center justify-center transition-transform duration-200 hover:scale-110">
-        <WhatsAppIcon />
+    <div className="whatsapp-float-wrap group fixed bottom-5 right-5 z-[90] flex items-center gap-3 sm:bottom-6 sm:right-6">
+      <span
+        className="whatsapp-tooltip pointer-events-none hidden translate-x-3 rounded-full bg-foreground px-4 py-2 font-nav text-[10px] uppercase tracking-wide text-primary-foreground opacity-0 shadow-lg transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100 sm:block"
+        aria-hidden
+      >
+        Chat on WhatsApp
       </span>
-    </a>
+
+      <a
+        href={WHATSAPP_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Chat on WhatsApp at 03000000000"
+        className="whatsapp-float relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_4px_20px_rgba(37,211,102,0.45)] sm:h-[3.75rem] sm:w-[3.75rem]"
+      >
+        <span className="whatsapp-ring absolute inset-0 rounded-full bg-[#25D366]" aria-hidden />
+        <span className="whatsapp-ring-delay absolute inset-0 rounded-full bg-[#25D366]" aria-hidden />
+        <span className="whatsapp-icon relative z-10 flex items-center justify-center">
+          <WhatsAppIcon />
+        </span>
+      </a>
+    </div>
   );
 };
 
