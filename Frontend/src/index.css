@@ -214,3 +214,21 @@
     transform: translateX(-33.333%);
   }
 }
+
+@keyframes whatsapp-float-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+.whatsapp-float {
+  animation: whatsapp-float-bob 2.8s ease-in-out infinite;
+}
+
+.whatsapp-float:hover {
+  animation-play-state: paused;
+}

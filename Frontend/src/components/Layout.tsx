@@ -22,6 +22,7 @@ import {
   CollectionsMobileLinks,
 } from "@/components/CollectionsMegaMenu";
 import PurchaseNotificationToast from "@/components/PurchaseNotificationToast";
+import WhatsAppButton from "@/components/WhatsAppButton";
 
 const navLinks = [
   { label: "Home", path: "/" },
@@ -274,6 +275,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       <main className="flex-1 overflow-x-hidden">{children}</main>
 
       <PurchaseNotificationToast />
+      <WhatsAppButton />
 
       {/* Footer */}
       <footer className="bg-foreground text-primary-foreground">
