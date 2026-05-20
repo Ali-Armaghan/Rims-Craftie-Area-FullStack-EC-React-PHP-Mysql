@@ -84,7 +84,7 @@ function buildNotification(products: Product[]): Notification | null {
 }
 
 function randomIntervalMs() {
-  return 12000 + Math.floor(Math.random() * 13000);
+  return 22000 + Math.floor(Math.random() * 18000);
 }
 
 const PurchaseNotificationToast = () => {
@@ -128,7 +128,7 @@ const PurchaseNotificationToast = () => {
     const initialDelay = setTimeout(() => {
       showNext();
       schedule();
-    }, 4000);
+    }, 10000);
 
     return () => {
       clearTimeout(initialDelay);
