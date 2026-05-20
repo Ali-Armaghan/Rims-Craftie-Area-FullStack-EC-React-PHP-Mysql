@@ -1,6 +1,16 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, ShoppingBag, Menu, X, Heart, User } from "lucide-react";
+import {
+  Facebook,
+  Heart,
+  Instagram,
+  LayoutDashboard,
+  Menu,
+  ShoppingBag,
+  User,
+  X,
+  Youtube,
+} from "lucide-react";
 import NavSearch from "@/components/NavSearch";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
@@ -17,6 +27,12 @@ const navLinks = [
   { label: "Home", path: "/" },
   { label: "Rewards", path: "/rewards" },
 ];
+
+const socialLinks = [
+  { label: "Facebook", href: "#", icon: Facebook },
+  { label: "Instagram", href: "#", icon: Instagram },
+  { label: "YouTube", href: "#", icon: Youtube },
+] as const;
 
 const ANNOUNCEMENT_SLIDES = [
   "LIMITED TIME OFFER: 50% OFF ON ALL ORDERS",
@@ -265,9 +281,21 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
             <div>
               <h3 className="font-display text-xl mb-4">Ateeqo</h3>
-              <p className="font-body text-sm text-primary-foreground/70 leading-relaxed">
+              <p className="font-body text-sm text-primary-foreground/70 leading-relaxed mb-5">
                 Stylish handbags and accessories for every occasion — quality you can see and feel.
               </p>
+              <div className="flex items-center gap-3">
+                {socialLinks.map(({ label, href, icon: Icon }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    aria-label={label}
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-primary-foreground/25 text-primary-foreground/70 transition-colors hover:border-primary-foreground/50 hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                  >
+                    <Icon size={16} strokeWidth={1.75} />
+                  </a>
+                ))}
+              </div>
             </div>
             <div>
               <h4 className="font-nav text-xs tracking-wide uppercase mb-4">Quick Links</h4>
