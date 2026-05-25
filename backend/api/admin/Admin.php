@@ -287,10 +287,7 @@ class Admin {
             $page['page_views'] = (int)$page['page_views'];
             $page['unique_visitors'] = (int)$page['unique_visitors'];
             $page['avg_stay_seconds'] = (int)($page['avg_stay_seconds'] ?? 0);
-            $page['label'] = $this->formatPageLabel(
-                $page['page_path'],
-                $page['page_title'] ?? null
-            );
+            $page['label'] = $this->formatPageLabel($page['page_path']);
         }
         unset($page);
 
@@ -316,19 +313,41 @@ class Admin {
         ];
     }
 
-    private function formatPageLabel($pagePath, $pageTitle = null) {
-        if (!empty($pageTitle)) {
-            $label = trim($pageTitle);
-        } elseif ($pagePath === '/' || $pagePath === '') {
-            $label = 'Home';
-        } else {
-            $label = trim($pagePath, '/');
-            $label = str_replace(['-', '_'], ' ', basename($label));
-            $label = ucwords($label);
+    private function formatPageLabel($pagePath) {
+        $path = trim($pagePath ?: '/');
+
+        if ($path === '/') {
+            return 'Home';
         }
 
-        if (strlen($label) > 28) {
-            return substr($label, 0, 25) . '...';
+        $pathPart = $path;
+        $queryPart = '';
+        if (($queryPos = strpos($path, '?')) !== false) {
+            $pathPart = substr($path, 0, $queryPos);
+            $queryPart = substr($path, $queryPos + 1);
+        }
+
+        $segments = array_values(array_filter(explode('/', trim($pathPart, '/'))));
+        $segmentLabel = $segments
+            ? ucwords(str_replace(['-', '_'], ' ', end($segments)))
+            : 'Page';
+
+        if (count($segments) > 1 && preg_match('/^\d+$/', end($segments))) {
+            $parent = $segments[count($segments) - 2];
+            $segmentLabel = ucwords(str_replace(['-', '_'], ' ', $parent)) . ' #' . end($segments);
+        }
+
+        if ($queryPart !== '') {
+            $shortQuery = strlen($queryPart) > 16
+                ? substr($queryPart, 0, 14) . '..'
+                : $queryPart;
+            $label = $segmentLabel . ' (' . $shortQuery . ')';
+        } else {
+            $label = $pathPart;
+        }
+
+        if (strlen($label) > 40) {
+            return substr($label, 0, 37) . '...';
         }
 
         return $label;

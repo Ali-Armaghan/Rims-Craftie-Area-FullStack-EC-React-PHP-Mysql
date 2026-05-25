@@ -54,6 +54,27 @@ function formatDuration(seconds: number) {
   return `${mins}m ${secs}s`
 }
 
+function formatPageLabel(path: string) {
+  const normalized = path?.trim() || '/'
+  if (normalized === '/') return 'Home'
+
+  const [pathPart, queryPart = ''] = normalized.split('?')
+  const segments = pathPart.split('/').filter(Boolean)
+  const last = segments[segments.length - 1] ?? 'page'
+
+  if (segments.length > 1 && /^\d+$/.test(last)) {
+    const parent = segments[segments.length - 2]
+    const base = `${parent.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} #${last}`
+    return queryPart ? `${base} (${queryPart.slice(0, 14)})` : base
+  }
+
+  const label = queryPart
+    ? `${pathPart} (${queryPart.slice(0, 14)}${queryPart.length > 14 ? '..' : ''})`
+    : pathPart
+
+  return label.length > 40 ? `${label.slice(0, 37)}...` : label
+}
+
 function PageMetricChart({
   data,
   dataKey,
@@ -65,12 +86,21 @@ function PageMetricChart({
   barClassName: string
   valueFormatter?: (value: number) => string
 }) {
-  const chartHeight = Math.max(280, data.length * 42)
+  const chartData = useMemo(
+    () =>
+      data.map((row) => ({
+        ...row,
+        chartLabel: formatPageLabel(row.page_path),
+      })),
+    [data]
+  )
+
+  const chartHeight = Math.max(280, chartData.length * 48)
 
   return (
     <ResponsiveContainer width='100%' height={chartHeight}>
       <BarChart
-        data={data}
+        data={chartData}
         layout='vertical'
         margin={{ top: 8, right: 16, left: 8, bottom: 8 }}
       >
@@ -87,10 +117,11 @@ function PageMetricChart({
         />
         <YAxis
           type='category'
-          dataKey='label'
-          width={120}
+          dataKey='chartLabel'
+          width={180}
+          interval={0}
           stroke='#888888'
-          fontSize={12}
+          fontSize={11}
           tickLine={false}
           axisLine={false}
         />
