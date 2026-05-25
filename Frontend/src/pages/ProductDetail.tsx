@@ -5,7 +5,6 @@ import {
   ChevronLeft,
   ChevronRight,
   CreditCard,
-  Heart,
   PackageCheck,
   RotateCcw,
   ShieldCheck,
@@ -16,6 +15,7 @@ import {
 import { useProduct } from "@/hooks/useProduct";
 import { useCart } from "@/context/CartContext";
 import { useFavorites } from "@/context/FavoritesContext";
+import { FavoriteHeartButton } from "@/components/FavoriteHeartButton";
 import ProductCard from "@/components/ProductCard";
 import { useState, useEffect, useMemo } from "react";
 import { useProductReviews, useSubmitReview } from "@/hooks/useProductReviews";
@@ -494,25 +494,16 @@ const ProductDetail = () => {
               <div className="mb-6 rounded-3xl border border-border bg-background p-5 shadow-sm">
                 <div className="mb-5 flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => product && toggleFavorite(product)}
-                      className={`flex h-11 w-11 items-center justify-center rounded-full border transition ${
+                    <FavoriteHeartButton
+                      favorited={Boolean(product && isFavorite(product.id))}
+                      onToggle={() => product && toggleFavorite(product)}
+                      size={18}
+                      className={`h-11 w-11 rounded-full border transition ${
                         product && isFavorite(product.id)
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-border text-foreground hover:border-primary"
+                          ? "border-red-500/40 bg-red-500/10"
+                          : "border-border text-foreground hover:border-red-400 hover:text-red-400"
                       }`}
-                      aria-label={
-                        product && isFavorite(product.id)
-                          ? "Remove from favorites"
-                          : "Add to favorites"
-                      }
-                    >
-                      <Heart
-                        size={18}
-                        className={product && isFavorite(product.id) ? "fill-current" : undefined}
-                      />
-                    </button>
+                    />
                     <div>
                       <p className="font-nav text-xs font-bold uppercase tracking-wide text-muted-foreground">
                         Quantity
