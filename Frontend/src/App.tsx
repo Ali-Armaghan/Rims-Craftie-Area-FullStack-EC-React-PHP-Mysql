@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/context/CartContext";
+import { FavoritesProvider } from "@/context/FavoritesContext";
 import { AuthProvider } from "@/context/AuthContext";
 import Layout from "@/components/Layout";
 import Index from "./pages/Index";
@@ -15,6 +16,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Account from "./pages/Account";
 import RewardsProgram from "./pages/RewardsProgram";
+import Favorites from "./pages/Favorites";
 import NotFound from "./pages/NotFound";
 import { AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
@@ -37,6 +39,7 @@ const AnimatedRoutes = () => {
         <Route path="/signup" element={<PageTransition><Signup /></PageTransition>} />
         <Route path="/account" element={<PageTransition><Account /></PageTransition>} />
         <Route path="/rewards" element={<PageTransition><RewardsProgram /></PageTransition>} />
+        <Route path="/favorites" element={<PageTransition><Favorites /></PageTransition>} />
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>
     </AnimatePresence>
@@ -50,13 +53,15 @@ const App = () => (
     <TooltipProvider>
       <AuthProvider>
         <CartProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Layout>
-              <AnimatedRoutes />
-            </Layout>
-          </BrowserRouter>
+          <FavoritesProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Layout>
+                <AnimatedRoutes />
+              </Layout>
+            </BrowserRouter>
+          </FavoritesProvider>
         </CartProvider>
       </AuthProvider>
     </TooltipProvider>

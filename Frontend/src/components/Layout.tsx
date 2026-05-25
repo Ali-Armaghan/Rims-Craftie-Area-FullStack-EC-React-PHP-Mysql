@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import NavSearch from "@/components/NavSearch";
 import { useCart } from "@/context/CartContext";
+import { useFavorites } from "@/context/FavoritesContext";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -47,6 +48,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [announcementIndex, setAnnouncementIndex] = useState(0);
   const { totalItems } = useCart();
+  const { totalFavorites } = useFavorites();
   const { user, logout } = useAuth();
   const location = useLocation();
 
@@ -148,13 +150,18 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
             <div className="z-10 flex w-[4.5rem] shrink-0 items-center justify-end gap-2 sm:w-24 sm:gap-2.5 lg:w-auto lg:gap-5">
               <NavSearch className="inline-flex items-center justify-center" />
-              <button
-                type="button"
-                className="hidden md:block text-foreground/70 hover:text-foreground transition-colors"
-                aria-label="Wishlist"
+              <Link
+                to="/favorites"
+                className="relative hidden text-foreground/70 transition-colors hover:text-foreground md:inline-flex"
+                aria-label="Favorites"
               >
                 <Heart size={20} />
-              </button>
+                {totalFavorites > 0 && (
+                  <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-nav text-primary-foreground">
+                    {totalFavorites}
+                  </span>
+                )}
+              </Link>
               <Link to="/cart" className="relative text-foreground/70 hover:text-foreground transition-colors" aria-label="Cart">
                 <ShoppingBag size={20} />
                 {totalItems > 0 && (
@@ -231,6 +238,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                   </Link>
                 ))}
                 <CollectionsMobileLinks onNavigate={() => setMobileOpen(false)} />
+                <Link
+                  to="/favorites"
+                  className="font-nav text-lg uppercase tracking-wide text-foreground/80 transition-colors hover:text-foreground"
+                >
+                  Favorites{totalFavorites > 0 ? ` (${totalFavorites})` : ""}
+                </Link>
                 {user ? (
                   <>
                     <div className="font-body text-sm text-muted-foreground">

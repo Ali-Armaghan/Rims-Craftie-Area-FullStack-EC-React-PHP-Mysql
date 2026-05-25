@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useProduct } from "@/hooks/useProduct";
 import { useCart } from "@/context/CartContext";
+import { useFavorites } from "@/context/FavoritesContext";
 import ProductCard from "@/components/ProductCard";
 import { useState, useEffect, useMemo } from "react";
 import { useProductReviews, useSubmitReview } from "@/hooks/useProductReviews";
@@ -91,6 +92,7 @@ const CountdownValue = ({ value }: { value: string }) => (
 const ProductDetail = () => {
   const { id } = useParams();
   const { addToCart } = useCart();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const { product, isLoading, error } = useProduct(id);
   const { data: reviews = [], isLoading: isLoadingReviews } = useProductReviews(id);
   const { data: saleCountdown } = useQuery({
@@ -494,10 +496,22 @@ const ProductDetail = () => {
                   <div className="flex items-center gap-3">
                     <button
                       type="button"
-                      className="flex h-11 w-11 items-center justify-center rounded-full border border-border text-foreground transition hover:border-primary"
-                      aria-label="Add to wishlist"
+                      onClick={() => product && toggleFavorite(product)}
+                      className={`flex h-11 w-11 items-center justify-center rounded-full border transition ${
+                        product && isFavorite(product.id)
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border text-foreground hover:border-primary"
+                      }`}
+                      aria-label={
+                        product && isFavorite(product.id)
+                          ? "Remove from favorites"
+                          : "Add to favorites"
+                      }
                     >
-                      <Heart size={18} />
+                      <Heart
+                        size={18}
+                        className={product && isFavorite(product.id) ? "fill-current" : undefined}
+                      />
                     </button>
                     <div>
                       <p className="font-nav text-xs font-bold uppercase tracking-wide text-muted-foreground">

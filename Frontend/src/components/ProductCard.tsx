@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Star } from "lucide-react";
+import { Heart, Star } from "lucide-react";
 import { Product } from "@/data/products";
 import { cn } from "@/lib/utils";
+import { useFavorites } from "@/context/FavoritesContext";
 
 const ProductCard = ({
   product,
@@ -13,6 +14,8 @@ const ProductCard = ({
   index?: number;
   compact?: boolean;
 }) => {
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const favorited = isFavorite(product.id);
   const rating = Number(product.rating ?? 5);
   const reviewCount = product.reviewCount ?? 17;
   const roundedRating = Math.round(rating);
@@ -25,7 +28,24 @@ const ProductCard = ({
       transition={{ duration: 0.6, delay: index * 0.1 }}
       className="w-full min-w-0 overflow-hidden text-center"
     >
-      <div className={cn("overflow-hidden", compact ? "mb-1.5" : "mb-4")}>
+      <div className={cn("relative overflow-hidden", compact ? "mb-1.5" : "mb-4")}>
+        <button
+          type="button"
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            toggleFavorite(product);
+          }}
+          className={cn(
+            "absolute right-2 top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full border bg-background/90 transition-colors",
+            favorited
+              ? "border-primary text-primary"
+              : "border-border text-foreground/70 hover:border-primary hover:text-primary"
+          )}
+          aria-label={favorited ? "Remove from favorites" : "Add to favorites"}
+        >
+          <Heart size={16} className={favorited ? "fill-current" : undefined} />
+        </button>
         <Link to={`/product/${product.id}`} className="block w-full">
           <div
             className={cn(
