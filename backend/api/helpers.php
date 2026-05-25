@@ -93,5 +93,9 @@ function normalize_product_row(array $row): array
             : null;
     }
 
+    if (array_key_exists('description', $row)) {
+        $row['short_description'] = $row['description'];
+    }
+
     return $row;
 }

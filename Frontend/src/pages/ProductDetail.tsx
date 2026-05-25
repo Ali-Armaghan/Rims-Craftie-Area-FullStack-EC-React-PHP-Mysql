@@ -377,6 +377,22 @@ const ProductDetail = () => {
                   ))}
                 </div>
               )}
+
+              {product.longDescription?.trim() && (
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.15 }}
+                  className="mt-8 rounded-3xl border border-border/70 bg-card/40 p-6"
+                >
+                  <h2 className="mb-4 font-nav text-[11px] font-bold uppercase tracking-wide text-foreground">
+                    Description
+                  </h2>
+                  <p className="font-body text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
+                    {product.longDescription}
+                  </p>
+                </motion.div>
+              )}
             </div>
 
             {/* Right Column - Product Info */}

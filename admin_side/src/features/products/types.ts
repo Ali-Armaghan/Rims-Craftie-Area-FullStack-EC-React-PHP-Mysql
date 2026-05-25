@@ -17,6 +17,8 @@ export const productSchema = z
     category_names: z.string().optional(),
     categories: z.array(productCategorySchema).optional(),
     description: z.string().optional(),
+    short_description: z.string().optional(),
+    long_description: z.string().optional(),
     original_price: z.number().min(0).nullable().optional(),
     sale_price: z.number().min(0, 'Sale price must be zero or greater'),
     price: z.number().min(0).optional(),

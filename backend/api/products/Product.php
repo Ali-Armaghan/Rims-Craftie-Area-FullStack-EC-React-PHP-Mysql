@@ -11,6 +11,28 @@ class Product {
         $this->conn = $db;
         $this->ensureProductCategoriesTable();
         $this->ensureOriginalPriceColumn();
+        $this->ensureLongDescriptionColumn();
+    }
+
+    private function ensureLongDescriptionColumn() {
+        static $done = false;
+        if ($done) {
+            return;
+        }
+
+        try {
+            $this->conn->query("SELECT long_description FROM " . $this->table_name . " LIMIT 1");
+        } catch (Exception $e) {
+            try {
+                $this->conn->exec(
+                    "ALTER TABLE " . $this->table_name . "
+                     ADD COLUMN long_description TEXT NULL DEFAULT NULL AFTER description"
+                );
+            } catch (Exception $ignored) {
+            }
+        }
+
+        $done = true;
     }
 
     private function ensureOriginalPriceColumn() {
@@ -348,24 +370,39 @@ class Product {
         return normalize_product_row($row);
     }
 
+    private function resolveShortDescription($data) {
+        if (isset($data['short_description'])) {
+            return $data['short_description'];
+        }
+
+        return $data['description'] ?? '';
+    }
+
+    private function resolveLongDescription($data) {
+        return $data['long_description'] ?? '';
+    }
+
     public function create($data) {
         $categoryIds = $this->extractCategoryIds($data);
         $primaryCategoryId = $categoryIds ? $categoryIds[0] : null;
 
         $query = "INSERT INTO " . $this->table_name . " 
                   SET name=:name, slug=:slug, category_id=:cat_id, 
-                      description=:desc, price=:price, original_price=:original_price,
+                      description=:desc, long_description=:long_desc, price=:price, original_price=:original_price,
                       stock=:stock, images=:images";
         $stmt = $this->conn->prepare($query);
 
         $images = json_encode($data['images']);
         $salePrice = $this->resolveSalePrice($data);
         $originalPrice = $this->resolveOriginalPrice($data);
+        $shortDescription = $this->resolveShortDescription($data);
+        $longDescription = $this->resolveLongDescription($data);
 
         $stmt->bindParam(":name", $data['name']);
         $stmt->bindParam(":slug", $data['slug']);
         $stmt->bindParam(":cat_id", $primaryCategoryId, $primaryCategoryId === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
-        $stmt->bindParam(":desc", $data['description']);
+        $stmt->bindParam(":desc", $shortDescription);
+        $stmt->bindParam(":long_desc", $longDescription);
         $stmt->bindParam(":price", $salePrice);
         $stmt->bindParam(":original_price", $originalPrice, $originalPrice === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
         $stmt->bindParam(":stock", $data['stock']);
@@ -388,7 +425,7 @@ class Product {
 
         $query = "UPDATE " . $this->table_name . " 
                   SET name=:name, slug=:slug, category_id=:cat_id, 
-                      description=:desc, price=:price, original_price=:original_price,
+                      description=:desc, long_description=:long_desc, price=:price, original_price=:original_price,
                       stock=:stock, images=:images, is_active=:is_active
                   WHERE id=:id";
         $stmt = $this->conn->prepare($query);
@@ -397,11 +434,14 @@ class Product {
         $images = json_encode($newImages);
         $salePrice = $this->resolveSalePrice($data);
         $originalPrice = $this->resolveOriginalPrice($data);
+        $shortDescription = $this->resolveShortDescription($data);
+        $longDescription = $this->resolveLongDescription($data);
 
         $stmt->bindParam(":name", $data['name']);
         $stmt->bindParam(":slug", $data['slug']);
         $stmt->bindParam(":cat_id", $primaryCategoryId, $primaryCategoryId === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
-        $stmt->bindParam(":desc", $data['description']);
+        $stmt->bindParam(":desc", $shortDescription);
+        $stmt->bindParam(":long_desc", $longDescription);
         $stmt->bindParam(":price", $salePrice);
         $stmt->bindParam(":original_price", $originalPrice, $originalPrice === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
         $stmt->bindParam(":stock", $data['stock']);

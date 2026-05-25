@@ -134,6 +134,10 @@ function normalizeProduct(product: Product, categories: Category[]): Product {
     stock: Number(product.stock),
     images: parseProductImages(product.images).map(resolveImageUrl),
     is_active: Number(product.is_active),
+    short_description:
+      product.short_description ?? product.description ?? '',
+    long_description: product.long_description ?? '',
+    description: product.short_description ?? product.description ?? '',
   }
 }
 
@@ -194,6 +198,8 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
       sale_price: 0,
       price: 0,
       description: '',
+      short_description: '',
+      long_description: '',
       stock: 0,
       images: [],
       is_active: 1,
@@ -489,6 +495,9 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
       category_id: data.category_ids[0],
       price: data.sale_price,
       original_price: data.original_price ?? null,
+      description: data.short_description ?? data.description ?? '',
+      short_description: data.short_description ?? data.description ?? '',
+      long_description: data.long_description ?? '',
     }
 
     try {
@@ -709,14 +718,32 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
 
                 <FormField
                   control={form.control}
-                  name='description'
+                  name='short_description'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <FormLabel>Short Description</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder='Product description'
-                          className='min-h-32'
+                          placeholder='Brief summary shown near price (1–2 lines)'
+                          className='min-h-24'
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='long_description'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Long Description</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder='Full product details shown below images on the product page'
+                          className='min-h-40'
                           {...field}
                         />
                       </FormControl>

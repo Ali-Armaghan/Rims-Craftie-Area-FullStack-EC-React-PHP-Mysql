@@ -19,6 +19,7 @@ export interface Product {
   categoryIds?: number[];
   description: string;
   shortDescription?: string;
+  longDescription?: string;
   details: string[];
   material: string;
   inStock: boolean;

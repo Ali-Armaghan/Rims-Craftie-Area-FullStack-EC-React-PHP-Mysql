@@ -67,6 +67,8 @@ export function ProductDialog() {
       sale_price: 0,
       price: 0,
       description: '',
+      short_description: '',
+      long_description: '',
       stock: 0,
       images: [],
       is_active: 1,
@@ -90,6 +92,11 @@ export function ProductDialog() {
         sale_price: Number(currentRow.sale_price ?? currentRow.price ?? 0),
         price: Number(currentRow.sale_price ?? currentRow.price ?? 0),
         stock: Number(currentRow.stock),
+        short_description:
+          currentRow.short_description ?? currentRow.description ?? '',
+        long_description: currentRow.long_description ?? '',
+        description:
+          currentRow.short_description ?? currentRow.description ?? '',
       })
       return
     }
@@ -104,6 +111,8 @@ export function ProductDialog() {
         sale_price: 0,
         price: 0,
         description: '',
+        short_description: '',
+        long_description: '',
         stock: 0,
         images: [],
         is_active: 1,
@@ -118,6 +127,9 @@ export function ProductDialog() {
       category_id: data.category_ids[0],
       price: data.sale_price,
       original_price: data.original_price ?? null,
+      description: data.short_description ?? data.description ?? '',
+      short_description: data.short_description ?? data.description ?? '',
+      long_description: data.long_description ?? '',
     }
 
     try {
@@ -252,12 +264,33 @@ export function ProductDialog() {
             />
             <FormField
               control={form.control}
-              name='description'
+              name='short_description'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>Short Description</FormLabel>
                   <FormControl>
-                    <Textarea {...field} />
+                    <Textarea
+                      placeholder='Brief summary (1–2 lines)'
+                      className='min-h-20'
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name='long_description'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Long Description</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder='Full details for product page'
+                      className='min-h-32'
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

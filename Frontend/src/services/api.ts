@@ -118,6 +118,8 @@ type BackendProduct = {
     category_names?: string | null;
     categories?: { id: number; name: string; slug?: string }[];
     description?: string | null;
+    short_description?: string | null;
+    long_description?: string | null;
     price: number | string;
     sale_price?: number | string | null;
     original_price?: number | string | null;
@@ -260,8 +262,15 @@ function mapBackendProduct(product: BackendProduct): Product {
         categories: categoryNames,
         categoryId: categoryIds[0],
         categoryIds,
-        description: product.description || 'No description available',
-        shortDescription: product.description || undefined,
+        description:
+            product.short_description ||
+            product.description ||
+            'No description available',
+        shortDescription:
+            product.short_description ||
+            product.description ||
+            undefined,
+        longDescription: product.long_description || undefined,
         details: [],
         material: 'Premium Quality',
         inStock: stockQuantity > 0 && Number(product.is_active ?? 1) === 1,
