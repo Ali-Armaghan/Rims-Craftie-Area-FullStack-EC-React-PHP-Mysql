@@ -113,7 +113,10 @@ type BackendProduct = {
     name: string;
     slug: string;
     category_id?: number | string | null;
+    category_ids?: number[];
     category_name?: string | null;
+    category_names?: string | null;
+    categories?: { id: number; name: string; slug?: string }[];
     description?: string | null;
     price: number | string;
     stock?: number | string | null;
@@ -224,6 +227,18 @@ function mapBackendProduct(product: BackendProduct): Product {
     const parsedImages = parseImages(product.images).filter(Boolean).map(resolveImageUrl);
     const image = parsedImages[0] ?? 'https://placehold.co/600x600?text=No+Image';
     const stockQuantity = Number(product.stock ?? 0);
+    const categoryNames = Array.isArray(product.categories) && product.categories.length
+        ? product.categories.map((category) => category.name)
+        : product.category_names
+            ? product.category_names.split(',').map((name) => name.trim()).filter(Boolean)
+            : product.category_name
+                ? [product.category_name]
+                : ['Uncategorized'];
+    const categoryIds = Array.isArray(product.category_ids) && product.category_ids.length
+        ? product.category_ids.map(Number)
+        : product.category_id != null
+            ? [Number(product.category_id)]
+            : [];
 
     return {
         id: String(product.id),
@@ -231,8 +246,10 @@ function mapBackendProduct(product: BackendProduct): Product {
         price: Number(product.price ?? 0),
         image,
         images: parsedImages.length ? parsedImages : [image],
-        category: product.category_name || 'Uncategorized',
-        categoryId: product.category_id != null ? Number(product.category_id) : undefined,
+        category: categoryNames[0] || 'Uncategorized',
+        categories: categoryNames,
+        categoryId: categoryIds[0],
+        categoryIds,
         description: product.description || 'No description available',
         shortDescription: product.description || undefined,
         details: [],

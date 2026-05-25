@@ -44,6 +44,7 @@ import { Textarea } from '@/components/ui/textarea'
 import apiClient from '@/lib/api-client'
 import { resolveImageUrl } from '@/lib/resolve-image-url'
 import { productSchema, type Product } from './types'
+import { CategoryMultiSelect } from './components/category-multi-select'
 
 type Category = {
   id: number | string
@@ -66,11 +67,23 @@ type CropSession = {
   croppedFiles: File[]
 }
 
-function getProductCategoryId(product: Product, categories: Category[]) {
-  const categoryId = Number(product.category_id)
+function getProductCategoryIds(
+  product: Product & { categories?: { id: number }[] },
+  categories: Category[]
+) {
+  if (Array.isArray(product.category_ids) && product.category_ids.length) {
+    return product.category_ids.map(Number).filter((id) => id > 0)
+  }
 
+  if (Array.isArray(product.categories) && product.categories.length) {
+    return product.categories
+      .map((category) => Number(category.id))
+      .filter((id) => id > 0)
+  }
+
+  const categoryId = Number(product.category_id)
   if (categoryId > 0) {
-    return categoryId
+    return [categoryId]
   }
 
   const categoryByName = categories.find(
@@ -78,10 +91,10 @@ function getProductCategoryId(product: Product, categories: Category[]) {
   )
 
   if (categoryByName) {
-    return Number(categoryByName.id)
+    return [Number(categoryByName.id)]
   }
 
-  return Number(categories[0]?.id ?? 0)
+  return []
 }
 
 function parseProductImages(images: unknown): string[] {
@@ -104,9 +117,16 @@ function parseProductImages(images: unknown): string[] {
 }
 
 function normalizeProduct(product: Product, categories: Category[]): Product {
+  const categoryIds = getProductCategoryIds(product, categories)
+
   return {
     ...product,
-    category_id: getProductCategoryId(product, categories),
+    category_ids: categoryIds.length
+      ? categoryIds
+      : categories[0]
+        ? [Number(categories[0].id)]
+        : [],
+    category_id: categoryIds[0] ?? Number(categories[0]?.id ?? 0),
     price: Number(product.price),
     stock: Number(product.stock),
     images: parseProductImages(product.images).map(resolveImageUrl),
@@ -165,6 +185,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
     defaultValues: {
       name: '',
       slug: '',
+      category_ids: [],
       category_id: 0,
       description: '',
       price: 0,
@@ -179,27 +200,23 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
     if (productToEdit) {
       const normalizedProduct = normalizeProduct(productToEdit, categories)
       reset(normalizedProduct)
-      setValue('category_id', normalizedProduct.category_id, {
+      setValue('category_ids', normalizedProduct.category_ids, {
         shouldDirty: false,
         shouldValidate: true,
       })
       return
     }
 
-    if (categories.length && !getValues('category_id')) {
-      setValue('category_id', Number(categories[0].id), {
+    if (categories.length && !getValues('category_ids')?.length) {
+      setValue('category_ids', [Number(categories[0].id)], {
         shouldDirty: false,
         shouldValidate: true,
       })
     }
   }, [categories, getValues, productToEdit, reset, setValue])
 
-  const selectedCategoryId = watch('category_id')
+  const selectedCategoryIds = watch('category_ids') ?? []
   const productImages = watch('images') ?? []
-  const categorySelectValue =
-    selectedCategoryId && Number(selectedCategoryId) > 0
-      ? String(selectedCategoryId)
-      : ''
 
   const uploadProductImages = async (files: File[]) => {
     if (!files.length) return []
@@ -453,11 +470,17 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
   const onSubmit = async (data: Product) => {
     setIsSaving(true)
 
+    const payload = {
+      ...data,
+      category_ids: data.category_ids,
+      category_id: data.category_ids[0],
+    }
+
     try {
       if (isEdit) {
-        await apiClient.put('/products', { ...data, id: Number(productId) })
+        await apiClient.put('/products', { ...payload, id: Number(productId) })
       } else {
-        await apiClient.post('/products', data)
+        await apiClient.post('/products', payload)
       }
       await queryClient.invalidateQueries({ queryKey: ['products'] })
       toast.success(
@@ -553,64 +576,50 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
                   />
                 </div>
 
-                <div className='grid gap-4 md:grid-cols-3'>
-                  <FormField
-                    control={form.control}
-                    name='category_id'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Category</FormLabel>
-                        <FormControl>
-                          <select
-                            className='border-input bg-background ring-offset-background flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50'
-                            disabled={
-                              isCategoriesLoading ||
-                              isCategoriesError ||
-                              categories.length === 0
-                            }
-                            value={categorySelectValue}
-                            onChange={(event) => {
-                              const categoryId = Number(event.target.value)
-                              field.onChange(categoryId)
-                              setValue('category_id', categoryId, {
-                                shouldDirty: true,
-                                shouldValidate: true,
-                              })
-                            }}
-                          >
-                            <option value='' disabled>
-                              {isCategoriesLoading
-                                ? 'Loading categories...'
-                                : isCategoriesError
-                                  ? 'Failed to load categories'
-                                  : 'Select category'}
-                            </option>
-                            {categories.map((category) => (
-                              <option
-                                key={category.id}
-                                value={String(category.id)}
-                              >
-                                {category.name}
-                              </option>
-                            ))}
-                          </select>
-                        </FormControl>
-                        {!isCategoriesLoading &&
-                          !isCategoriesError &&
-                          categories.length === 0 && (
-                            <p className='text-xs text-muted-foreground'>
-                              No categories found in database
-                            </p>
-                          )}
-                        {/* {selectedCategory && (
+                <FormField
+                  control={form.control}
+                  name='category_ids'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Categories</FormLabel>
+                      <FormControl>
+                        <CategoryMultiSelect
+                          categories={categories}
+                          value={field.value ?? []}
+                          disabled={
+                            isCategoriesLoading ||
+                            isCategoriesError ||
+                            categories.length === 0
+                          }
+                          onChange={(nextValue) => {
+                            field.onChange(nextValue)
+                            setValue('category_id', nextValue[0] ?? 0, {
+                              shouldDirty: true,
+                              shouldValidate: true,
+                            })
+                          }}
+                        />
+                      </FormControl>
+                      {selectedCategoryIds.length > 0 && (
+                        <p className='text-xs text-muted-foreground'>
+                          {selectedCategoryIds.length} categor
+                          {selectedCategoryIds.length === 1 ? 'y' : 'ies'}{' '}
+                          selected
+                        </p>
+                      )}
+                      {!isCategoriesLoading &&
+                        !isCategoriesError &&
+                        categories.length === 0 && (
                           <p className='text-xs text-muted-foreground'>
-                            Selected: {selectedCategory.name}
+                            No categories found in database
                           </p>
-                        )} */}
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                        )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className='grid gap-4 md:grid-cols-3'>
                   <FormField
                     control={form.control}
                     name='price'

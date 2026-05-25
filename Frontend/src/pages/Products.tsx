@@ -21,7 +21,11 @@ const Products = () => {
 
   const filtered = useMemo(() => {
     const byCategory =
-      activeCategory === "All" ? products : products.filter((p) => p.category === activeCategory);
+      activeCategory === "All"
+        ? products
+        : products.filter((product) =>
+            (product.categories ?? [product.category]).includes(activeCategory)
+          );
 
     if (!searchQuery) return byCategory;
 
@@ -29,7 +33,9 @@ const Products = () => {
     return byCategory.filter(
       (p) =>
         p.name.toLowerCase().includes(term) ||
-        p.category.toLowerCase().includes(term) ||
+        (p.categories ?? [p.category]).some((category) =>
+          category.toLowerCase().includes(term)
+        ) ||
         (p.description?.toLowerCase().includes(term) ?? false) ||
         (p.shortDescription?.toLowerCase().includes(term) ?? false)
     );

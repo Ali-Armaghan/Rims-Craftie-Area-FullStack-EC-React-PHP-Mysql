@@ -85,7 +85,9 @@ const NavSearch = ({ className, iconClassName, onNavigate }: NavSearchProps) => 
       .filter(
         (p) =>
           p.name.toLowerCase().includes(trimmed) ||
-          p.category.toLowerCase().includes(trimmed) ||
+          (p.categories ?? [p.category]).some((category) =>
+            category.toLowerCase().includes(trimmed)
+          ) ||
           (p.description?.toLowerCase().includes(trimmed) ?? false)
       )
       .slice(0, 5);
@@ -254,7 +256,7 @@ const NavSearch = ({ className, iconClassName, onNavigate }: NavSearchProps) => 
                                       {product.name}
                                     </span>
                                     <span className="block truncate font-body text-xs text-muted-foreground">
-                                      {product.category} · Rs. {product.price.toLocaleString()}
+                                      {(product.categories ?? [product.category]).join(', ')} · Rs. {product.price.toLocaleString()}
                                     </span>
                                   </span>
                                   <ArrowRight size={14} className="shrink-0 text-muted-foreground" />

@@ -8,7 +8,7 @@ export function useProducts() {
         staleTime: 1000 * 60 * 10, // Data is fresh for 10 minutes
     });
 
-    const categories = ["All", ...new Set(products.map(p => p.category))];
+    const categories = ["All", ...new Set(products.flatMap((product) => product.categories ?? [product.category]))];
 
     return {
         products,

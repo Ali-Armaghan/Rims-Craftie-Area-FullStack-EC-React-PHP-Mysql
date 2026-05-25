@@ -18,13 +18,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -32,6 +25,7 @@ import { productSchema, type Product } from '../types'
 import { useProducts } from '../context/products-context'
 import apiClient from '@/lib/api-client'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { CategoryMultiSelect } from './category-multi-select'
 
 type Category = {
   id: number
@@ -39,6 +33,15 @@ type Category = {
 }
 
 const emptyCategories: Category[] = []
+
+function getCategoryIds(product: Product) {
+  if (Array.isArray(product.category_ids) && product.category_ids.length) {
+    return product.category_ids.map(Number).filter((id) => id > 0)
+  }
+
+  const single = Number(product.category_id)
+  return single > 0 ? [single] : []
+}
 
 export function ProductDialog() {
   const { open, setOpen, currentRow } = useProducts()
@@ -58,6 +61,7 @@ export function ProductDialog() {
     defaultValues: {
       name: '',
       slug: '',
+      category_ids: [],
       category_id: 0,
       description: '',
       price: 0,
@@ -66,14 +70,17 @@ export function ProductDialog() {
       is_active: 1,
     },
   })
-  const { reset } = form
+  const { reset, setValue } = form
 
   useEffect(() => {
     if (!open) return
 
     if (isEdit && currentRow) {
+      const categoryIds = getCategoryIds(currentRow)
       reset({
         ...currentRow,
+        category_ids: categoryIds,
+        category_id: categoryIds[0] ?? 0,
         price: Number(currentRow.price),
         stock: Number(currentRow.stock),
       })
@@ -84,6 +91,7 @@ export function ProductDialog() {
       reset({
         name: '',
         slug: '',
+        category_ids: categories[0] ? [categories[0].id] : [],
         category_id: categories[0]?.id ?? 0,
         description: '',
         price: 0,
@@ -95,12 +103,18 @@ export function ProductDialog() {
   }, [open, currentRow, isEdit, categories, reset])
 
   const onSubmit = async (data: Product) => {
+    const payload = {
+      ...data,
+      category_ids: data.category_ids,
+      category_id: data.category_ids[0],
+    }
+
     try {
       if (isEdit) {
-        await apiClient.put('/products', { ...data, id: currentRow?.id })
+        await apiClient.put('/products', { ...payload, id: currentRow?.id })
         toast.success('Product updated successfully')
       } else {
-        await apiClient.post('/products', data)
+        await apiClient.post('/products', payload)
         toast.success('Product created successfully')
       }
       queryClient.invalidateQueries({ queryKey: ['products'] })
@@ -112,7 +126,7 @@ export function ProductDialog() {
 
   return (
     <Dialog open={open === 'add' || open === 'edit'} onOpenChange={() => setOpen(null)}>
-      <DialogContent className='sm:max-w-[425px]'>
+      <DialogContent className='max-h-[90vh] overflow-y-auto sm:max-w-[425px]'>
         <DialogHeader>
           <DialogTitle>{isEdit ? 'Edit Product' : 'Add New Product'}</DialogTitle>
           <DialogDescription>
@@ -149,27 +163,20 @@ export function ProductDialog() {
             />
             <FormField
               control={form.control}
-              name='category_id'
+              name='category_ids'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Category</FormLabel>
-                  <Select
-                    onValueChange={(val) => field.onChange(Number(val))}
-                    value={field.value ? String(field.value) : ''}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder='Select a category' />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id.toString()}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Categories</FormLabel>
+                  <FormControl>
+                    <CategoryMultiSelect
+                      categories={categories}
+                      value={field.value ?? []}
+                      onChange={(nextValue) => {
+                        field.onChange(nextValue)
+                        setValue('category_id', nextValue[0] ?? 0)
+                      }}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

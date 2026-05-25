@@ -71,7 +71,12 @@ class Category {
 
     public function read() {
         $query = "SELECT c.*, p.name AS parent_name,
-                         (SELECT COUNT(*) FROM products WHERE category_id = c.id) AS product_count
+                         (
+                            SELECT COUNT(DISTINCT prod.id)
+                            FROM products prod
+                            LEFT JOIN product_categories pc ON pc.product_id = prod.id
+                            WHERE pc.category_id = c.id OR prod.category_id = c.id
+                         ) AS product_count
                   FROM " . $this->table_name . " c
                   LEFT JOIN " . $this->table_name . " p ON c.parent_id = p.id
                   ORDER BY c.home_sort_order ASC, c.name ASC";
@@ -97,7 +102,14 @@ class Category {
                          FROM products p
                          LEFT JOIN categories c ON p.category_id = c.id
                          LEFT JOIN product_reviews r ON r.product_id = p.id AND r.status = 'approved'
-                         WHERE p.category_id = ? AND p.is_active = 1
+                         WHERE p.is_active = 1
+                           AND (
+                               EXISTS (
+                                   SELECT 1 FROM product_categories pc
+                                   WHERE pc.product_id = p.id AND pc.category_id = ?
+                               )
+                               OR p.category_id = ?
+                           )
                          GROUP BY p.id
                          ORDER BY p.created_at DESC
                          LIMIT {$limit}";
@@ -105,8 +117,11 @@ class Category {
         $productStmt = $this->conn->prepare($productQuery);
 
         foreach ($categories as &$category) {
-            $productStmt->execute([$category['id']]);
+            $productStmt->execute([$category['id'], $category['id']]);
             $products = $productStmt->fetchAll(PDO::FETCH_ASSOC);
+            require_once __DIR__ . '/../products/Product.php';
+            $productModel = new Product($this->conn);
+            $products = $productModel->enrichRowsWithCategories($products);
             $category['products'] = array_map('normalize_product_row', $products);
         }
 
@@ -208,9 +223,12 @@ class Category {
             return ['success' => false, 'message' => 'Remove or reassign subcategories first.'];
         }
 
-        $productQuery = "SELECT COUNT(*) FROM products WHERE category_id = ?";
+        $productQuery = "SELECT COUNT(DISTINCT prod.id)
+                         FROM products prod
+                         LEFT JOIN product_categories pc ON pc.product_id = prod.id
+                         WHERE pc.category_id = ? OR prod.category_id = ?";
         $stmt = $this->conn->prepare($productQuery);
-        $stmt->execute([$id]);
+        $stmt->execute([$id, $id]);
         if ((int)$stmt->fetchColumn() > 0) {
             return ['success' => false, 'message' => 'Reassign products before deleting this category.'];
         }

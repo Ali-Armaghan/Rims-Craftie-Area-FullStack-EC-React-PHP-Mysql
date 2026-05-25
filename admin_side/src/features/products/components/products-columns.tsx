@@ -56,8 +56,19 @@ export const productsColumns: ColumnDef<Product>[] = [
     header: 'Name',
   },
   {
-    accessorKey: 'category_name',
-    header: 'Category',
+    accessorKey: 'category_names',
+    header: 'Categories',
+    cell: ({ row }) => {
+      const product = row.original
+      const labels =
+        product.category_names ||
+        product.category_name ||
+        (Array.isArray(product.categories)
+          ? product.categories.map((category) => category.name).join(', ')
+          : '')
+
+      return <div className='max-w-[220px] text-sm'>{labels || '—'}</div>
+    },
   },
   {
     accessorKey: 'price',
