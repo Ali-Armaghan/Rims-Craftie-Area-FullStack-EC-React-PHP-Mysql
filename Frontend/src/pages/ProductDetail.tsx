@@ -420,7 +420,7 @@ const ProductDetail = () => {
                     <div className="flex flex-col gap-1">
                       {product.originalPrice &&
                         product.originalPrice > product.price && (
-                          <span className="font-body text-sm text-muted-foreground line-through decoration-muted-foreground/70 md:text-base">
+                          <span className="font-body text-sm text-destructive line-through decoration-destructive/70 md:text-base">
                             Rs. {product.originalPrice.toLocaleString()}
                           </span>
                         )}

@@ -86,7 +86,7 @@ export const productsColumns: ColumnDef<Product>[] = [
         <div className='space-y-1'>
           <div className='font-medium'>{formatted}</div>
           {originalPrice != null && originalPrice > salePrice && (
-            <div className='text-xs text-muted-foreground line-through'>
+            <div className='text-xs text-destructive line-through decoration-destructive/70'>
               {new Intl.NumberFormat('en-PK', {
                 style: 'currency',
                 currency: 'PKR',
