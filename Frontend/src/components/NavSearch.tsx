@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Search, Sparkles, X } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { cn } from "@/lib/utils";
+import { getProductUrl } from "@/lib/product-url";
 
 const QUICK_SEARCHES = ["Handbag", "Tote", "Crossbody", "Wallet"];
 
@@ -108,10 +109,10 @@ const NavSearch = ({ className, iconClassName, onNavigate }: NavSearchProps) => 
     goToSearch(query);
   };
 
-  const openProduct = (productId: string) => {
+  const openProduct = (product: { slug: string; id: string }) => {
     close();
     onNavigate?.();
-    navigate(`/product/${productId}`);
+    navigate(getProductUrl(product));
   };
 
   return (
@@ -241,7 +242,7 @@ const NavSearch = ({ className, iconClassName, onNavigate }: NavSearchProps) => 
                               >
                                 <button
                                   type="button"
-                                  onClick={() => openProduct(product.id)}
+                                  onClick={() => openProduct(product)}
                                   className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-muted/50"
                                 >
                                   <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-muted/20">

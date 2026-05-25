@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Minus, Plus, X, ShoppingBag } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { getProductUrl } from "@/lib/product-url";
 
 const Cart = () => {
   const { items, updateQuantity, removeFromCart, totalPrice } = useCart();
@@ -32,7 +33,7 @@ const Cart = () => {
           <div className="lg:col-span-2 space-y-6">
             {items.map((item) => (
               <div key={item.product.id} className="flex gap-6 border-b border-border pb-6">
-                <Link to={`/product/${item.product.id}`} className="w-28 h-28 bg-card flex-shrink-0">
+                <Link to={getProductUrl(item.product)} className="w-28 h-28 bg-card flex-shrink-0">
                   <img src={item.product.image} alt={item.product.name} className="w-full h-full object-cover" />
                 </Link>
                 <div className="flex-1">

@@ -247,6 +247,7 @@ function mapBackendProduct(product: BackendProduct): Product {
 
     return {
         id: String(product.id),
+        slug: product.slug || String(product.id),
         name: product.name || 'Unknown Product',
         price: salePrice,
         originalPrice:
@@ -296,11 +297,16 @@ export async function fetchProducts() {
 }
 
 /**
- * Fetches a single product by ID to optimize payload size.
+ * Fetches a single product by URL slug (falls back to numeric id for old links).
  */
-export async function fetchProduct(id: string): Promise<Product | null> {
+export async function fetchProduct(identifier: string): Promise<Product | null> {
     try {
-        const response = await fetch(getBackendUrl('products', { id }).toString(), {
+        const isNumericId = /^\d+$/.test(identifier);
+        const response = await fetch(
+            isNumericId
+                ? getBackendUrl('products', { id: identifier }).toString()
+                : getBackendUrl(`products/${encodeURIComponent(identifier)}`).toString(),
+            {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
@@ -314,8 +320,8 @@ export async function fetchProduct(id: string): Promise<Product | null> {
         const data = await response.json();
         return mapBackendProduct(data);
     } catch (error) {
-        console.error(`Failed to fetch product ${id}:`, error);
-        return null; // Return null to indicate not found or network error
+        console.error(`Failed to fetch product ${identifier}:`, error);
+        return null;
     }
 }
 

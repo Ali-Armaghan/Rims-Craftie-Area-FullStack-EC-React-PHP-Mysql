@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import type { Product } from "@/data/products";
+import { getProductUrl } from "@/lib/product-url";
 
 const PAKISTANI_NAMES = [
   "Fatima",
@@ -154,7 +155,7 @@ const PurchaseNotificationToast = () => {
           >
             <div className="flex gap-3 p-3">
               <Link
-                to={`/product/${notification.product.id}`}
+                to={getProductUrl(notification.product)}
                 className="shrink-0 overflow-hidden rounded-md border border-[#E0D4C8] bg-white"
               >
                 <img
@@ -169,7 +170,7 @@ const PurchaseNotificationToast = () => {
                   <span className="text-muted-foreground">just bought</span>
                 </p>
                 <Link
-                  to={`/product/${notification.product.id}`}
+                  to={getProductUrl(notification.product)}
                   className="mt-0.5 block truncate font-nav text-[11px] font-medium uppercase tracking-wide text-foreground hover:text-primary sm:text-xs"
                 >
                   {notification.product.name}

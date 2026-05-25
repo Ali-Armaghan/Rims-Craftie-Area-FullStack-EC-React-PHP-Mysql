@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Star } from "lucide-react";
 import { Product } from "@/data/products";
 import { cn } from "@/lib/utils";
+import { getProductUrl } from "@/lib/product-url";
 import { useFavorites } from "@/context/FavoritesContext";
 import { FavoriteHeartButton } from "@/components/FavoriteHeartButton";
 
@@ -41,7 +42,7 @@ const ProductCard = ({
               : "border-border text-foreground/70 hover:border-red-400 hover:text-red-400"
           )}
         />
-        <Link to={`/product/${product.id}`} className="block w-full">
+        <Link to={getProductUrl(product)} className="block w-full">
           <div
             className={cn(
               "flex w-full items-center justify-center overflow-hidden bg-background",
@@ -57,7 +58,7 @@ const ProductCard = ({
         </Link>
       </div>
 
-      <Link to={`/product/${product.id}`}>
+      <Link to={getProductUrl(product)}>
         <h3
           className={cn(
             "font-display font-semibold leading-snug text-foreground",

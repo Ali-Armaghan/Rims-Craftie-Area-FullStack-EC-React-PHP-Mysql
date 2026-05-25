@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Heart, ShoppingBag, X } from "lucide-react";
 import { useFavorites } from "@/context/FavoritesContext";
 import { useCart } from "@/context/CartContext";
+import { getProductUrl } from "@/lib/product-url";
 
 const Favorites = () => {
   const { favorites, removeFavorite } = useFavorites();
@@ -47,7 +48,7 @@ const Favorites = () => {
               className="overflow-hidden rounded-2xl border border-border bg-card"
             >
               <Link
-                to={`/product/${product.id}`}
+                to={getProductUrl(product)}
                 className="block aspect-square bg-background p-4"
               >
                 <img
@@ -60,7 +61,7 @@ const Favorites = () => {
                 <div className="mb-4 flex items-start justify-between gap-3">
                   <div>
                     <Link
-                      to={`/product/${product.id}`}
+                      to={getProductUrl(product)}
                       className="font-display text-lg text-foreground hover:opacity-80"
                     >
                       {product.name}

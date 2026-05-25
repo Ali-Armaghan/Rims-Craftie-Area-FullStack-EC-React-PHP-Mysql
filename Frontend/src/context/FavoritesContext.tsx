@@ -30,13 +30,20 @@ function isValidProduct(value: unknown): value is Product {
   );
 }
 
+function normalizeStoredProduct(product: Product): Product {
+  return {
+    ...product,
+    slug: product.slug || product.id,
+  };
+}
+
 function loadFavoritesFromStorage(): Product[] {
   try {
     const stored = localStorage.getItem(FAVORITES_STORAGE_KEY);
     if (!stored) return [];
     const parsed = JSON.parse(stored);
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(isValidProduct);
+    return parsed.filter(isValidProduct).map(normalizeStoredProduct);
   } catch {
     return [];
   }

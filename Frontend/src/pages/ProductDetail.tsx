@@ -24,6 +24,7 @@ import ProductDetailSkeleton from "@/components/skeletons/ProductDetailSkeleton"
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSaleCountdown } from "@/services/api";
+import { getProductUrl } from "@/lib/product-url";
 
 function formatDeliveryStepDate(date: Date) {
   return date.toLocaleDateString("en-PK", {
@@ -90,11 +91,11 @@ const CountdownValue = ({ value }: { value: string }) => (
 );
 
 const ProductDetail = () => {
-  const { id } = useParams();
+  const { slug } = useParams();
   const { addToCart } = useCart();
   const { isFavorite, toggleFavorite } = useFavorites();
-  const { product, isLoading, error } = useProduct(id);
-  const { data: reviews = [], isLoading: isLoadingReviews } = useProductReviews(id);
+  const { product, isLoading, error } = useProduct(slug);
+  const { data: reviews = [], isLoading: isLoadingReviews } = useProductReviews(product?.id);
   const { data: saleCountdown } = useQuery({
     queryKey: ["sale-countdown"],
     queryFn: fetchSaleCountdown,
@@ -134,13 +135,19 @@ const ProductDetail = () => {
   const images = product?.images?.length ? product.images : (product ? [product.image] : []);
 
   const lowStockCount = useMemo(() => {
-    if (!id) return 8;
+    if (!slug) return 8;
     return Math.floor(Math.random() * 19) + 1;
-  }, [id]);
+  }, [slug]);
 
   const deliverySteps = useMemo(() => buildDeliverySteps(), []);
 
-  // Reset states when 'id' changes
+  useEffect(() => {
+    if (product && slug && slug !== product.slug && /^\d+$/.test(slug)) {
+      navigate(getProductUrl(product), { replace: true });
+    }
+  }, [product, slug, navigate]);
+
+  // Reset states when slug changes
   useEffect(() => {
     setCurrentImageIndex(0);
     // Auto-select the first variation if available, otherwise fallback to a generic string.
@@ -149,7 +156,7 @@ const ProductDetail = () => {
     } else {
       setSelectedOption("Default");
     }
-  }, [id, product?.variations]);
+  }, [slug, product?.variations]);
 
   // Auto-sliding Carousel Effect
   useEffect(() => {
@@ -240,10 +247,10 @@ const ProductDetail = () => {
 
   const handleReviewSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!product || !id) return;
+    if (!product) return;
 
     submitReviewMutation.mutate({
-      product_id: parseInt(id),
+      product_id: parseInt(product.id),
       ...reviewForm
     });
 

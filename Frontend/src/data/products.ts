@@ -7,6 +7,7 @@ import product6 from "@/assets/product6.png";
 
 export interface Product {
   id: string;
+  slug: string;
   name: string;
   price: number;
   originalPrice?: number;
@@ -40,6 +41,7 @@ export interface ProductReview {
 export const products: Product[] = [
   {
     id: "eternite-diamond-ring",
+    slug: "eternite-diamond-ring",
     name: "Éternité Diamond Ring",
     price: 4850,
     originalPrice: 5200,
@@ -54,6 +56,7 @@ export const products: Product[] = [
   },
   {
     id: "celestial-pendant",
+    slug: "celestial-pendant",
     name: "Celestial Gold Pendant",
     price: 3200,
     image: product2,
@@ -66,6 +69,7 @@ export const products: Product[] = [
   },
   {
     id: "aurora-studs",
+    slug: "aurora-studs",
     name: "Aurora Diamond Studs",
     price: 2750,
     image: product3,
@@ -79,6 +83,7 @@ export const products: Product[] = [
   },
   {
     id: "sovereign-bracelet",
+    slug: "sovereign-bracelet",
     name: "Sovereign Chain Bracelet",
     price: 5600,
     image: product4,
@@ -91,6 +96,7 @@ export const products: Product[] = [
   },
   {
     id: "perle-necklace",
+    slug: "perle-necklace",
     name: "Perle Royale Necklace",
     price: 6800,
     originalPrice: 7500,
@@ -105,6 +111,7 @@ export const products: Product[] = [
   },
   {
     id: "rose-gold-timepiece",
+    slug: "rose-gold-timepiece",
     name: "Rose Diamond Timepiece",
     price: 12500,
     image: product6,
