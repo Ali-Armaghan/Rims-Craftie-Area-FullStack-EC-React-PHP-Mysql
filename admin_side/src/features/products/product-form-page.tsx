@@ -263,7 +263,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
   }
 
   const cropImageToSquare = async (session: CropSession) => {
-    const maxExportSize = 1200
+    const maxExportSize = 1500
     const previewSize = 320
     const image = new Image()
     image.src = session.imageUrl
