@@ -263,7 +263,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
   }
 
   const cropImageToSquare = async (session: CropSession) => {
-    const cropSize = 700
+    const maxExportSize = 1200
     const previewSize = 320
     const image = new Image()
     image.src = session.imageUrl
@@ -298,13 +298,21 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
       Math.max(maxSourceY, 0)
     )
 
+    const exportSize = Math.min(
+      maxExportSize,
+      Math.max(Math.round(sourceSize), 1)
+    )
+
     const canvas = document.createElement('canvas')
-    canvas.width = cropSize
-    canvas.height = cropSize
+    canvas.width = exportSize
+    canvas.height = exportSize
     const ctx = canvas.getContext('2d')
     if (!ctx) {
       throw new Error('Canvas is not supported')
     }
+
+    ctx.imageSmoothingEnabled = true
+    ctx.imageSmoothingQuality = 'high'
 
     ctx.drawImage(
       image,
@@ -314,8 +322,8 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
       sourceSize,
       0,
       0,
-      cropSize,
-      cropSize
+      exportSize,
+      exportSize
     )
 
     const blob = await new Promise<Blob>((resolve, reject) => {
@@ -328,7 +336,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
           reject(new Error('Unable to crop image'))
         },
         'image/jpeg',
-        0.92
+        0.95
       )
     })
 
