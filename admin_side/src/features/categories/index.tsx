@@ -35,6 +35,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import apiClient from '@/lib/api-client'
+import { resolveImageUrl } from '@/lib/resolve-image-url'
 
 type Category = {
   id: number
@@ -108,7 +109,9 @@ function CategoryDialog({
         image: category.image ?? null,
       })
       setImageFile(null)
-      setImagePreview(category.image ?? null)
+      setImagePreview(
+        category.image ? resolveImageUrl(category.image) : null
+      )
       setSlugTouched(true)
     } else {
       setForm(defaultForm)
@@ -217,7 +220,7 @@ function CategoryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-lg'>
+      <DialogContent className='max-h-[90vh] overflow-y-auto sm:max-w-lg'>
         <DialogHeader>
           <DialogTitle>{isEdit ? 'Edit Category' : 'Add Category'}</DialogTitle>
           <DialogDescription>
@@ -253,17 +256,18 @@ function CategoryDialog({
               Shown in the Collections dropdown on the storefront header.
             </p>
             {imagePreview ? (
-              <div className='relative w-full max-w-[140px]'>
-                <img
-                  src={imagePreview}
-                  alt='Category preview'
-                  className='aspect-square w-full border object-cover'
-                />
+              <div className='flex flex-col items-start gap-2'>
+                <div className='size-32 shrink-0 overflow-hidden rounded-md border bg-muted'>
+                  <img
+                    src={imagePreview}
+                    alt='Category preview'
+                    className='size-full object-cover'
+                  />
+                </div>
                 <Button
                   type='button'
                   variant='secondary'
                   size='sm'
-                  className='mt-2 w-full'
                   onClick={clearImage}
                 >
                   Remove image
@@ -433,9 +437,9 @@ export function Categories() {
                       <TableCell>
                         {item.image ? (
                           <img
-                            src={item.image}
+                            src={resolveImageUrl(item.image)}
                             alt=''
-                            className='h-10 w-10 object-cover border'
+                            className='h-10 w-10 shrink-0 rounded object-cover border'
                           />
                         ) : (
                           <span className='text-xs text-muted-foreground'>—</span>

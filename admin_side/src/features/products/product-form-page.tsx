@@ -42,6 +42,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import apiClient from '@/lib/api-client'
+import { resolveImageUrl } from '@/lib/resolve-image-url'
 import { productSchema, type Product } from './types'
 
 type Category = {
@@ -108,7 +109,7 @@ function normalizeProduct(product: Product, categories: Category[]): Product {
     category_id: getProductCategoryId(product, categories),
     price: Number(product.price),
     stock: Number(product.stock),
-    images: parseProductImages(product.images),
+    images: parseProductImages(product.images).map(resolveImageUrl),
     is_active: Number(product.is_active),
   }
 }
@@ -208,7 +209,9 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
 
     const response = await apiClient.post('/uploads/products', formData)
 
-    return Array.isArray(response.data.images) ? response.data.images : []
+    return Array.isArray(response.data.images)
+      ? response.data.images.map((image: string) => resolveImageUrl(image))
+      : []
   }
 
   const openCropper = (files: File[], mode: CropMode) => {
@@ -716,16 +719,16 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
                           {productImages.map((image, index) => (
                             <div
                               key={`${image}-${index}`}
-                              className='relative overflow-hidden rounded-md border bg-muted'
+                              className='relative aspect-square overflow-hidden rounded-md border bg-muted'
                             >
                               <img
-                                src={image}
+                                src={resolveImageUrl(image)}
                                 alt={
                                   index === 0
                                     ? 'Main product'
                                     : `Carousel ${index}`
                                 }
-                                className='h-32 w-full object-cover'
+                                className='size-full object-cover'
                               />
                               <div className='absolute left-2 top-2 rounded bg-background/90 px-2 py-1 text-xs font-medium'>
                                 {index === 0 ? 'Front' : `Carousel ${index}`}
