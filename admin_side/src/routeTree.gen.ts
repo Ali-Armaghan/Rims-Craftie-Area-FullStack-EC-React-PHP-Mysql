@@ -29,6 +29,7 @@ import { Route as AuthenticatedProductsIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedOrdersIndexRouteImport } from './routes/_authenticated/orders/index'
 import { Route as AuthenticatedCategoriesIndexRouteImport } from './routes/_authenticated/categories/index'
 import { Route as AuthenticatedTrackingSessionsRouteImport } from './routes/_authenticated/tracking/sessions'
+import { Route as AuthenticatedTrackingPageAnalyticsRouteImport } from './routes/_authenticated/tracking/page-analytics'
 import { Route as AuthenticatedTrackingLiveRouteImport } from './routes/_authenticated/tracking/live'
 import { Route as AuthenticatedSettingsSaleCountdownRouteImport } from './routes/_authenticated/settings/sale-countdown'
 import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes/_authenticated/settings/notifications'
@@ -148,6 +149,12 @@ const AuthenticatedTrackingSessionsRoute =
     path: '/tracking/sessions',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedTrackingPageAnalyticsRoute =
+  AuthenticatedTrackingPageAnalyticsRouteImport.update({
+    id: '/tracking/page-analytics',
+    path: '/tracking/page-analytics',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedTrackingLiveRoute =
   AuthenticatedTrackingLiveRouteImport.update({
     id: '/tracking/live',
@@ -245,6 +252,7 @@ export interface FileRoutesByFullPath {
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/settings/sale-countdown': typeof AuthenticatedSettingsSaleCountdownRoute
   '/tracking/live': typeof AuthenticatedTrackingLiveRoute
+  '/tracking/page-analytics': typeof AuthenticatedTrackingPageAnalyticsRoute
   '/tracking/sessions': typeof AuthenticatedTrackingSessionsRoute
   '/categories/': typeof AuthenticatedCategoriesIndexRoute
   '/orders/': typeof AuthenticatedOrdersIndexRoute
@@ -277,6 +285,7 @@ export interface FileRoutesByTo {
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/settings/sale-countdown': typeof AuthenticatedSettingsSaleCountdownRoute
   '/tracking/live': typeof AuthenticatedTrackingLiveRoute
+  '/tracking/page-analytics': typeof AuthenticatedTrackingPageAnalyticsRoute
   '/tracking/sessions': typeof AuthenticatedTrackingSessionsRoute
   '/categories': typeof AuthenticatedCategoriesIndexRoute
   '/orders': typeof AuthenticatedOrdersIndexRoute
@@ -312,6 +321,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/_authenticated/settings/sale-countdown': typeof AuthenticatedSettingsSaleCountdownRoute
   '/_authenticated/tracking/live': typeof AuthenticatedTrackingLiveRoute
+  '/_authenticated/tracking/page-analytics': typeof AuthenticatedTrackingPageAnalyticsRoute
   '/_authenticated/tracking/sessions': typeof AuthenticatedTrackingSessionsRoute
   '/_authenticated/categories/': typeof AuthenticatedCategoriesIndexRoute
   '/_authenticated/orders/': typeof AuthenticatedOrdersIndexRoute
@@ -347,6 +357,7 @@ export interface FileRouteTypes {
     | '/settings/notifications'
     | '/settings/sale-countdown'
     | '/tracking/live'
+    | '/tracking/page-analytics'
     | '/tracking/sessions'
     | '/categories/'
     | '/orders/'
@@ -379,6 +390,7 @@ export interface FileRouteTypes {
     | '/settings/notifications'
     | '/settings/sale-countdown'
     | '/tracking/live'
+    | '/tracking/page-analytics'
     | '/tracking/sessions'
     | '/categories'
     | '/orders'
@@ -413,6 +425,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/notifications'
     | '/_authenticated/settings/sale-countdown'
     | '/_authenticated/tracking/live'
+    | '/_authenticated/tracking/page-analytics'
     | '/_authenticated/tracking/sessions'
     | '/_authenticated/categories/'
     | '/_authenticated/orders/'
@@ -579,6 +592,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTrackingSessionsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/tracking/page-analytics': {
+      id: '/_authenticated/tracking/page-analytics'
+      path: '/tracking/page-analytics'
+      fullPath: '/tracking/page-analytics'
+      preLoaderRoute: typeof AuthenticatedTrackingPageAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/tracking/live': {
       id: '/_authenticated/tracking/live'
       path: '/tracking/live'
@@ -701,6 +721,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedResaleCommissionsRoute: typeof AuthenticatedResaleCommissionsRoute
   AuthenticatedResaleLedgerRoute: typeof AuthenticatedResaleLedgerRoute
   AuthenticatedTrackingLiveRoute: typeof AuthenticatedTrackingLiveRoute
+  AuthenticatedTrackingPageAnalyticsRoute: typeof AuthenticatedTrackingPageAnalyticsRoute
   AuthenticatedTrackingSessionsRoute: typeof AuthenticatedTrackingSessionsRoute
   AuthenticatedCategoriesIndexRoute: typeof AuthenticatedCategoriesIndexRoute
   AuthenticatedOrdersIndexRoute: typeof AuthenticatedOrdersIndexRoute
@@ -719,6 +740,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedResaleCommissionsRoute: AuthenticatedResaleCommissionsRoute,
   AuthenticatedResaleLedgerRoute: AuthenticatedResaleLedgerRoute,
   AuthenticatedTrackingLiveRoute: AuthenticatedTrackingLiveRoute,
+  AuthenticatedTrackingPageAnalyticsRoute:
+    AuthenticatedTrackingPageAnalyticsRoute,
   AuthenticatedTrackingSessionsRoute: AuthenticatedTrackingSessionsRoute,
   AuthenticatedCategoriesIndexRoute: AuthenticatedCategoriesIndexRoute,
   AuthenticatedOrdersIndexRoute: AuthenticatedOrdersIndexRoute,

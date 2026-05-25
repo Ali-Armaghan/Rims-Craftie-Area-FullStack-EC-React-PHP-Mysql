@@ -52,6 +52,11 @@ switch ($action) {
         echo json_encode($admin->getTrafficAnalytics());
         break;
 
+    case 'page-analytics':
+        $days = isset($_GET['days']) ? (int)$_GET['days'] : 7;
+        echo json_encode($admin->getPageAnalytics($days));
+        break;
+
     case 'sale-countdown':
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             echo json_encode($admin->getSaleCountdownSettings());

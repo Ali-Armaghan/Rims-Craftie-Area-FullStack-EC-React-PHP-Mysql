@@ -265,6 +265,75 @@ class Admin {
         ];
     }
 
+    public function getPageAnalytics($days = 7) {
+        $days = max(1, min(90, (int)$days));
+        $since = "DATE_SUB(NOW(), INTERVAL $days DAY)";
+
+        $query = "SELECT pv.page_path,
+                         MAX(NULLIF(pv.page_title, '')) AS page_title,
+                         COUNT(*) AS page_views,
+                         COUNT(DISTINCT pv.session_id) AS unique_visitors,
+                         ROUND(AVG(CASE WHEN pv.stay_duration > 0 THEN pv.stay_duration END), 0) AS avg_stay_seconds
+                  FROM page_views pv
+                  WHERE pv.entered_at >= $since
+                  GROUP BY pv.page_path
+                  ORDER BY page_views DESC
+                  LIMIT 12";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($pages as &$page) {
+            $page['page_views'] = (int)$page['page_views'];
+            $page['unique_visitors'] = (int)$page['unique_visitors'];
+            $page['avg_stay_seconds'] = (int)($page['avg_stay_seconds'] ?? 0);
+            $page['label'] = $this->formatPageLabel(
+                $page['page_path'],
+                $page['page_title'] ?? null
+            );
+        }
+        unset($page);
+
+        $totalPageViews = (int)$this->conn->query(
+            "SELECT COUNT(*) FROM page_views WHERE entered_at >= $since"
+        )->fetchColumn();
+
+        $totalUniqueVisitors = (int)$this->conn->query(
+            "SELECT COUNT(DISTINCT session_uuid) FROM visitor_sessions WHERE first_seen >= $since"
+        )->fetchColumn();
+
+        $overallAvgStay = (int)$this->conn->query(
+            "SELECT COALESCE(ROUND(AVG(CASE WHEN stay_duration > 0 THEN stay_duration END), 0), 0)
+             FROM page_views WHERE entered_at >= $since"
+        )->fetchColumn();
+
+        return [
+            'days' => $days,
+            'total_page_views' => $totalPageViews,
+            'total_unique_visitors' => $totalUniqueVisitors,
+            'overall_avg_stay_seconds' => $overallAvgStay,
+            'pages' => $pages,
+        ];
+    }
+
+    private function formatPageLabel($pagePath, $pageTitle = null) {
+        if (!empty($pageTitle)) {
+            $label = trim($pageTitle);
+        } elseif ($pagePath === '/' || $pagePath === '') {
+            $label = 'Home';
+        } else {
+            $label = trim($pagePath, '/');
+            $label = str_replace(['-', '_'], ' ', basename($label));
+            $label = ucwords($label);
+        }
+
+        if (strlen($label) > 28) {
+            return substr($label, 0, 25) . '...';
+        }
+
+        return $label;
+    }
+
     public function getReSaleManagement() {
         $query = "SELECT id, name, email, resale_code, resale_balance FROM users ORDER BY resale_balance DESC";
         $stmt = $this->conn->prepare($query);

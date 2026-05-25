@@ -79,6 +79,10 @@ export const sidebarData: SidebarData = {
               title: 'Visitor Sessions',
               url: '/tracking/sessions',
             },
+            {
+              title: 'Page Analytics',
+              url: '/tracking/page-analytics',
+            },
           ],
         },
         {
