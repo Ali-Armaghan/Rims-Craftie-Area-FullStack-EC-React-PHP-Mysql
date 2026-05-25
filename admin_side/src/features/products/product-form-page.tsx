@@ -127,7 +127,10 @@ function normalizeProduct(product: Product, categories: Category[]): Product {
         ? [Number(categories[0].id)]
         : [],
     category_id: categoryIds[0] ?? Number(categories[0]?.id ?? 0),
-    price: Number(product.price),
+    original_price:
+      product.original_price != null ? Number(product.original_price) : null,
+    sale_price: Number(product.sale_price ?? product.price ?? 0),
+    price: Number(product.sale_price ?? product.price ?? 0),
     stock: Number(product.stock),
     images: parseProductImages(product.images).map(resolveImageUrl),
     is_active: Number(product.is_active),
@@ -187,8 +190,10 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
       slug: '',
       category_ids: [],
       category_id: 0,
-      description: '',
+      original_price: null,
+      sale_price: 0,
       price: 0,
+      description: '',
       stock: 0,
       images: [],
       is_active: 1,
@@ -474,6 +479,8 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
       ...data,
       category_ids: data.category_ids,
       category_id: data.category_ids[0],
+      price: data.sale_price,
+      original_price: data.original_price ?? null,
     }
 
     try {
@@ -622,18 +629,48 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
                 <div className='grid gap-4 md:grid-cols-3'>
                   <FormField
                     control={form.control}
-                    name='price'
+                    name='original_price'
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Price (PKR)</FormLabel>
+                        <FormLabel>Original Price (PKR)</FormLabel>
                         <FormControl>
                           <Input
                             type='number'
                             min='0'
+                            placeholder='Before discount'
+                            value={field.value ?? ''}
+                            onChange={(e) => {
+                              const value = e.target.value
+                              field.onChange(
+                                value === '' ? null : Number(value)
+                              )
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name='sale_price'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Sale Price (PKR)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type='number'
+                            min='0'
+                            placeholder='After discount'
                             {...field}
-                            onChange={(e) =>
-                              field.onChange(Number(e.target.value))
-                            }
+                            onChange={(e) => {
+                              const value = Number(e.target.value)
+                              field.onChange(value)
+                              setValue('price', value, {
+                                shouldDirty: true,
+                                shouldValidate: true,
+                              })
+                            }}
                           />
                         </FormControl>
                         <FormMessage />

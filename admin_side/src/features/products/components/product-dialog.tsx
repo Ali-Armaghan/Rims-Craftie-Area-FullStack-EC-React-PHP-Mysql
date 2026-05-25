@@ -63,8 +63,10 @@ export function ProductDialog() {
       slug: '',
       category_ids: [],
       category_id: 0,
-      description: '',
+      original_price: null,
+      sale_price: 0,
       price: 0,
+      description: '',
       stock: 0,
       images: [],
       is_active: 1,
@@ -81,7 +83,12 @@ export function ProductDialog() {
         ...currentRow,
         category_ids: categoryIds,
         category_id: categoryIds[0] ?? 0,
-        price: Number(currentRow.price),
+        original_price:
+          currentRow.original_price != null
+            ? Number(currentRow.original_price)
+            : null,
+        sale_price: Number(currentRow.sale_price ?? currentRow.price ?? 0),
+        price: Number(currentRow.sale_price ?? currentRow.price ?? 0),
         stock: Number(currentRow.stock),
       })
       return
@@ -93,8 +100,10 @@ export function ProductDialog() {
         slug: '',
         category_ids: categories[0] ? [categories[0].id] : [],
         category_id: categories[0]?.id ?? 0,
-        description: '',
+        original_price: null,
+        sale_price: 0,
         price: 0,
+        description: '',
         stock: 0,
         images: [],
         is_active: 1,
@@ -107,6 +116,8 @@ export function ProductDialog() {
       ...data,
       category_ids: data.category_ids,
       category_id: data.category_ids[0],
+      price: data.sale_price,
+      original_price: data.original_price ?? null,
     }
 
     try {
@@ -183,12 +194,44 @@ export function ProductDialog() {
             />
              <FormField
               control={form.control}
-              name='price'
+              name='original_price'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Price (PKR)</FormLabel>
+                  <FormLabel>Original Price (PKR)</FormLabel>
                   <FormControl>
-                    <Input type='number' {...field} onChange={e => field.onChange(Number(e.target.value))} />
+                    <Input
+                      type='number'
+                      min='0'
+                      placeholder='Before discount'
+                      value={field.value ?? ''}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        field.onChange(value === '' ? null : Number(value))
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name='sale_price'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Sale Price (PKR)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type='number'
+                      min='0'
+                      placeholder='After discount'
+                      {...field}
+                      onChange={(e) => {
+                        const value = Number(e.target.value)
+                        field.onChange(value)
+                        setValue('price', value)
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

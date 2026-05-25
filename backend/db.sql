@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS products (
     slug VARCHAR(200) UNIQUE NOT NULL,
     description TEXT,
     price DECIMAL(10,2) NOT NULL,
+    original_price DECIMAL(10,2) NULL DEFAULT NULL,
     stock INT DEFAULT 0,
     images JSON, -- Store as array of paths
     is_active TINYINT(1) DEFAULT 1,

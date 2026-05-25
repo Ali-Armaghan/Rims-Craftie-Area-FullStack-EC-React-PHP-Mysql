@@ -10,6 +10,48 @@ class Product {
     public function __construct($db) {
         $this->conn = $db;
         $this->ensureProductCategoriesTable();
+        $this->ensureOriginalPriceColumn();
+    }
+
+    private function ensureOriginalPriceColumn() {
+        static $done = false;
+        if ($done) {
+            return;
+        }
+
+        try {
+            $this->conn->query("SELECT original_price FROM " . $this->table_name . " LIMIT 1");
+        } catch (Exception $e) {
+            try {
+                $this->conn->exec(
+                    "ALTER TABLE " . $this->table_name . "
+                     ADD COLUMN original_price DECIMAL(10,2) NULL DEFAULT NULL AFTER price"
+                );
+            } catch (Exception $ignored) {
+            }
+        }
+
+        $done = true;
+    }
+
+    private function resolveSalePrice($data) {
+        if (isset($data['sale_price'])) {
+            return $data['sale_price'];
+        }
+
+        return $data['price'] ?? 0;
+    }
+
+    private function resolveOriginalPrice($data) {
+        if (!array_key_exists('original_price', $data)) {
+            return null;
+        }
+
+        if ($data['original_price'] === null || $data['original_price'] === '') {
+            return null;
+        }
+
+        return $data['original_price'];
     }
 
     private function ensureProductCategoriesTable() {
@@ -312,16 +354,20 @@ class Product {
 
         $query = "INSERT INTO " . $this->table_name . " 
                   SET name=:name, slug=:slug, category_id=:cat_id, 
-                      description=:desc, price=:price, stock=:stock, images=:images";
+                      description=:desc, price=:price, original_price=:original_price,
+                      stock=:stock, images=:images";
         $stmt = $this->conn->prepare($query);
 
         $images = json_encode($data['images']);
+        $salePrice = $this->resolveSalePrice($data);
+        $originalPrice = $this->resolveOriginalPrice($data);
 
         $stmt->bindParam(":name", $data['name']);
         $stmt->bindParam(":slug", $data['slug']);
         $stmt->bindParam(":cat_id", $primaryCategoryId, $primaryCategoryId === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
         $stmt->bindParam(":desc", $data['description']);
-        $stmt->bindParam(":price", $data['price']);
+        $stmt->bindParam(":price", $salePrice);
+        $stmt->bindParam(":original_price", $originalPrice, $originalPrice === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
         $stmt->bindParam(":stock", $data['stock']);
         $stmt->bindParam(":images", $images);
 
@@ -342,18 +388,22 @@ class Product {
 
         $query = "UPDATE " . $this->table_name . " 
                   SET name=:name, slug=:slug, category_id=:cat_id, 
-                      description=:desc, price=:price, stock=:stock, images=:images, is_active=:is_active
+                      description=:desc, price=:price, original_price=:original_price,
+                      stock=:stock, images=:images, is_active=:is_active
                   WHERE id=:id";
         $stmt = $this->conn->prepare($query);
 
         $newImages = $this->parseImages(isset($data['images']) ? $data['images'] : []);
         $images = json_encode($newImages);
+        $salePrice = $this->resolveSalePrice($data);
+        $originalPrice = $this->resolveOriginalPrice($data);
 
         $stmt->bindParam(":name", $data['name']);
         $stmt->bindParam(":slug", $data['slug']);
         $stmt->bindParam(":cat_id", $primaryCategoryId, $primaryCategoryId === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
         $stmt->bindParam(":desc", $data['description']);
-        $stmt->bindParam(":price", $data['price']);
+        $stmt->bindParam(":price", $salePrice);
+        $stmt->bindParam(":original_price", $originalPrice, $originalPrice === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
         $stmt->bindParam(":stock", $data['stock']);
         $stmt->bindParam(":images", $images);
         $stmt->bindParam(":is_active", $data['is_active']);

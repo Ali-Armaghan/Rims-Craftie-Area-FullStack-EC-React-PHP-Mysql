@@ -13,7 +13,6 @@ import {
 import { useProducts } from '../context/products-context'
 import type { Product } from '../types'
 
-// Extracted into a proper React component so hooks can be called safely
 function ProductRowActions({ product }: { product: Product }) {
   const { setOpen, setCurrentRow } = useProducts()
 
@@ -71,15 +70,31 @@ export const productsColumns: ColumnDef<Product>[] = [
     },
   },
   {
-    accessorKey: 'price',
-    header: 'Price',
+    accessorKey: 'sale_price',
+    header: 'Sale Price',
     cell: ({ row }) => {
-      const price = parseFloat(row.getValue('price'))
+      const product = row.original
+      const salePrice = Number(product.sale_price ?? product.price ?? 0)
+      const originalPrice =
+        product.original_price != null ? Number(product.original_price) : null
       const formatted = new Intl.NumberFormat('en-PK', {
         style: 'currency',
         currency: 'PKR',
-      }).format(price)
-      return <div className='font-medium'>{formatted}</div>
+      }).format(salePrice)
+
+      return (
+        <div className='space-y-1'>
+          <div className='font-medium'>{formatted}</div>
+          {originalPrice != null && originalPrice > salePrice && (
+            <div className='text-xs text-muted-foreground line-through'>
+              {new Intl.NumberFormat('en-PK', {
+                style: 'currency',
+                currency: 'PKR',
+              }).format(originalPrice)}
+            </div>
+          )}
+        </div>
+      )
     },
   },
   {

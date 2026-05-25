@@ -119,6 +119,8 @@ type BackendProduct = {
     categories?: { id: number; name: string; slug?: string }[];
     description?: string | null;
     price: number | string;
+    sale_price?: number | string | null;
+    original_price?: number | string | null;
     stock?: number | string | null;
     images?: string[] | string | null;
     is_active?: number | string | boolean;
@@ -227,6 +229,9 @@ function mapBackendProduct(product: BackendProduct): Product {
     const parsedImages = parseImages(product.images).filter(Boolean).map(resolveImageUrl);
     const image = parsedImages[0] ?? 'https://placehold.co/600x600?text=No+Image';
     const stockQuantity = Number(product.stock ?? 0);
+    const salePrice = Number(product.sale_price ?? product.price ?? 0);
+    const originalPriceValue =
+        product.original_price != null ? Number(product.original_price) : null;
     const categoryNames = Array.isArray(product.categories) && product.categories.length
         ? product.categories.map((category) => category.name)
         : product.category_names
@@ -243,7 +248,11 @@ function mapBackendProduct(product: BackendProduct): Product {
     return {
         id: String(product.id),
         name: product.name || 'Unknown Product',
-        price: Number(product.price ?? 0),
+        price: salePrice,
+        originalPrice:
+            originalPriceValue != null && originalPriceValue > salePrice
+                ? originalPriceValue
+                : undefined,
         image,
         images: parsedImages.length ? parsedImages : [image],
         category: categoryNames[0] || 'Uncategorized',

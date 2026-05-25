@@ -83,5 +83,15 @@ function normalize_product_row(array $row): array
         );
     }
 
+    if (array_key_exists('price', $row)) {
+        $row['sale_price'] = $row['price'] !== null ? (float)$row['price'] : 0;
+    }
+
+    if (array_key_exists('original_price', $row)) {
+        $row['original_price'] = $row['original_price'] !== null
+            ? (float)$row['original_price']
+            : null;
+    }
+
     return $row;
 }

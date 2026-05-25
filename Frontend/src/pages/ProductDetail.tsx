@@ -417,15 +417,25 @@ const ProductDetail = () => {
               <div className="mb-6 rounded-3xl border border-border/70 bg-card/50 px-5 py-4 shadow-sm">
                 <div className={`grid gap-4 ${showSaleCountdown ? "sm:grid-cols-[1fr_auto_1fr]" : ""} sm:items-stretch`}>
                   <div className="flex min-w-0 flex-col justify-center">
-                    <div className="flex flex-wrap items-end gap-3">
-                      <span className="font-display text-4xl font-bold leading-none text-foreground md:text-[46px]">
+                    <div className="flex flex-col gap-1">
+                      {product.originalPrice &&
+                        product.originalPrice > product.price && (
+                          <span className="font-body text-sm text-muted-foreground line-through decoration-muted-foreground/70 md:text-base">
+                            Rs. {product.originalPrice.toLocaleString()}
+                          </span>
+                        )}
+                      <span className="font-display text-4xl font-bold leading-none text-foreground md:text-5xl">
                         Rs. {product.price.toLocaleString()}
                       </span>
-                      {product.originalPrice && (
-                        <span className="pb-1 font-body text-xl font-medium text-muted-foreground line-through decoration-muted-foreground/60 decoration-2">
-                          Rs. {product.originalPrice.toLocaleString()}
-                        </span>
-                      )}
+                      {product.originalPrice &&
+                        product.originalPrice > product.price && (
+                          <span className="font-body text-xs font-medium text-primary md:text-sm">
+                            You save Rs.{" "}
+                            {(
+                              product.originalPrice - product.price
+                            ).toLocaleString()}
+                          </span>
+                        )}
                     </div>
                     <p className="mt-3 line-clamp-2 font-body text-sm leading-snug text-muted-foreground">
                       {product.shortDescription || product.description || "Premium product with carefully selected materials and refined finishing."}
