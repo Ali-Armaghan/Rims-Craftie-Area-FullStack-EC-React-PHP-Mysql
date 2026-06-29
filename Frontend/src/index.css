@@ -281,3 +281,33 @@
     transform: rotate(12deg) scale(1.08);
   }
 }
+
+.purchase-toast {
+  box-shadow:
+    0 4px 6px -1px hsl(30 68% 11% / 0.06),
+    0 12px 28px -4px hsl(30 68% 11% / 0.12),
+    0 0 0 1px hsl(30 68% 11% / 0.04);
+}
+
+.purchase-toast__close {
+  background: linear-gradient(180deg, hsl(0 72% 51%) 0%, hsl(0 65% 38%) 100%);
+}
+
+.purchase-toast__close:hover {
+  background: linear-gradient(180deg, hsl(0 72% 46%) 0%, hsl(0 65% 33%) 100%);
+}
+
+.purchase-toast__progress {
+  background: linear-gradient(90deg, hsl(30 68% 11%), hsl(38 52% 42%), hsl(30 68% 11%));
+  background-size: 200% 100%;
+  animation: purchase-toast-shimmer 2s linear infinite;
+}
+
+@keyframes purchase-toast-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
