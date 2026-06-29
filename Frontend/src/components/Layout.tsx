@@ -143,7 +143,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                   ATEEQO
                 </h1>
                 <p className="font-nav text-[10px] tracking-wide text-muted-foreground -mt-0.5 sm:text-xs">
-                  Bags &amp; Accessories
+                  Wear your story
                 </p>
               </div>
             </Link>
@@ -361,7 +361,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </div>
           </div>
           <div className="border-t border-primary-foreground/10 mt-12 pt-8 text-center">
-            <p className="font-body text-xs text-primary-foreground/50">© 2026 Ateeqo Bags &amp; Accessories. All rights reserved.</p>
+            <p className="font-body text-xs text-primary-foreground/50">© 2026 Ateeqo Wear your story. All rights reserved.</p>
           </div>
         </div>
       </footer>

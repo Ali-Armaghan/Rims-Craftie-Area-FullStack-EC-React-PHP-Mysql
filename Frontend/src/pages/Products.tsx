@@ -53,7 +53,7 @@ const Products = () => {
                 searchQuery ? "mb-4" : "mb-8"
               }`}
             >
-              Bags &amp; Accessories
+              Wear your story
             </h1>
             {searchQuery && (
               <p className="mb-8 font-body text-sm text-muted-foreground">

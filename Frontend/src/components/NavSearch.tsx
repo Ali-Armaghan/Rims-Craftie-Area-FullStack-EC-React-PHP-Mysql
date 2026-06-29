@@ -168,7 +168,7 @@ const NavSearch = ({ className, iconClassName, onNavigate }: NavSearchProps) => 
                           </span>
                           <div>
                             <p className="font-display text-lg leading-tight text-foreground">Find something you love</p>
-                            <p className="font-body text-xs text-muted-foreground">Search our bags &amp; accessories</p>
+                            <p className="font-body text-xs text-muted-foreground">Search our Wear your story</p>
                           </div>
                         </div>
                         <button
