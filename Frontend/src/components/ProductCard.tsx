@@ -21,6 +21,10 @@ const ProductCard = ({
   const rating = Number(product.rating ?? 5);
   const reviewCount = product.reviewCount ?? 17;
   const roundedRating = Math.round(rating);
+  const discountPercent =
+    product.originalPrice && product.originalPrice > product.price
+      ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+      : null;
 
   return (
     <motion.div
@@ -31,6 +35,16 @@ const ProductCard = ({
       className="w-full min-w-0 overflow-hidden text-center"
     >
       <div className={cn("relative overflow-hidden", compact ? "mb-1.5" : "mb-4")}>
+        {discountPercent != null && (
+          <span
+            className={cn(
+              "absolute left-2 top-2 z-10 rounded-full bg-primary font-nav font-bold uppercase tracking-normal text-primary-foreground shadow",
+              compact ? "px-2 py-0.5 text-[9px] sm:text-[10px]" : "px-3 py-1 text-[10px] sm:text-xs"
+            )}
+          >
+            OFF {discountPercent}%
+          </span>
+        )}
         <FavoriteHeartButton
           favorited={favorited}
           onToggle={() => toggleFavorite(product)}
@@ -94,7 +108,17 @@ const ProductCard = ({
           </div>
         )}
 
-        <div className="flex items-end justify-center gap-2">
+        <div className="flex flex-col items-center justify-center gap-0.5">
+          {product.originalPrice && product.originalPrice > product.price && (
+            <span
+              className={cn(
+                "font-body text-destructive line-through decoration-destructive/70",
+                compact ? "text-xs" : "text-sm"
+              )}
+            >
+              Rs. {product.originalPrice.toLocaleString()}
+            </span>
+          )}
           <span
             className={cn(
               "font-body font-semibold text-foreground",
