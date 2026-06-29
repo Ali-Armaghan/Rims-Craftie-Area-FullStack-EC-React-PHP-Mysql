@@ -1,5 +1,4 @@
-const WHATSAPP_NUMBER = "9230000000000";
-const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}`;
+import { CONTACT } from "@/lib/contact";
 
 const WhatsAppIcon = () => (
   <svg
@@ -22,10 +21,10 @@ const WhatsAppButton = () => {
       </span>
 
       <a
-        href={WHATSAPP_URL}
+        href={CONTACT.whatsapp.url}
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="Chat on WhatsApp at 03000000000"
+        aria-label={`Chat on WhatsApp at ${CONTACT.whatsapp.display}`}
         className="whatsapp-float relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_4px_20px_rgba(37,211,102,0.45)] sm:h-[3.75rem] sm:w-[3.75rem]"
       >
         <span className="whatsapp-ring absolute inset-0 rounded-full bg-[#25D366]" aria-hidden />
