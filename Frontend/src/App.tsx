@@ -16,6 +16,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Account from "./pages/Account";
 import RewardsProgram from "./pages/RewardsProgram";
+import LoyaltyProgram from "./pages/LoyaltyProgram";
 import Contact from "./pages/Contact";
 import Favorites from "./pages/Favorites";
 import NotFound from "./pages/NotFound";
@@ -40,6 +41,7 @@ const AnimatedRoutes = () => {
         <Route path="/signup" element={<PageTransition><Signup /></PageTransition>} />
         <Route path="/account" element={<PageTransition><Account /></PageTransition>} />
         <Route path="/rewards" element={<PageTransition><RewardsProgram /></PageTransition>} />
+        <Route path="/loyalty" element={<PageTransition><LoyaltyProgram /></PageTransition>} />
         <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />
         <Route path="/favorites" element={<PageTransition><Favorites /></PageTransition>} />
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />

@@ -4,6 +4,7 @@ export interface OrderPayload {
     user_id: number;
     subtotal: number;
     total: number;
+    apply_loyalty?: boolean;
     referred_by_code?: string;
     shipping_address: {
         full_name: string;
@@ -540,6 +541,30 @@ export async function fetchCustomerOrder(orderId: string | number, userId: strin
 
     if (!response.ok) {
         throw new Error(`Error fetching order: ${response.statusText}`);
+    }
+
+    return response.json();
+}
+
+export type LoyaltyStatus = {
+    lifetime_spent: number;
+    tier_label: string;
+    tier_threshold: number;
+    discount_percent: number;
+    next_tier_threshold: number | null;
+    next_tier_percent: number | null;
+    amount_to_next_tier: number;
+    tiers: { min: number; percent: number; label: string }[];
+};
+
+export async function fetchLoyaltyStatus(userId: string | number): Promise<LoyaltyStatus> {
+    const response = await fetch(getBackendUrl('loyalty', { user_id: userId }).toString(), {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+    });
+
+    if (!response.ok) {
+        throw new Error(`Error fetching loyalty status: ${response.statusText}`);
     }
 
     return response.json();

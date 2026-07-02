@@ -26,12 +26,14 @@ import { CONTACT } from "@/lib/contact";
 
 const navLinks = [
   { label: "Home", path: "/" },
+  { label: "Loyalty", path: "/loyalty" },
   { label: "Rewards", path: "/rewards" },
   { label: "Contact", path: "/contact" },
 ];
 
 const footerCustomerCareLinks = [
   { label: "Contact Us", path: "/contact" },
+  { label: "Book Appointment", path: "/contact" },
   { label: "Shipping & Returns", path: "/contact" },
   { label: "FAQs", path: "/contact" },
 ];
@@ -310,8 +312,18 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             <div>
               <h4 className="font-nav text-xs tracking-wide uppercase mb-4">Quick Links</h4>
               <div className="flex flex-col gap-2">
-                {["New Arrivals", "Bestsellers", "Gift Guide", "Care Guide"].map((l) => (
-                  <span key={l} className="font-body text-sm text-primary-foreground/60 hover:text-primary-foreground cursor-pointer transition-colors">{l}</span>
+                {["New Arrivals", "Bestsellers", "Loyalty Points", "Gift Guide"].map((l) => (
+                  l === "Loyalty Points" ? (
+                    <Link
+                      key={l}
+                      to="/loyalty"
+                      className="font-body text-sm text-primary-foreground/60 transition-colors hover:text-primary-foreground"
+                    >
+                      {l}
+                    </Link>
+                  ) : (
+                    <span key={l} className="font-body text-sm text-primary-foreground/60 hover:text-primary-foreground cursor-pointer transition-colors">{l}</span>
+                  )
                 ))}
               </div>
             </div>

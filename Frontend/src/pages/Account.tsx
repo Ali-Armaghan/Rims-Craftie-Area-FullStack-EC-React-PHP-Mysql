@@ -11,6 +11,7 @@ import {
   fetchCustomerOrders,
   fetchCustomerResale,
   fetchCustomerResaleLedger,
+  fetchLoyaltyStatus,
 } from "@/services/api";
 
 type DashboardTab = "overview" | "orders" | "resale" | "ledger";
@@ -64,6 +65,12 @@ const Account = () => {
   const { data: ledger = [], isLoading: ledgerLoading } = useQuery({
     queryKey: ["customer-resale-ledger", userId],
     queryFn: () => fetchCustomerResaleLedger(userId!),
+    enabled: !!userId,
+  });
+
+  const { data: loyalty } = useQuery({
+    queryKey: ["loyalty-status", userId],
+    queryFn: () => fetchLoyaltyStatus(userId!),
     enabled: !!userId,
   });
 
@@ -146,6 +153,29 @@ const Account = () => {
                 <div className="border border-border p-5">
                   <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Commission</p>
                   <p className="font-display text-2xl text-foreground mt-2">{money(resale?.total_commissions)}</p>
+                </div>
+              </div>
+
+              <div className="border border-primary/20 bg-primary/5 p-6">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <p className="font-nav text-xs tracking-wide uppercase text-primary mb-2">
+                      Loyalty Points
+                    </p>
+                    <h3 className="font-display text-2xl text-foreground">
+                      {loyalty?.tier_label ?? "Member"}
+                      {loyalty && loyalty.discount_percent > 0 ? ` · ${loyalty.discount_percent}% OFF` : ""}
+                    </h3>
+                    <p className="mt-2 font-body text-sm text-muted-foreground">
+                      Lifetime spend: {money(loyalty?.lifetime_spent ?? 0)}
+                    </p>
+                  </div>
+                  <Link
+                    to="/loyalty"
+                    className="inline-flex items-center border border-foreground px-4 py-2 font-nav text-xs uppercase tracking-wide text-foreground hover:bg-foreground hover:text-primary-foreground"
+                  >
+                    View program
+                  </Link>
                 </div>
               </div>
 

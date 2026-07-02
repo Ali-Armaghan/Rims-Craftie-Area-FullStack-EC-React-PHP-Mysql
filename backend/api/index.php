@@ -41,6 +41,9 @@ switch ($module) {
     case 'resale':
         require_once __DIR__ . '/resale/handler.php';
         break;
+    case 'loyalty':
+        require_once __DIR__ . '/loyalty/handler.php';
+        break;
     case 'tracking':
         require_once __DIR__ . '/tracking/handler.php';
         break;

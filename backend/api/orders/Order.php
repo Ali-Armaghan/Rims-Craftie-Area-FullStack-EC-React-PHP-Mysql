@@ -1,6 +1,8 @@
 <?php
 // api/orders/Order.php
 
+require_once __DIR__ . '/../loyalty/Loyalty.php';
+
 class Order {
     private $conn;
     private $table_name = "orders";
@@ -17,15 +19,31 @@ class Order {
             $shipping = json_encode($data['shipping_address']);
             $referred_by_code = isset($data['referred_by_code']) ? $data['referred_by_code'] : null;
 
+            $subtotal = (float) $data['subtotal'];
+            $discountAmount = 0.0;
+            $finalTotal = $subtotal;
+            $loyaltyPercent = 0.0;
+
+            $applyLoyalty = !empty($data['apply_loyalty']);
+            if ($applyLoyalty) {
+                $loyalty = new Loyalty($this->conn);
+                $lifetimeSpent = $loyalty->getLifetimeSpent($data['user_id']);
+                $loyaltyDiscount = $loyalty->calculateDiscount($subtotal, $lifetimeSpent);
+                $discountAmount = (float) $loyaltyDiscount['discount_amount'];
+                $finalTotal = (float) $loyaltyDiscount['total_after_discount'];
+                $loyaltyPercent = (float) $loyaltyDiscount['discount_percent'];
+            }
+
             $query = "INSERT INTO " . $this->table_name . " 
                       SET user_id=:user_id, order_number=:onum, subtotal=:sub, 
-                          total=:total, shipping_address=:ship, referred_by_code=:ref";
+                          discount=:discount, total=:total, shipping_address=:ship, referred_by_code=:ref";
             
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(":user_id", $data['user_id']);
             $stmt->bindParam(":onum", $order_number);
-            $stmt->bindParam(":sub", $data['subtotal']);
-            $stmt->bindParam(":total", $data['total']);
+            $stmt->bindParam(":sub", $subtotal);
+            $stmt->bindParam(":discount", $discountAmount);
+            $stmt->bindParam(":total", $finalTotal);
             $stmt->bindParam(":ship", $shipping);
             $stmt->bindParam(":ref", $referred_by_code);
             $stmt->execute();
@@ -49,7 +67,14 @@ class Order {
             }
 
             $this->conn->commit();
-            return ["success" => true, "order_id" => (int)$order_id, "order_number" => $order_number];
+            return [
+                "success" => true,
+                "order_id" => (int)$order_id,
+                "order_number" => $order_number,
+                "loyalty_discount" => $discountAmount,
+                "loyalty_discount_percent" => $loyaltyPercent,
+                "total" => $finalTotal,
+            ];
 
         } catch (Exception $e) {
             $this->conn->rollBack();

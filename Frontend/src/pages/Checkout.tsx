@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 import { useCart } from "@/context/CartContext";
-import { Lock, ArrowLeft, Loader2 } from "lucide-react";
-import { createOrder, loginCustomer, OrderPayload, signupCustomer } from "@/services/api";
+import { Lock, ArrowLeft, Loader2, BadgePercent } from "lucide-react";
+import { createOrder, fetchLoyaltyStatus, loginCustomer, OrderPayload, signupCustomer } from "@/services/api";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
+import { calculateLoyaltyDiscount } from "@/lib/loyalty";
 
 const Checkout = () => {
   const { items, totalPrice, clearCart } = useCart();
@@ -36,6 +38,19 @@ const Checkout = () => {
       email: prev.email || user.email,
     }));
   }, [user]);
+
+  const { data: loyaltyStatus } = useQuery({
+    queryKey: ["loyalty-status", user?.id],
+    queryFn: () => fetchLoyaltyStatus(user!.id),
+    enabled: !!user?.id,
+  });
+
+  const loyaltySavings = useMemo(() => {
+    if (!user || !loyaltyStatus) {
+      return { discountPercent: 0, discountAmount: 0, totalAfterDiscount: totalPrice };
+    }
+    return calculateLoyaltyDiscount(totalPrice, loyaltyStatus.lifetime_spent);
+  }, [user, loyaltyStatus, totalPrice]);
 
   const resolveOrderUserId = async () => {
     if (user) return Number(user.id);
@@ -71,7 +86,8 @@ const Checkout = () => {
       const orderPayload: OrderPayload = {
         user_id: userId,
         subtotal: totalPrice,
-        total: totalPrice,
+        total: loyaltySavings.totalAfterDiscount,
+        apply_loyalty: Boolean(user),
         referred_by_code: formData.referralCode || undefined,
         shipping_address: {
           full_name: formData.fullName,
@@ -135,7 +151,8 @@ const Checkout = () => {
     );
   }
 
-  const shipping = 0; // FREE shipping for COD in Pakistan
+  const shipping = 0;
+  const orderTotal = loyaltySavings.totalAfterDiscount + shipping;
 
   return (
     <section className="container py-16">
@@ -206,7 +223,7 @@ const Checkout = () => {
                 </>
               ) : (
                 <>
-                  <Lock size={14} /> Place Order — Rs. {(totalPrice + shipping).toLocaleString()}
+                  <Lock size={14} /> Place Order — Rs. {orderTotal.toLocaleString()}
                 </>
               )}
             </button>
@@ -234,6 +251,33 @@ const Checkout = () => {
                 <span className="text-muted-foreground">Subtotal</span>
                 <span className="text-foreground">Rs. {totalPrice.toLocaleString()}</span>
               </div>
+              {user && loyaltySavings.discountAmount > 0 && (
+                <div className="flex justify-between font-body text-sm">
+                  <span className="inline-flex items-center gap-1.5 text-emerald-700">
+                    <BadgePercent size={14} />
+                    Loyalty discount ({loyaltySavings.discountPercent}%)
+                  </span>
+                  <span className="font-semibold text-emerald-700">
+                    - Rs. {loyaltySavings.discountAmount.toLocaleString()}
+                  </span>
+                </div>
+              )}
+              {user && loyaltySavings.discountAmount === 0 && loyaltyStatus && loyaltyStatus.lifetime_spent < 5000 && (
+                <div className="rounded-md border border-border/70 bg-secondary/30 px-3 py-2 font-body text-xs text-muted-foreground">
+                  Spend Rs. {Math.max(0, 5000 - loyaltyStatus.lifetime_spent).toLocaleString()} more while logged in to unlock 5% loyalty savings.{" "}
+                  <Link to="/loyalty" className="text-primary underline underline-offset-2">
+                    View tiers
+                  </Link>
+                </div>
+              )}
+              {!user && (
+                <div className="rounded-md border border-border/70 bg-secondary/30 px-3 py-2 font-body text-xs text-muted-foreground">
+                  <Link to="/login" className="text-primary underline underline-offset-2">
+                    Login
+                  </Link>{" "}
+                  to unlock automatic loyalty discounts on your order.
+                </div>
+              )}
               <div className="flex justify-between font-body text-sm">
                 <span className="text-muted-foreground">Shipping</span>
                 <span className="text-foreground">FREE</span>
@@ -241,7 +285,7 @@ const Checkout = () => {
             </div>
             <div className="border-t border-border pt-4 flex justify-between">
               <span className="font-nav text-xs tracking-wider uppercase text-foreground">Total</span>
-              <span className="font-display text-xl text-foreground">Rs. {(totalPrice + shipping).toLocaleString()}</span>
+              <span className="font-display text-xl text-foreground">Rs. {orderTotal.toLocaleString()}</span>
             </div>
           </div>
         </div>
