@@ -13,12 +13,6 @@ import { useCart } from "@/context/CartContext";
 import { useFavorites } from "@/context/FavoritesContext";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  CollectionsMegaMenuRoot,
-  CollectionsNavTrigger,
-  CollectionsMegaMenuPanel,
-  CollectionsMobileLinks,
-} from "@/components/CollectionsMegaMenu";
 import PurchaseNotificationToast from "@/components/PurchaseNotificationToast";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import SocialLinks from "@/components/SocialLinks";
@@ -26,6 +20,7 @@ import { CONTACT } from "@/lib/contact";
 
 const navLinks = [
   { label: "Home", path: "/" },
+  { label: "Collections", path: "/products" },
   { label: "Loyalty", path: "/loyalty" },
   { label: "Rewards", path: "/rewards" },
   { label: "Contact", path: "/contact" },
@@ -105,7 +100,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       </div>
 
       {/* Navigation */}
-      <CollectionsMegaMenuRoot>
       <header
         className={`top-0 z-50 relative transition-all duration-500 ${
           scrolled ? "bg-background/95 backdrop-blur-md luxury-shadow" : "bg-background"
@@ -129,7 +123,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     {link.label}
                   </Link>
                 ))}
-                <CollectionsNavTrigger />
               </nav>
             </div>
 
@@ -197,9 +190,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </div>
           </div>
         </div>
-        <CollectionsMegaMenuPanel />
       </header>
-      </CollectionsMegaMenuRoot>
 
       {/* Mobile Menu */}
       <AnimatePresence>
@@ -239,7 +230,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     {link.label}
                   </Link>
                 ))}
-                <CollectionsMobileLinks onNavigate={() => setMobileOpen(false)} />
                 <Link
                   to="/favorites"
                   className="font-nav text-lg uppercase tracking-wide text-foreground/80 transition-colors hover:text-foreground"
