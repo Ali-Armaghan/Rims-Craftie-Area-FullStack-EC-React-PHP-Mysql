@@ -19,6 +19,7 @@ import RewardsProgram from "./pages/RewardsProgram";
 import LoyaltyProgram from "./pages/LoyaltyProgram";
 import Contact from "./pages/Contact";
 import Policies from "./pages/Policies";
+import SizeAndCareGuide from "./pages/SizeAndCareGuide";
 import Favorites from "./pages/Favorites";
 import NotFound from "./pages/NotFound";
 import { AnimatePresence } from "framer-motion";
@@ -45,6 +46,7 @@ const AnimatedRoutes = () => {
         <Route path="/loyalty" element={<PageTransition><LoyaltyProgram /></PageTransition>} />
         <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />
         <Route path="/policies" element={<PageTransition><Policies /></PageTransition>} />
+        <Route path="/size-care" element={<PageTransition><SizeAndCareGuide /></PageTransition>} />
         <Route path="/favorites" element={<PageTransition><Favorites /></PageTransition>} />
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>
