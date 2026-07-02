@@ -29,8 +29,8 @@ const navLinks = [
 const footerCustomerCareLinks = [
   { label: "Contact Us", path: "/contact" },
   { label: "Book Appointment", path: "/contact" },
-  { label: "Shipping & Returns", path: "/contact" },
-  { label: "FAQs", path: "/contact" },
+  { label: "Shipping & Returns", path: "/policies#shipping" },
+  { label: "Policies & FAQ", path: "/policies" },
 ];
 
 const ANNOUNCEMENT_SLIDES = [
