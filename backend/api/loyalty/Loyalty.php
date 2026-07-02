@@ -23,7 +23,7 @@ class Loyalty {
         $query = "SELECT COALESCE(SUM(total), 0) AS lifetime_spent
                   FROM orders
                   WHERE user_id = ?
-                    AND status != 'cancelled'";
+                    AND status = 'delivered'";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([(int) $userId]);
         return (float) $stmt->fetchColumn();

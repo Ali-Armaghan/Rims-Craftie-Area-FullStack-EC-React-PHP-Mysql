@@ -28,7 +28,7 @@ const steps = [
   {
     icon: ShoppingBag,
     title: "Shop and build history",
-    body: "Every completed order adds to your lifetime purchase total. The more you shop with Ateeqo, the higher your automatic discount becomes.",
+    body: "Every delivered order adds to your lifetime purchase total. The more you shop with Ateeqo, the higher your automatic discount becomes.",
   },
   {
     icon: BadgePercent,
@@ -53,7 +53,7 @@ const faqs = [
   },
   {
     q: "What counts toward purchase history?",
-    a: "All non-cancelled orders on your account count toward your lifetime spend total.",
+    a: "Only orders marked as delivered count toward your lifetime spend total. Pending or in-progress orders are not included until delivery is complete.",
   },
   {
     q: "Can I combine loyalty discount with a referral code?",

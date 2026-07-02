@@ -140,6 +140,16 @@ const ProductDetail = () => {
     return Math.floor(Math.random() * 19) + 1;
   }, [slug]);
 
+  const productSummary = useMemo(() => {
+    if (!product) return "";
+    return (
+      product.shortDescription?.trim() ||
+      (product.description?.trim() && product.description !== "No description available"
+        ? product.description
+        : "")
+    );
+  }, [product]);
+
   const deliverySteps = useMemo(() => buildDeliverySteps(), []);
 
   useEffect(() => {
@@ -473,7 +483,19 @@ const ProductDetail = () => {
                         )}
                     </div>
                     <p className="mt-3 line-clamp-2 font-body text-sm leading-snug text-muted-foreground">
-                      {product.shortDescription || product.description || "Premium product with carefully selected materials and refined finishing."}
+                      {productSummary ? (
+                        productSummary
+                      ) : (
+                        <>
+                          Want to save more?{" "}
+                          <Link
+                            to="/loyalty"
+                            className="font-medium text-primary underline underline-offset-2 hover:text-primary/80"
+                          >
+                            Click here
+                          </Link>
+                        </>
+                      )}
                     </p>
                   </div>
                   {showSaleCountdown && (
