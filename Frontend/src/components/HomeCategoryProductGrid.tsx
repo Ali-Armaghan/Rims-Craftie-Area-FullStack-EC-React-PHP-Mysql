@@ -41,10 +41,11 @@ const HomeCategoryProductGrid = ({
   }, [slideCount]);
 
   const scrollToSlide = (index: number) => {
-    const slide = scrollRef.current?.querySelector<HTMLElement>(
-      `[data-product-slide="${index}"]`
-    );
-    slide?.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
+    const el = scrollRef.current;
+    if (!el) return;
+    const slide = el.querySelector<HTMLElement>(`[data-product-slide="${index}"]`);
+    if (!slide) return;
+    el.scrollTo({ left: slide.offsetLeft, behavior: "smooth" });
     setActiveIndex(index);
   };
 
@@ -67,7 +68,7 @@ const HomeCategoryProductGrid = ({
       ));
 
   return (
-    <section className="w-full overflow-x-hidden">
+    <section className="w-full min-w-0 overflow-x-clip">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -80,11 +81,11 @@ const HomeCategoryProductGrid = ({
       <div className="w-full px-2 sm:px-3 lg:px-4">
         {isLoading || displayProducts.length > 0 ? (
           <>
-            <div className="lg:hidden">
+            <div className="min-w-0 lg:hidden">
               <div
                 ref={scrollRef}
                 onScroll={updateActiveIndex}
-                className="-mx-1 overflow-x-auto pb-1 snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                className="-mx-1 overflow-x-auto overflow-y-hidden overscroll-x-contain touch-pan-x pb-1 snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
               >
                 <div className="flex w-max gap-2 px-1">{mobileSlider}</div>
               </div>

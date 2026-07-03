@@ -58,7 +58,7 @@ const Index = () => {
 
       <HomePromoBanners />
       
-      <div className="w-full space-y-6 overflow-x-hidden pt-10 pb-4 md:space-y-8 md:pt-12 md:pb-6">
+      <div className="w-full min-w-0 space-y-6 overflow-x-clip pt-10 pb-4 md:space-y-8 md:pt-12 md:pb-6">
         {homeSectionsLoading ? (
           <HomeCategoryProductGrid title="Loading..." categoryName="" products={[]} isLoading />
         ) : (
