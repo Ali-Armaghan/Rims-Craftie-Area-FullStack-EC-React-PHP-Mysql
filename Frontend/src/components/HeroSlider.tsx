@@ -24,7 +24,7 @@ const HeroSlider = () => {
   }, []);
 
   return (
-    <section className="relative h-[42vh] min-h-[180px] sm:h-[48vh] md:h-[62vh] lg:h-[80vh] overflow-hidden">
+    <section className="relative h-[38vh] min-h-[165px] max-h-[220px] w-full overflow-hidden sm:h-[48vh] sm:max-h-none sm:min-h-[200px] md:h-[62vh] lg:h-[80vh]">
       <AnimatePresence mode="wait">
         <motion.div
           key={current}
@@ -38,13 +38,13 @@ const HeroSlider = () => {
             <img
               src={slides[current].image}
               alt={slides[current].alt}
-              className="h-full w-full object-cover object-center"
+              className="absolute left-1/2 top-1/2 h-full w-auto max-w-none -translate-x-1/2 -translate-y-1/2 sm:left-0 sm:top-0 sm:h-full sm:w-full sm:translate-x-0 sm:translate-y-0 sm:object-cover sm:object-center"
             />
           </Link>
         </motion.div>
       </AnimatePresence>
 
-      <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2 sm:bottom-6 md:bottom-8 md:gap-3">
+      <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-2 sm:bottom-6 md:bottom-8 md:gap-3">
         {slides.map((_, i) => (
           <button
             key={i}

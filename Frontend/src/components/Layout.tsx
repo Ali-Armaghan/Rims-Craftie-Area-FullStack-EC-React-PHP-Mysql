@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
+  ChevronRight,
   Heart,
   LayoutDashboard,
+  LogOut,
   Menu,
+  MessageCircle,
   ShoppingBag,
   User,
   X,
@@ -75,6 +78,20 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     );
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [mobileOpen]);
+
+  const closeMobileMenu = () => setMobileOpen(false);
+
+  const isNavActive = (path: string) =>
+    path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
 
   return (
     <div className="flex min-h-screen flex-col overflow-x-hidden">
@@ -201,78 +218,202 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-foreground/30 z-50"
-              onClick={() => setMobileOpen(false)}
+              transition={{ duration: 0.25 }}
+              className="fixed inset-0 z-50 bg-foreground/40 backdrop-blur-[2px] lg:hidden"
+              onClick={closeMobileMenu}
+              aria-hidden
             />
-            <motion.div
+            <motion.aside
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
-              transition={{ type: "tween", duration: 0.3 }}
-              className="fixed left-0 top-0 bottom-0 w-80 bg-background z-50 p-8 flex flex-col"
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
+              className="fixed inset-y-0 left-0 z-50 flex w-[min(320px,88vw)] flex-col border-r border-border bg-background shadow-[8px_0_40px_hsl(30_68%_11%/0.12)] lg:hidden"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Navigation menu"
             >
-              <button onClick={() => setMobileOpen(false)} className="self-end mb-8 text-foreground">
-                <X size={24} />
-              </button>
-              <div className="mb-6">
-                <NavSearch
-                  className="mb-3 inline-flex"
-                  onNavigate={() => setMobileOpen(false)}
-                />
-                <p className="font-body text-xs text-muted-foreground">Tap to search products</p>
-              </div>
-              <nav className="flex flex-col gap-6">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.label}
-                    to={link.path}
-                    className="font-nav text-lg tracking-wide uppercase text-foreground/80 hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-                <Link
-                  to="/favorites"
-                  className="font-nav text-lg uppercase tracking-wide text-foreground/80 transition-colors hover:text-foreground"
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-border/60 px-5 py-4">
+                <div>
+                  <p className="font-display text-xl font-semibold text-foreground">ATEEQO</p>
+                  <p className="font-nav text-[10px] tracking-wide text-muted-foreground">
+                    Wear your story
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeMobileMenu}
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-border text-foreground transition-colors hover:bg-secondary"
+                  aria-label="Close menu"
                 >
-                  Favorites{totalFavorites > 0 ? ` (${totalFavorites})` : ""}
-                </Link>
-                {user ? (
-                  <>
-                    <div className="font-body text-sm text-muted-foreground">
-                      Signed in as {user.name}
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
+                {/* Search */}
+                <div className="border-b border-border/60 px-5 py-4">
+                  <NavSearch className="inline-flex" onNavigate={closeMobileMenu} />
+                  <p className="mt-2 font-body text-xs text-muted-foreground">
+                    Search bags, collections & more
+                  </p>
+                </div>
+
+                {/* Quick actions */}
+                <div className="grid grid-cols-2 gap-2 border-b border-border/60 px-5 py-4">
+                  <Link
+                    to="/cart"
+                    onClick={closeMobileMenu}
+                    className="flex items-center gap-2.5 rounded-xl border border-border bg-secondary/40 px-3 py-3 transition-colors hover:border-primary/30 hover:bg-secondary"
+                  >
+                    <ShoppingBag size={18} className="shrink-0 text-foreground/70" />
+                    <div className="min-w-0">
+                      <p className="font-nav text-[11px] uppercase tracking-wide text-foreground">Cart</p>
+                      <p className="font-body text-xs text-muted-foreground">
+                        {totalItems > 0 ? `${totalItems} item${totalItems > 1 ? "s" : ""}` : "Empty"}
+                      </p>
                     </div>
-                    <Link
-                      to="/account"
-                      className="font-nav text-lg tracking-wide uppercase text-foreground/80 hover:text-foreground transition-colors"
-                    >
-                      Dashboard
-                    </Link>
-                    <button
-                      onClick={logout}
-                      className="text-left font-nav text-lg tracking-wide uppercase text-foreground/80 hover:text-foreground transition-colors"
-                    >
-                      Logout
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      to="/login"
-                      className="font-nav text-lg tracking-wide uppercase text-foreground/80 hover:text-foreground transition-colors"
-                    >
-                      Login
-                    </Link>
-                    <Link
-                      to="/signup"
-                      className="font-nav text-lg tracking-wide uppercase text-foreground/80 hover:text-foreground transition-colors"
-                    >
-                      Sign Up
-                    </Link>
-                  </>
-                )}
-              </nav>
-            </motion.div>
+                  </Link>
+                  <Link
+                    to="/favorites"
+                    onClick={closeMobileMenu}
+                    className="flex items-center gap-2.5 rounded-xl border border-border bg-secondary/40 px-3 py-3 transition-colors hover:border-primary/30 hover:bg-secondary"
+                  >
+                    <Heart size={18} className="shrink-0 text-foreground/70" />
+                    <div className="min-w-0">
+                      <p className="font-nav text-[11px] uppercase tracking-wide text-foreground">Saved</p>
+                      <p className="font-body text-xs text-muted-foreground">
+                        {totalFavorites > 0 ? `${totalFavorites} item${totalFavorites > 1 ? "s" : ""}` : "No items"}
+                      </p>
+                    </div>
+                  </Link>
+                </div>
+
+                {/* Main nav */}
+                <nav className="px-3 py-4">
+                  <p className="mb-2 px-2 font-nav text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Menu
+                  </p>
+                  <ul className="space-y-1">
+                    {navLinks.map((link) => {
+                      const active = isNavActive(link.path);
+                      return (
+                        <li key={link.label}>
+                          <Link
+                            to={link.path}
+                            onClick={closeMobileMenu}
+                            className={`flex items-center justify-between rounded-lg px-3 py-3 font-nav text-sm uppercase tracking-wide transition-colors ${
+                              active
+                                ? "bg-foreground text-primary-foreground"
+                                : "text-foreground/80 hover:bg-secondary hover:text-foreground"
+                            }`}
+                          >
+                            {link.label}
+                            <ChevronRight
+                              size={16}
+                              className={active ? "text-primary-foreground/70" : "text-muted-foreground/50"}
+                            />
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </nav>
+
+                {/* Account */}
+                <div className="border-t border-border/60 px-3 py-4">
+                  <p className="mb-2 px-2 font-nav text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Account
+                  </p>
+                  {user ? (
+                    <div className="space-y-2">
+                      <div className="rounded-xl border border-border bg-secondary/30 px-4 py-3">
+                        <p className="font-body text-xs text-muted-foreground">Signed in as</p>
+                        <p className="truncate font-nav text-sm text-foreground">{user.name}</p>
+                      </div>
+                      <Link
+                        to="/account"
+                        onClick={closeMobileMenu}
+                        className="flex items-center justify-between rounded-lg px-3 py-3 font-nav text-sm uppercase tracking-wide text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
+                      >
+                        <span className="flex items-center gap-2">
+                          <LayoutDashboard size={16} />
+                          Dashboard
+                        </span>
+                        <ChevronRight size={16} className="text-muted-foreground/50" />
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          logout();
+                          closeMobileMenu();
+                        }}
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-3 text-left font-nav text-sm uppercase tracking-wide text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
+                      >
+                        <LogOut size={16} />
+                        Logout
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      <Link
+                        to="/login"
+                        onClick={closeMobileMenu}
+                        className="rounded-lg border border-border px-3 py-3 text-center font-nav text-xs uppercase tracking-wide text-foreground transition-colors hover:bg-secondary"
+                      >
+                        Login
+                      </Link>
+                      <Link
+                        to="/signup"
+                        onClick={closeMobileMenu}
+                        className="rounded-lg bg-foreground px-3 py-3 text-center font-nav text-xs uppercase tracking-wide text-primary-foreground transition-opacity hover:opacity-90"
+                      >
+                        Sign Up
+                      </Link>
+                    </div>
+                  )}
+                </div>
+
+                {/* Help links */}
+                <div className="border-t border-border/60 px-3 py-4">
+                  <p className="mb-2 px-2 font-nav text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Help
+                  </p>
+                  <ul className="space-y-1">
+                    {footerCustomerCareLinks.slice(0, 3).map(({ label, path }) => (
+                      <li key={label}>
+                        <Link
+                          to={path}
+                          onClick={closeMobileMenu}
+                          className="flex items-center justify-between rounded-lg px-3 py-2.5 font-body text-sm text-foreground/75 transition-colors hover:bg-secondary hover:text-foreground"
+                        >
+                          {label}
+                          <ChevronRight size={14} className="text-muted-foreground/40" />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="shrink-0 border-t border-border/60 bg-secondary/20 px-5 py-4">
+                <a
+                  href={CONTACT.whatsapp.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mb-4 flex items-center justify-center gap-2 rounded-xl bg-foreground px-4 py-3 font-nav text-xs uppercase tracking-wide text-primary-foreground transition-opacity hover:opacity-90"
+                >
+                  <MessageCircle size={16} />
+                  Chat on WhatsApp
+                </a>
+                <SocialLinks
+                  className="justify-center"
+                  iconClassName="flex h-9 w-9 items-center justify-center rounded-full border border-border text-foreground/60 transition-colors hover:border-primary hover:text-primary"
+                />
+              </div>
+            </motion.aside>
           </>
         )}
       </AnimatePresence>
