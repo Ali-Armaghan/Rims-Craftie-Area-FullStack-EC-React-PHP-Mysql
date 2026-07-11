@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import HeroSlider from "@/components/HeroSlider";
 import HomePromoBanners from "@/components/HomePromoBanners";
 import HomeCategoryProductGrid from "@/components/HomeCategoryProductGrid";
+import TestimonialSlider from "@/components/TestimonialSlider";
 import { useHomeCategorySections } from "@/hooks/useHomeCategorySections";
 import { useStoreCategories } from "@/hooks/useStoreCategories";
 
@@ -123,22 +124,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Testimonial */}
-      <section className="py-24">
-        <div className="container max-w-3xl text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <p className="text-label mb-8">What our customers say</p>
-            <blockquote className="font-display text-2xl md:text-3xl text-foreground leading-relaxed mb-8">
-              &ldquo;Beautiful bag, exactly as shown. The leather feels premium and it goes with everything in my wardrobe.&rdquo;
-            </blockquote>
-            <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">— Victoria S., London</p>
-          </motion.div>
-        </div>
-      </section>
+      <TestimonialSlider />
 
       {/* CTA */}
       <section className="py-20 bg-foreground">
