@@ -7,7 +7,7 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, ImagePlus, Loader2, X } from 'lucide-react'
+import { ArrowLeft, ImagePlus, Loader2, Plus, Trash2, X } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { Header } from '@/components/layout/header'
@@ -43,7 +43,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import apiClient from '@/lib/api-client'
 import { resolveImageUrl } from '@/lib/resolve-image-url'
-import { productSchema, type Product } from './types'
+import { productSchema, type Product, type ProductColor } from './types'
 import { CategoryMultiSelect } from './components/category-multi-select'
 
 type Category = {
@@ -116,6 +116,36 @@ function parseProductImages(images: unknown): string[] {
   return []
 }
 
+function parseProductColors(colors: unknown): ProductColor[] {
+  if (!Array.isArray(colors)) {
+    if (typeof colors === 'string' && colors.trim()) {
+      try {
+        const parsed = JSON.parse(colors)
+        return parseProductColors(parsed)
+      } catch {
+        return []
+      }
+    }
+    return []
+  }
+
+  return colors
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null
+      const row = item as { name?: unknown; hex?: unknown }
+      const hex = typeof row.hex === 'string' ? row.hex.trim() : ''
+      const name = typeof row.name === 'string' ? row.name.trim() : ''
+      if (!/^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/.test(hex)) return null
+      return {
+        hex: hex.length === 4
+          ? `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`.toUpperCase()
+          : hex.toUpperCase(),
+        name: name || hex.toUpperCase(),
+      }
+    })
+    .filter((item): item is ProductColor => item !== null)
+}
+
 function normalizeProduct(product: Product, categories: Category[]): Product {
   const categoryIds = getProductCategoryIds(product, categories)
 
@@ -133,6 +163,7 @@ function normalizeProduct(product: Product, categories: Category[]): Product {
     price: Number(product.sale_price ?? product.price ?? 0),
     stock: Number(product.stock),
     images: parseProductImages(product.images).map(resolveImageUrl),
+    colors: parseProductColors(product.colors),
     is_active: Number(product.is_active),
     short_description:
       product.short_description ?? product.description ?? '',
@@ -202,6 +233,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
       long_description: '',
       stock: 0,
       images: [],
+      colors: [],
       is_active: 1,
     },
   })
@@ -228,6 +260,34 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
 
   const selectedCategoryIds = watch('category_ids') ?? []
   const productImages = watch('images') ?? []
+  const productColors = watch('colors') ?? []
+
+  const addColor = () => {
+    const nextIndex = productColors.length + 1
+    setValue(
+      'colors',
+      [...productColors, { name: `Color ${nextIndex}`, hex: '#000000' }],
+      { shouldDirty: true, shouldValidate: true }
+    )
+  }
+
+  const updateColor = (
+    index: number,
+    patch: Partial<ProductColor>
+  ) => {
+    const next = productColors.map((color, i) =>
+      i === index ? { ...color, ...patch } : color
+    )
+    setValue('colors', next, { shouldDirty: true, shouldValidate: true })
+  }
+
+  const removeColor = (index: number) => {
+    setValue(
+      'colors',
+      productColors.filter((_, i) => i !== index),
+      { shouldDirty: true, shouldValidate: true }
+    )
+  }
 
   const uploadProductImages = async (files: File[]) => {
     if (!files.length) return []
@@ -498,6 +558,12 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
       description: data.short_description ?? data.description ?? '',
       short_description: data.short_description ?? data.description ?? '',
       long_description: data.long_description ?? '',
+      colors: (data.colors ?? [])
+        .filter((c) => c.hex && /^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/.test(c.hex))
+        .map((c) => ({
+          hex: c.hex.toUpperCase(),
+          name: c.name?.trim() || c.hex.toUpperCase(),
+        })),
     }
 
     try {
@@ -715,6 +781,95 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
                     )}
                   />
                 </div>
+
+                <FormField
+                  control={form.control}
+                  name='colors'
+                  render={() => (
+                    <FormItem>
+                      <div className='flex items-center justify-between gap-3'>
+                        <div>
+                          <FormLabel>Color variations</FormLabel>
+                          <p className='text-xs text-muted-foreground'>
+                            Add multiple colors for this product. Shown as
+                            swatches on the store product page.
+                          </p>
+                        </div>
+                        <Button
+                          type='button'
+                          variant='outline'
+                          size='sm'
+                          onClick={addColor}
+                        >
+                          <Plus className='h-4 w-4' />
+                          Add color
+                        </Button>
+                      </div>
+
+                      {productColors.length === 0 ? (
+                        <div className='rounded-md border border-dashed p-4 text-sm text-muted-foreground'>
+                          No colors yet. Click &quot;Add color&quot; to add
+                          variations (e.g. Black, Beige, Navy).
+                        </div>
+                      ) : (
+                        <div className='space-y-3'>
+                          {productColors.map((color, index) => (
+                            <div
+                              key={`color-${index}`}
+                              className='flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-center'
+                            >
+                              <Input
+                                type='color'
+                                value={color.hex || '#000000'}
+                                onChange={(e) =>
+                                  updateColor(index, {
+                                    hex: e.target.value.toUpperCase(),
+                                    name:
+                                      color.name?.trim() ||
+                                      e.target.value.toUpperCase(),
+                                  })
+                                }
+                                className='h-10 w-16 cursor-pointer p-1'
+                                aria-label={`Color picker ${index + 1}`}
+                              />
+                              <Input
+                                value={color.hex}
+                                onChange={(e) =>
+                                  updateColor(index, {
+                                    hex: e.target.value,
+                                  })
+                                }
+                                placeholder='#000000'
+                                className='font-mono sm:w-32'
+                              />
+                              <Input
+                                value={color.name}
+                                onChange={(e) =>
+                                  updateColor(index, {
+                                    name: e.target.value,
+                                  })
+                                }
+                                placeholder='Color name (e.g. Midnight Black)'
+                                className='flex-1'
+                              />
+                              <Button
+                                type='button'
+                                variant='outline'
+                                size='icon'
+                                className='text-destructive hover:text-destructive'
+                                onClick={() => removeColor(index)}
+                                aria-label={`Remove color ${index + 1}`}
+                              >
+                                <Trash2 className='h-4 w-4' />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <FormField
                   control={form.control}

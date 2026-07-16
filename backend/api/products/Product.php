@@ -12,6 +12,28 @@ class Product {
         $this->ensureProductCategoriesTable();
         $this->ensureOriginalPriceColumn();
         $this->ensureLongDescriptionColumn();
+        $this->ensureColorsColumn();
+    }
+
+    private function ensureColorsColumn() {
+        static $done = false;
+        if ($done) {
+            return;
+        }
+
+        try {
+            $this->conn->query("SELECT colors FROM " . $this->table_name . " LIMIT 1");
+        } catch (Exception $e) {
+            try {
+                $this->conn->exec(
+                    "ALTER TABLE " . $this->table_name . "
+                     ADD COLUMN colors JSON NULL DEFAULT NULL AFTER images"
+                );
+            } catch (Exception $ignored) {
+            }
+        }
+
+        $done = true;
     }
 
     private function ensureLongDescriptionColumn() {
@@ -382,6 +404,55 @@ class Product {
         return $data['long_description'] ?? '';
     }
 
+    private function normalizeColors($raw) {
+        if ($raw === null || $raw === '') {
+            return [];
+        }
+
+        if (is_string($raw)) {
+            $decoded = json_decode($raw, true);
+            $raw = is_array($decoded) ? $decoded : [];
+        }
+
+        if (!is_array($raw)) {
+            return [];
+        }
+
+        $colors = [];
+        foreach ($raw as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $hex = isset($item['hex']) ? trim((string) $item['hex']) : '';
+            if ($hex === '' || !preg_match('/^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/', $hex)) {
+                continue;
+            }
+
+            // Normalize #RGB → #RRGGBB
+            if (strlen($hex) === 4) {
+                $hex = '#' . $hex[1] . $hex[1] . $hex[2] . $hex[2] . $hex[3] . $hex[3];
+            }
+
+            $name = isset($item['name']) ? trim((string) $item['name']) : '';
+            if ($name === '') {
+                $name = strtoupper($hex);
+            }
+
+            $colors[] = [
+                'name' => mb_substr($name, 0, 50),
+                'hex' => strtoupper($hex),
+            ];
+        }
+
+        return $colors;
+    }
+
+    private function resolveColorsJson($data) {
+        $colors = $this->normalizeColors($data['colors'] ?? []);
+        return json_encode($colors);
+    }
+
     public function create($data) {
         $categoryIds = $this->extractCategoryIds($data);
         $primaryCategoryId = $categoryIds ? $categoryIds[0] : null;
@@ -389,10 +460,11 @@ class Product {
         $query = "INSERT INTO " . $this->table_name . " 
                   SET name=:name, slug=:slug, category_id=:cat_id, 
                       description=:desc, long_description=:long_desc, price=:price, original_price=:original_price,
-                      stock=:stock, images=:images";
+                      stock=:stock, images=:images, colors=:colors";
         $stmt = $this->conn->prepare($query);
 
         $images = json_encode($data['images']);
+        $colors = $this->resolveColorsJson($data);
         $salePrice = $this->resolveSalePrice($data);
         $originalPrice = $this->resolveOriginalPrice($data);
         $shortDescription = $this->resolveShortDescription($data);
@@ -407,6 +479,7 @@ class Product {
         $stmt->bindParam(":original_price", $originalPrice, $originalPrice === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
         $stmt->bindParam(":stock", $data['stock']);
         $stmt->bindParam(":images", $images);
+        $stmt->bindParam(":colors", $colors);
 
         if (!$stmt->execute()) {
             return false;
@@ -426,12 +499,13 @@ class Product {
         $query = "UPDATE " . $this->table_name . " 
                   SET name=:name, slug=:slug, category_id=:cat_id, 
                       description=:desc, long_description=:long_desc, price=:price, original_price=:original_price,
-                      stock=:stock, images=:images, is_active=:is_active
+                      stock=:stock, images=:images, colors=:colors, is_active=:is_active
                   WHERE id=:id";
         $stmt = $this->conn->prepare($query);
 
         $newImages = $this->parseImages(isset($data['images']) ? $data['images'] : []);
         $images = json_encode($newImages);
+        $colors = $this->resolveColorsJson($data);
         $salePrice = $this->resolveSalePrice($data);
         $originalPrice = $this->resolveOriginalPrice($data);
         $shortDescription = $this->resolveShortDescription($data);
@@ -446,6 +520,7 @@ class Product {
         $stmt->bindParam(":original_price", $originalPrice, $originalPrice === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
         $stmt->bindParam(":stock", $data['stock']);
         $stmt->bindParam(":images", $images);
+        $stmt->bindParam(":colors", $colors);
         $stmt->bindParam(":is_active", $data['is_active']);
         $stmt->bindParam(":id", $id);
 

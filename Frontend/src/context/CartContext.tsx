@@ -1,16 +1,30 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { Product } from "@/data/products";
 
+export type SelectedColor = {
+  name: string;
+  hex: string;
+};
+
 export interface CartItem {
   product: Product;
   quantity: number;
+  selectedColor?: SelectedColor | null;
 }
 
 interface CartContextType {
   items: CartItem[];
-  addToCart: (product: Product, quantity?: number) => void;
-  removeFromCart: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  addToCart: (
+    product: Product,
+    quantity?: number,
+    selectedColor?: SelectedColor | null
+  ) => void;
+  removeFromCart: (productId: string, selectedColor?: SelectedColor | null) => void;
+  updateQuantity: (
+    productId: string,
+    quantity: number,
+    selectedColor?: SelectedColor | null
+  ) => void;
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
@@ -18,16 +32,39 @@ interface CartContextType {
 
 const CART_STORAGE_KEY = "ateeqo_cart";
 
+export function cartLineKey(
+  productId: string,
+  selectedColor?: SelectedColor | null
+) {
+  const colorPart = selectedColor?.hex || selectedColor?.name || "default";
+  return `${productId}::${colorPart}`;
+}
+
+function sameCartLine(
+  item: CartItem,
+  productId: string,
+  selectedColor?: SelectedColor | null
+) {
+  return cartLineKey(item.product.id, item.selectedColor) ===
+    cartLineKey(productId, selectedColor);
+}
+
 function isValidCartItem(value: unknown): value is CartItem {
   if (!value || typeof value !== "object") return false;
   const item = value as CartItem;
+  const colorOk =
+    item.selectedColor == null ||
+    (typeof item.selectedColor === "object" &&
+      typeof item.selectedColor.name === "string" &&
+      typeof item.selectedColor.hex === "string");
   return (
     typeof item.quantity === "number" &&
     item.quantity > 0 &&
     !!item.product &&
     typeof item.product.id === "string" &&
     typeof item.product.name === "string" &&
-    typeof item.product.price === "number"
+    typeof item.product.price === "number" &&
+    colorOk
   );
 }
 
@@ -52,27 +89,63 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
   }, [items]);
 
-  const addToCart = useCallback((product: Product, quantity: number = 1) => {
-    setItems((prev) => {
-      const existing = prev.find((i) => i.product.id === product.id);
-      if (existing) {
-        return prev.map((i) => i.product.id === product.id ? { ...i, quantity: i.quantity + quantity } : i);
+  const addToCart = useCallback(
+    (
+      product: Product,
+      quantity: number = 1,
+      selectedColor: SelectedColor | null = null
+    ) => {
+      const color =
+        selectedColor?.name && selectedColor?.hex
+          ? { name: selectedColor.name, hex: selectedColor.hex }
+          : null;
+
+      setItems((prev) => {
+        const existing = prev.find((i) =>
+          sameCartLine(i, product.id, color)
+        );
+        if (existing) {
+          return prev.map((i) =>
+            sameCartLine(i, product.id, color)
+              ? { ...i, quantity: i.quantity + quantity }
+              : i
+          );
+        }
+        return [...prev, { product, quantity, selectedColor: color }];
+      });
+    },
+    []
+  );
+
+  const removeFromCart = useCallback(
+    (productId: string, selectedColor: SelectedColor | null = null) => {
+      setItems((prev) =>
+        prev.filter((i) => !sameCartLine(i, productId, selectedColor))
+      );
+    },
+    []
+  );
+
+  const updateQuantity = useCallback(
+    (
+      productId: string,
+      quantity: number,
+      selectedColor: SelectedColor | null = null
+    ) => {
+      if (quantity <= 0) {
+        setItems((prev) =>
+          prev.filter((i) => !sameCartLine(i, productId, selectedColor))
+        );
+      } else {
+        setItems((prev) =>
+          prev.map((i) =>
+            sameCartLine(i, productId, selectedColor) ? { ...i, quantity } : i
+          )
+        );
       }
-      return [...prev, { product, quantity }];
-    });
-  }, []);
-
-  const removeFromCart = useCallback((productId: string) => {
-    setItems((prev) => prev.filter((i) => i.product.id !== productId));
-  }, []);
-
-  const updateQuantity = useCallback((productId: string, quantity: number) => {
-    if (quantity <= 0) {
-      setItems((prev) => prev.filter((i) => i.product.id !== productId));
-    } else {
-      setItems((prev) => prev.map((i) => i.product.id === productId ? { ...i, quantity } : i));
-    }
-  }, []);
+    },
+    []
+  );
 
   const clearCart = useCallback(() => {
     setItems([]);

@@ -161,13 +161,14 @@ const ProductDetail = () => {
   // Reset states when slug changes
   useEffect(() => {
     setCurrentImageIndex(0);
-    // Auto-select the first variation if available, otherwise fallback to a generic string.
-    if (product?.variations && product.variations.length > 0) {
+    if (product?.colors && product.colors.length > 0) {
+      setSelectedOption(product.colors[0].name);
+    } else if (product?.variations && product.variations.length > 0) {
       setSelectedOption(product.variations[0].name);
     } else {
       setSelectedOption("Default");
     }
-  }, [slug, product?.variations]);
+  }, [slug, product?.colors, product?.variations]);
 
   // Auto-sliding Carousel Effect
   useEffect(() => {
@@ -246,13 +247,23 @@ const ProductDetail = () => {
   };
 
   const handleAdd = () => {
-    addToCart(product, quantity);
+    const selectedColor =
+      product.colors?.find((c) => c.name === selectedOption) ??
+      (selectedOption && selectedOption !== "Default"
+        ? { name: selectedOption, hex: "#000000" }
+        : null);
+    addToCart(product, quantity, selectedColor);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
 
   const handleBuyNow = () => {
-    addToCart(product, quantity);
+    const selectedColor =
+      product.colors?.find((c) => c.name === selectedOption) ??
+      (selectedOption && selectedOption !== "Default"
+        ? { name: selectedOption, hex: "#000000" }
+        : null);
+    addToCart(product, quantity, selectedColor);
     navigate("/checkout");
   };
 
@@ -526,7 +537,43 @@ const ProductDetail = () => {
                 </div>
               </div>
 
-              {product.variations && product.variations.length > 0 && (
+              {product.colors && product.colors.length > 0 ? (
+                <div className="mb-6">
+                  <p className="mb-3 font-nav text-xs font-bold uppercase tracking-normal text-foreground">
+                    Select Color
+                    {selectedOption && selectedOption !== "Default" ? (
+                      <span className="ml-2 font-body text-sm font-medium normal-case tracking-normal text-muted-foreground">
+                        — {selectedOption}
+                      </span>
+                    ) : null}
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    {product.colors.map((color) => {
+                      const isSelected = selectedOption === color.name;
+                      return (
+                        <button
+                          key={`${color.hex}-${color.name}`}
+                          type="button"
+                          onClick={() => setSelectedOption(color.name)}
+                          title={color.name}
+                          aria-label={`Select color ${color.name}`}
+                          aria-pressed={isSelected}
+                          className={`relative flex h-10 w-10 items-center justify-center rounded-full border-2 transition ${
+                            isSelected
+                              ? "border-foreground scale-110 shadow-sm"
+                              : "border-border hover:border-foreground/50"
+                          }`}
+                        >
+                          <span
+                            className="h-7 w-7 rounded-full border border-black/10"
+                            style={{ backgroundColor: color.hex }}
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : product.variations && product.variations.length > 0 ? (
                 <div className="mb-6">
                   <p className="mb-3 font-nav text-xs font-bold uppercase tracking-normal text-foreground">Select Option</p>
                   <div className="flex flex-wrap gap-2.5">
@@ -544,7 +591,7 @@ const ProductDetail = () => {
                     ))}
                   </div>
                 </div>
-              )}
+              ) : null}
 
               <div className="mb-6 rounded-3xl border border-border bg-background p-5 shadow-sm">
                 <div className="mb-5 flex items-center justify-between gap-4">

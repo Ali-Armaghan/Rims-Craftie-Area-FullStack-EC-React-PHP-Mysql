@@ -1,12 +1,21 @@
-import { useQuery } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
-import { ArrowLeft } from 'lucide-react'
+import { useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { ArrowLeft, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -15,6 +24,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import apiClient from '@/lib/api-client'
 
 type Order = {
@@ -24,8 +43,9 @@ type Order = {
   customer_email?: string | null
   status: string
   subtotal?: string
+  discount?: string
   total: string
-  shipping_address?: string
+  shipping_address?: string | Record<string, unknown>
   referred_by_code?: string | null
   commission_earned: string
   resale_credited: number
@@ -39,18 +59,42 @@ type OrderItem = {
   price: string
   quantity: number
   subtotal: string
+  color_name?: string | null
+  color_hex?: string | null
 }
 
 type OrderDetail = Order & {
   items: OrderItem[]
 }
 
+const STATUS_OPTIONS = [
+  'pending',
+  'paid',
+  'processing',
+  'shipped',
+  'delivered',
+  'cancelled',
+]
+
 function formatCurrency(value: string | number | undefined | null) {
   return `PKR ${Number(value ?? 0).toLocaleString()}`
 }
 
-function parseShippingAddress(value?: string) {
+function parseShippingAddress(value?: string | Record<string, unknown>) {
   if (!value) return null
+
+  if (typeof value === 'object') {
+    return value as {
+      full_name?: string
+      phone?: string
+      email?: string
+      address?: string
+      city?: string
+      state?: string
+      zip?: string
+      country?: string
+    }
+  }
 
   try {
     return JSON.parse(value) as {
@@ -69,6 +113,12 @@ function parseShippingAddress(value?: string) {
 }
 
 export function OrderDetailPage({ orderId }: { orderId: string }) {
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const [statusLoading, setStatusLoading] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
   const { data: order, isLoading } = useQuery<OrderDetail | null>({
     queryKey: ['order-detail', orderId],
     queryFn: async () => {
@@ -81,6 +131,39 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
 
   const shipping = parseShippingAddress(order?.shipping_address)
 
+  const updateStatus = async (status: string) => {
+    if (!order) return
+    setStatusLoading(true)
+    try {
+      await apiClient.put('/orders', { id: order.id, status })
+      toast.success(`Order marked as ${status}`)
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['orders'] }),
+        queryClient.invalidateQueries({ queryKey: ['order-detail', orderId] }),
+      ])
+    } catch {
+      toast.error('Failed to update status')
+    } finally {
+      setStatusLoading(false)
+    }
+  }
+
+  const deleteOrder = async () => {
+    if (!order) return
+    setDeleting(true)
+    try {
+      await apiClient.delete('/orders', { params: { id: order.id } })
+      toast.success(`Order ${order.order_number} deleted`)
+      await queryClient.invalidateQueries({ queryKey: ['orders'] })
+      setDeleteOpen(false)
+      navigate({ to: '/orders' })
+    } catch {
+      toast.error('Failed to delete order')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   return (
     <>
       <Header fixed>
@@ -92,21 +175,33 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
       </Header>
 
       <Main>
-        <div className='mb-4 flex items-center gap-3'>
-          <Button asChild variant='outline' size='sm'>
-            <Link to='/orders'>
-              <ArrowLeft className='h-4 w-4' />
-              Back
-            </Link>
-          </Button>
-          <div>
-            <h2 className='text-2xl font-bold tracking-tight'>
-              Order Details
-            </h2>
-            <p className='text-muted-foreground'>
-              View complete order history, items, customer, and commission data.
-            </p>
+        <div className='mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+          <div className='flex items-center gap-3'>
+            <Button asChild variant='outline' size='sm'>
+              <Link to='/orders'>
+                <ArrowLeft className='h-4 w-4' />
+                Back
+              </Link>
+            </Button>
+            <div>
+              <h2 className='text-2xl font-bold tracking-tight'>
+                Order Details
+              </h2>
+              <p className='text-muted-foreground'>
+                View, update status, or delete this order.
+              </p>
+            </div>
           </div>
+          {order && (
+            <Button
+              variant='destructive'
+              size='sm'
+              onClick={() => setDeleteOpen(true)}
+            >
+              <Trash2 className='h-4 w-4' />
+              Delete order
+            </Button>
+          )}
         </div>
 
         {isLoading ? (
@@ -117,12 +212,33 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
           <div className='space-y-6'>
             <div className='grid gap-4 md:grid-cols-4'>
               <div className='rounded-md border p-4'>
-                <p className='text-xs uppercase text-muted-foreground'>Order #</p>
-                <p className='font-mono text-sm font-medium'>{order.order_number}</p>
+                <p className='text-xs uppercase text-muted-foreground'>
+                  Order #
+                </p>
+                <p className='font-mono text-sm font-medium'>
+                  {order.order_number}
+                </p>
               </div>
               <div className='rounded-md border p-4'>
-                <p className='text-xs uppercase text-muted-foreground'>Status</p>
-                <p className='capitalize font-medium'>{order.status}</p>
+                <p className='mb-2 text-xs uppercase text-muted-foreground'>
+                  Status
+                </p>
+                <Select
+                  value={order.status}
+                  onValueChange={updateStatus}
+                  disabled={statusLoading}
+                >
+                  <SelectTrigger className='h-8 capitalize'>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS_OPTIONS.map((s) => (
+                      <SelectItem key={s} value={s} className='capitalize'>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className='rounded-md border p-4'>
                 <p className='text-xs uppercase text-muted-foreground'>Total</p>
@@ -144,7 +260,9 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
                   {order.customer_email ?? shipping?.email ?? 'No email'}
                 </p>
                 {shipping?.phone && (
-                  <p className='text-sm text-muted-foreground'>{shipping.phone}</p>
+                  <p className='text-sm text-muted-foreground'>
+                    {shipping.phone}
+                  </p>
                 )}
               </div>
 
@@ -175,6 +293,7 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Product</TableHead>
+                    <TableHead>Color</TableHead>
                     <TableHead>Price</TableHead>
                     <TableHead>Qty</TableHead>
                     <TableHead className='text-right'>Subtotal</TableHead>
@@ -185,6 +304,21 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
                     order.items.map((item) => (
                       <TableRow key={item.id}>
                         <TableCell>{item.product_name}</TableCell>
+                        <TableCell>
+                          {item.color_name ? (
+                            <span className='inline-flex items-center gap-2'>
+                              {item.color_hex ? (
+                                <span
+                                  className='inline-block h-3.5 w-3.5 rounded-full border'
+                                  style={{ backgroundColor: item.color_hex }}
+                                />
+                              ) : null}
+                              {item.color_name}
+                            </span>
+                          ) : (
+                            <span className='text-muted-foreground'>—</span>
+                          )}
+                        </TableCell>
                         <TableCell>{formatCurrency(item.price)}</TableCell>
                         <TableCell>{item.quantity}</TableCell>
                         <TableCell className='text-right'>
@@ -194,7 +328,7 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={4} className='text-center'>
+                      <TableCell colSpan={5} className='text-center'>
                         No items found.
                       </TableCell>
                     </TableRow>
@@ -205,7 +339,9 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
 
             <div className='grid gap-4 md:grid-cols-3'>
               <div className='rounded-md border p-4'>
-                <p className='text-xs uppercase text-muted-foreground'>Subtotal</p>
+                <p className='text-xs uppercase text-muted-foreground'>
+                  Subtotal
+                </p>
                 <p className='font-medium'>{formatCurrency(order.subtotal)}</p>
               </div>
               <div className='rounded-md border p-4'>
@@ -232,6 +368,32 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
           </div>
         )}
       </Main>
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this order?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete order{' '}
+              <strong>{order?.order_number}</strong> and its items. This cannot
+              be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault()
+                void deleteOrder()
+              }}
+              disabled={deleting}
+              className='bg-red-600 hover:bg-red-700'
+            >
+              {deleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

@@ -97,5 +97,17 @@ function normalize_product_row(array $row): array
         $row['short_description'] = $row['description'];
     }
 
+    if (array_key_exists('colors', $row)) {
+        $colors = $row['colors'];
+        if (is_string($colors) && trim($colors) !== '') {
+            $decoded = json_decode($colors, true);
+            $row['colors'] = is_array($decoded) ? $decoded : [];
+        } elseif (!is_array($colors)) {
+            $row['colors'] = [];
+        }
+    } else {
+        $row['colors'] = [];
+    }
+
     return $row;
 }

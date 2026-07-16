@@ -19,7 +19,7 @@ export function buildWhatsAppOrderUrl(details: WhatsAppOrderDetails): string {
     `Price: Rs. ${details.price.toLocaleString()}`,
     `Quantity: ${details.quantity}`,
     ...(details.selectedOption && details.selectedOption !== "Default"
-      ? [`Option: ${details.selectedOption}`]
+      ? [`Color: ${details.selectedOption}`]
       : []),
     `Total: Rs. ${total.toLocaleString()}`,
     ...(details.productUrl ? [`Link: ${details.productUrl}`] : []),

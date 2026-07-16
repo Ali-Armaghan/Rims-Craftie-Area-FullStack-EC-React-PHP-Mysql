@@ -21,6 +21,8 @@ export interface OrderPayload {
         name: string;
         price: number;
         quantity: number;
+        color_name?: string | null;
+        color_hex?: string | null;
     }[];
 }
 
@@ -44,6 +46,8 @@ export type CustomerOrderItem = {
     price: string | number;
     quantity: number;
     subtotal: string | number;
+    color_name?: string | null;
+    color_hex?: string | null;
 };
 
 export type CustomerOrderDetail = CustomerOrder & {
@@ -129,6 +133,7 @@ type BackendProduct = {
     is_active?: number | string | boolean;
     average_rating?: number | string | null;
     review_count?: number | string | null;
+    colors?: { name?: string; hex?: string }[] | string | null;
     created_at?: string;
 };
 
@@ -228,6 +233,34 @@ function resolveImageUrl(image: string) {
     return image.startsWith('/') ? `${backendOrigin}${image}` : `${backendOrigin}/${image}`;
 }
 
+function parseColors(colors: BackendProduct['colors']) {
+    if (Array.isArray(colors)) {
+        return colors
+            .map((item) => {
+                if (!item || typeof item !== 'object') return null;
+                const hex = typeof item.hex === 'string' ? item.hex.trim() : '';
+                const name = typeof item.name === 'string' ? item.name.trim() : '';
+                if (!/^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/.test(hex)) return null;
+                return {
+                    hex: hex.toUpperCase(),
+                    name: name || hex.toUpperCase(),
+                };
+            })
+            .filter((item): item is { name: string; hex: string } => item !== null);
+    }
+
+    if (typeof colors === 'string' && colors.trim()) {
+        try {
+            const parsed = JSON.parse(colors);
+            return parseColors(parsed);
+        } catch {
+            return [];
+        }
+    }
+
+    return [];
+}
+
 function mapBackendProduct(product: BackendProduct): Product {
     const parsedImages = parseImages(product.images).filter(Boolean).map(resolveImageUrl);
     const image = parsedImages[0] ?? 'https://placehold.co/600x600?text=No+Image';
@@ -247,6 +280,7 @@ function mapBackendProduct(product: BackendProduct): Product {
         : product.category_id != null
             ? [Number(product.category_id)]
             : [];
+    const colors = parseColors(product.colors);
 
     return {
         id: String(product.id),
@@ -276,6 +310,11 @@ function mapBackendProduct(product: BackendProduct): Product {
         material: 'Premium Quality',
         inStock: stockQuantity > 0 && Number(product.is_active ?? 1) === 1,
         stockQuantity,
+        colors,
+        variations: colors.map((color, index) => ({
+            id: index + 1,
+            name: color.name,
+        })),
         rating: String(Number(product.average_rating ?? 0).toFixed(1)),
         reviewCount: Number(product.review_count ?? 0),
     };

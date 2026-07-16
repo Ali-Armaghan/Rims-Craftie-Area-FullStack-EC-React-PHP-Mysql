@@ -25,6 +25,7 @@ export interface Product {
   inStock: boolean;
   badge?: string;
   variations?: { id: number; name: string }[];
+  colors?: { name: string; hex: string }[];
   rating?: string;
   reviewCount?: number;
   stockQuantity?: number;

@@ -6,6 +6,13 @@ export const productCategorySchema = z.object({
   slug: z.string().optional(),
 })
 
+export const productColorSchema = z.object({
+  name: z.string().min(1, 'Color name is required'),
+  hex: z
+    .string()
+    .regex(/^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/, 'Invalid color'),
+})
+
 export const productSchema = z
   .object({
     id: z.number().optional(),
@@ -24,6 +31,7 @@ export const productSchema = z
     price: z.number().min(0).optional(),
     stock: z.number().int().min(0, 'Stock must be non-negative'),
     images: z.array(z.string()),
+    colors: z.array(productColorSchema).default([]),
     is_active: z.number().int().min(0).max(1),
     created_at: z.string().optional(),
   })
@@ -38,4 +46,5 @@ export const productSchema = z
     }
   )
 
+export type ProductColor = z.infer<typeof productColorSchema>
 export type Product = z.infer<typeof productSchema>

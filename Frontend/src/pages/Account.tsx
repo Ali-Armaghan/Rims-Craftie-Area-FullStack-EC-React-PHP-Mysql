@@ -257,7 +257,20 @@ const Account = () => {
                       <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground mb-2">Items</p>
                       {selectedOrder.items?.map((item) => (
                         <div key={item.id} className="flex justify-between border-t border-border py-3 font-body text-sm">
-                          <span>{item.product_name ?? item.name} x {item.quantity}</span>
+                          <span className="pr-3">
+                            {item.product_name ?? item.name} x {item.quantity}
+                            {item.color_name ? (
+                              <span className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                                {item.color_hex ? (
+                                  <span
+                                    className="inline-block h-2.5 w-2.5 rounded-full border border-border"
+                                    style={{ backgroundColor: item.color_hex }}
+                                  />
+                                ) : null}
+                                Color: {item.color_name}
+                              </span>
+                            ) : null}
+                          </span>
                           <span>{money(item.subtotal)}</span>
                         </div>
                       ))}

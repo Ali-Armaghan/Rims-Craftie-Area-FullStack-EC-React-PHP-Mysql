@@ -32,7 +32,10 @@ const Cart = () => {
           {/* Items */}
           <div className="lg:col-span-2 space-y-6">
             {items.map((item) => (
-              <div key={item.product.id} className="flex gap-6 border-b border-border pb-6">
+              <div
+                key={`${item.product.id}-${item.selectedColor?.hex ?? "default"}`}
+                className="flex gap-6 border-b border-border pb-6"
+              >
                 <Link to={getProductUrl(item.product)} className="w-28 h-28 bg-card flex-shrink-0">
                   <img src={item.product.image} alt={item.product.name} className="w-full h-full object-cover" />
                 </Link>
@@ -40,19 +43,42 @@ const Cart = () => {
                   <div className="flex justify-between">
                     <div>
                       <h3 className="font-display text-lg text-foreground">{item.product.name}</h3>
-                      <p className="font-nav text-xs tracking-wider text-muted-foreground">{item.product.material}</p>
+                      {item.selectedColor ? (
+                        <p className="mt-1 flex items-center gap-1.5 font-nav text-xs tracking-wider text-muted-foreground">
+                          <span
+                            className="inline-block h-3 w-3 rounded-full border border-border"
+                            style={{ backgroundColor: item.selectedColor.hex }}
+                          />
+                          {item.selectedColor.name}
+                        </p>
+                      ) : (
+                        <p className="font-nav text-xs tracking-wider text-muted-foreground">{item.product.material}</p>
+                      )}
                     </div>
-                    <button onClick={() => removeFromCart(item.product.id)} className="text-muted-foreground hover:text-foreground transition-colors">
+                    <button
+                      onClick={() => removeFromCart(item.product.id, item.selectedColor)}
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
                       <X size={18} />
                     </button>
                   </div>
                   <div className="flex items-center justify-between mt-4">
                     <div className="flex items-center border border-border">
-                      <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)} className="p-2 text-muted-foreground hover:text-foreground">
+                      <button
+                        onClick={() =>
+                          updateQuantity(item.product.id, item.quantity - 1, item.selectedColor)
+                        }
+                        className="p-2 text-muted-foreground hover:text-foreground"
+                      >
                         <Minus size={14} />
                       </button>
                       <span className="px-4 font-nav text-sm">{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.product.id, item.quantity + 1)} className="p-2 text-muted-foreground hover:text-foreground">
+                      <button
+                        onClick={() =>
+                          updateQuantity(item.product.id, item.quantity + 1, item.selectedColor)
+                        }
+                        className="p-2 text-muted-foreground hover:text-foreground"
+                      >
                         <Plus size={14} />
                       </button>
                     </div>

@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS products (
     original_price DECIMAL(10,2) NULL DEFAULT NULL,
     stock INT DEFAULT 0,
     images JSON, -- Store as array of paths
+    colors JSON NULL DEFAULT NULL, -- [{ "name": "Black", "hex": "#000000" }, ...]
     is_active TINYINT(1) DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
@@ -102,6 +103,8 @@ CREATE TABLE IF NOT EXISTS order_items (
     order_id INT,
     product_id INT,
     product_name VARCHAR(200) NOT NULL,
+    color_name VARCHAR(100) NULL DEFAULT NULL,
+    color_hex VARCHAR(20) NULL DEFAULT NULL,
     price DECIMAL(10,2) NOT NULL,
     quantity INT NOT NULL,
     subtotal DECIMAL(10,2) NOT NULL,

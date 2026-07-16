@@ -104,6 +104,8 @@ const Checkout = () => {
           name: item.product.name,
           price: item.product.price,
           quantity: item.quantity,
+          color_name: item.selectedColor?.name ?? null,
+          color_hex: item.selectedColor?.hex ?? null,
         })),
       };
 
@@ -234,12 +236,24 @@ const Checkout = () => {
             <h3 className="font-nav text-xs tracking-wide uppercase text-foreground mb-6">Your Order</h3>
             <div className="space-y-4 border-b border-border pb-6 mb-6">
               {items.map((item) => (
-                <div key={item.product.id} className="flex gap-4">
+                <div
+                  key={`${item.product.id}-${item.selectedColor?.hex ?? "default"}`}
+                  className="flex gap-4"
+                >
                   <div className="w-16 h-16 bg-secondary flex-shrink-0">
                     <img src={item.product.image} alt={item.product.name} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1">
                     <p className="font-display text-sm text-foreground">{item.product.name}</p>
+                    {item.selectedColor && (
+                      <p className="mt-1 flex items-center gap-1.5 font-body text-xs text-muted-foreground">
+                        <span
+                          className="inline-block h-3 w-3 rounded-full border border-border"
+                          style={{ backgroundColor: item.selectedColor.hex }}
+                        />
+                        Color: {item.selectedColor.name}
+                      </p>
+                    )}
                     <p className="font-body text-xs text-muted-foreground">Qty: {item.quantity}</p>
                   </div>
                   <span className="font-body text-sm text-foreground">Rs. {(item.product.price * item.quantity).toLocaleString()}</span>

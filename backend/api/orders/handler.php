@@ -7,6 +7,9 @@ $db = $database->getConnection();
 $order = new Order($db);
 
 $data = json_decode(file_get_contents("php://input"), true);
+if (!is_array($data)) {
+    $data = [];
+}
 
 switch ($_SERVER['REQUEST_METHOD']) {
     case 'GET':
@@ -33,8 +36,12 @@ switch ($_SERVER['REQUEST_METHOD']) {
                 break;
             }
             
-            // Get items
-            $iq = "SELECT oi.*, p.name as product_name FROM order_items oi LEFT JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?";
+            // Get items (prefer stored product_name snapshot; keep selected color)
+            $iq = "SELECT oi.*,
+                          COALESCE(oi.product_name, p.name) as product_name
+                   FROM order_items oi
+                   LEFT JOIN products p ON oi.product_id = p.id
+                   WHERE oi.order_id = ?";
             $istmt = $db->prepare($iq);
             $istmt->execute([$_GET['id']]);
             $ord['items'] = $istmt->fetchAll(PDO::FETCH_ASSOC);
@@ -90,6 +97,46 @@ switch ($_SERVER['REQUEST_METHOD']) {
         if (!empty($data['id']) && !empty($data['status'])) {
             $res = $order->updateStatus($data['id'], $data['status']);
             echo json_encode(['success' => $res]);
+        } else {
+            http_response_code(400);
+            echo json_encode(['message' => 'Order id and status are required']);
+        }
+        break;
+
+    case 'DELETE':
+        // Multi-delete: body { "ids": [1,2,3] } or ?ids=1,2,3
+        $ids = [];
+        if (!empty($data['ids']) && is_array($data['ids'])) {
+            $ids = $data['ids'];
+        } elseif (!empty($_GET['ids'])) {
+            $ids = array_map('trim', explode(',', $_GET['ids']));
+        }
+
+        if (!empty($ids)) {
+            $res = $order->deleteMany($ids);
+            if (!empty($res['success'])) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => $res['deleted'] . ' order(s) deleted',
+                    'deleted' => $res['deleted'],
+                ]);
+            } else {
+                http_response_code(503);
+                echo json_encode([
+                    'success' => false,
+                    'message' => $res['message'] ?? 'Unable to delete orders',
+                ]);
+            }
+            break;
+        }
+
+        // Single delete: ?id=123
+        $id = !empty($_GET['id']) ? $_GET['id'] : ($data['id'] ?? null);
+        if ($id && $order->delete($id)) {
+            echo json_encode(['success' => true, 'message' => 'Order deleted']);
+        } else {
+            http_response_code(503);
+            echo json_encode(['success' => false, 'message' => 'Unable to delete order']);
         }
         break;
 

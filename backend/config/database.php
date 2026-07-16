@@ -3,7 +3,7 @@
 
 class Database {
     private $host = "localhost";
-    private $db_name = "online_store_resale";
+    private $db_name = "ateeqo";
     private $username = "root";
     private $password = "";
     public $conn;
