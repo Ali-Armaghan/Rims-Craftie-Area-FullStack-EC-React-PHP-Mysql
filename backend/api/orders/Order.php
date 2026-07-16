@@ -10,6 +10,7 @@ class Order {
     public function __construct($db) {
         $this->conn = $db;
         $this->ensureOrderItemColorColumns();
+        $this->ensureOrderResaleColumns();
     }
 
     private function ensureOrderItemColorColumns() {
@@ -46,32 +47,132 @@ class Order {
         $done = true;
     }
 
+    private function ensureOrderResaleColumns() {
+        static $done = false;
+        if ($done) {
+            return;
+        }
+
+        $columns = [
+            "referrer_user_id" => "ALTER TABLE orders ADD COLUMN referrer_user_id INT NULL DEFAULT NULL AFTER referred_by_code",
+            "resale_discount_percent" => "ALTER TABLE orders ADD COLUMN resale_discount_percent DECIMAL(5,2) NOT NULL DEFAULT 0.00 AFTER referrer_user_id",
+            "resale_discount_amount" => "ALTER TABLE orders ADD COLUMN resale_discount_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER resale_discount_percent",
+            "resale_commission_percent" => "ALTER TABLE orders ADD COLUMN resale_commission_percent DECIMAL(5,2) NOT NULL DEFAULT 0.00 AFTER resale_discount_amount",
+        ];
+
+        foreach ($columns as $column => $sql) {
+            try {
+                $this->conn->query("SELECT $column FROM orders LIMIT 1");
+            } catch (Exception $e) {
+                try {
+                    $this->conn->exec($sql);
+                } catch (Exception $ignored) {
+                }
+            }
+        }
+
+        $done = true;
+    }
+
+    private function findResaleCodeOwner($code) {
+        $code = strtoupper(trim((string) $code));
+        if ($code === '') {
+            return null;
+        }
+
+        $query = "SELECT id, resale_code, resale_discount_percent, resale_commission_percent, resale_code_active
+                  FROM users
+                  WHERE resale_code = ?
+                  LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$code]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$row || (int) ($row['resale_code_active'] ?? 1) !== 1) {
+            return null;
+        }
+
+        return $row;
+    }
+
+    private function calculateResaleDiscount(float $subtotal, $referredByCode): array {
+        $owner = $this->findResaleCodeOwner($referredByCode);
+        if (!$owner) {
+            return [
+                'owner' => null,
+                'discount_percent' => 0.0,
+                'discount_amount' => 0.0,
+                'commission_percent' => 0.0,
+                'code' => null,
+            ];
+        }
+
+        $discountPercent = max(0, min(100, (float) ($owner['resale_discount_percent'] ?? 0)));
+        $commissionPercent = max(0, min(100, (float) ($owner['resale_commission_percent'] ?? 0)));
+        $discountAmount = round($subtotal * ($discountPercent / 100), 2);
+
+        return [
+            'owner' => $owner,
+            'discount_percent' => $discountPercent,
+            'discount_amount' => $discountAmount,
+            'commission_percent' => $commissionPercent,
+            'code' => $owner['resale_code'],
+        ];
+    }
+
     public function create($data) {
         try {
             $this->conn->beginTransaction();
 
             $order_number = "ORD-" . date('Ymd') . "-" . rand(1000, 9999);
             $shipping = json_encode($data['shipping_address']);
-            $referred_by_code = isset($data['referred_by_code']) ? $data['referred_by_code'] : null;
+            $referred_by_code = isset($data['referred_by_code']) ? strtoupper(trim((string) $data['referred_by_code'])) : null;
 
             $subtotal = (float) $data['subtotal'];
             $discountAmount = 0.0;
             $finalTotal = $subtotal;
             $loyaltyPercent = 0.0;
+            $resaleDiscountPercent = 0.0;
+            $resaleDiscountAmount = 0.0;
+            $resaleCommissionPercent = 0.0;
+            $referrerUserId = null;
 
             $applyLoyalty = !empty($data['apply_loyalty']);
+            $loyaltyDiscountAmount = 0.0;
             if ($applyLoyalty) {
                 $loyalty = new Loyalty($this->conn);
                 $lifetimeSpent = $loyalty->getLifetimeSpent($data['user_id']);
                 $loyaltyDiscount = $loyalty->calculateDiscount($subtotal, $lifetimeSpent);
-                $discountAmount = (float) $loyaltyDiscount['discount_amount'];
-                $finalTotal = (float) $loyaltyDiscount['total_after_discount'];
+                $loyaltyDiscountAmount = (float) $loyaltyDiscount['discount_amount'];
                 $loyaltyPercent = (float) $loyaltyDiscount['discount_percent'];
             }
 
+            $resaleConfig = $this->calculateResaleDiscount($subtotal, $referred_by_code);
+            if (!empty($resaleConfig['owner'])) {
+                $resaleDiscountPercent = (float) $resaleConfig['discount_percent'];
+                $resaleDiscountAmount = (float) $resaleConfig['discount_amount'];
+                $resaleCommissionPercent = (float) $resaleConfig['commission_percent'];
+                $referrerUserId = (int) $resaleConfig['owner']['id'];
+                $referred_by_code = $resaleConfig['code'];
+            } else {
+                $referred_by_code = null;
+            }
+
+            if ($resaleDiscountAmount >= $loyaltyDiscountAmount) {
+                $discountAmount = $resaleDiscountAmount;
+            } else {
+                $discountAmount = $loyaltyDiscountAmount;
+                $resaleDiscountPercent = 0.0;
+                $resaleDiscountAmount = 0.0;
+            }
+
+            $finalTotal = max(0, round($subtotal - $discountAmount, 2));
+
             $query = "INSERT INTO " . $this->table_name . " 
                       SET user_id=:user_id, order_number=:onum, subtotal=:sub, 
-                          discount=:discount, total=:total, shipping_address=:ship, referred_by_code=:ref";
+                          discount=:discount, total=:total, shipping_address=:ship, referred_by_code=:ref,
+                          referrer_user_id=:referrer_user_id, resale_discount_percent=:resale_discount_percent,
+                          resale_discount_amount=:resale_discount_amount, resale_commission_percent=:resale_commission_percent";
             
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(":user_id", $data['user_id']);
@@ -81,6 +182,10 @@ class Order {
             $stmt->bindParam(":total", $finalTotal);
             $stmt->bindParam(":ship", $shipping);
             $stmt->bindParam(":ref", $referred_by_code);
+            $stmt->bindParam(":referrer_user_id", $referrerUserId, $referrerUserId === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
+            $stmt->bindParam(":resale_discount_percent", $resaleDiscountPercent);
+            $stmt->bindParam(":resale_discount_amount", $resaleDiscountAmount);
+            $stmt->bindParam(":resale_commission_percent", $resaleCommissionPercent);
             $stmt->execute();
             
             $order_id = $this->conn->lastInsertId();
@@ -116,6 +221,9 @@ class Order {
                 "order_number" => $order_number,
                 "loyalty_discount" => $discountAmount,
                 "loyalty_discount_percent" => $loyaltyPercent,
+                "resale_discount_percent" => $resaleDiscountPercent,
+                "resale_discount_amount" => $resaleDiscountAmount,
+                "resale_commission_percent" => $resaleCommissionPercent,
                 "total" => $finalTotal,
             ];
 
@@ -236,11 +344,15 @@ class Order {
     }
 
     private function creditCommission($order) {
-        // Get commission rate from settings
-        $sq = "SELECT setting_value FROM settings WHERE setting_key = 'commission_rate'";
-        $ss = $this->conn->prepare($sq);
-        $ss->execute();
-        $rate = (float)$ss->fetchColumn();
+        $rate = isset($order['resale_commission_percent'])
+            ? (float) $order['resale_commission_percent']
+            : 0.0;
+        if ($rate <= 0) {
+            $sq = "SELECT setting_value FROM settings WHERE setting_key = 'commission_rate'";
+            $ss = $this->conn->prepare($sq);
+            $ss->execute();
+            $rate = (float)$ss->fetchColumn();
+        }
 
         $commission = $order['total'] * ($rate / 100);
 

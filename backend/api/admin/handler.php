@@ -8,7 +8,10 @@ $database = new Database();
 $db = $database->getConnection();
 $admin = new Admin($db);
 
-$data = json_decode(file_get_contents("php://input"));
+$data = json_decode(file_get_contents("php://input"), true);
+if (!is_array($data)) {
+    $data = [];
+}
 
 // In a real app, verify Admin JWT here
 // $isAdmin = verifyAdminToken(); 
@@ -20,7 +23,28 @@ switch ($action) {
         break;
     
     case 'users':
-        echo json_encode($admin->getUsers());
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            echo json_encode($admin->getUsers());
+            break;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $result = $admin->createUser($data);
+            http_response_code(!empty($result['success']) ? 201 : 400);
+            echo json_encode($result);
+            break;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+            $id = !empty($data['id']) ? (int) $data['id'] : 0;
+            $result = $admin->updateUser($id, $data);
+            http_response_code(!empty($result['success']) ? 200 : 400);
+            echo json_encode($result);
+            break;
+        }
+
+        http_response_code(405);
+        echo json_encode(["message" => "Method not allowed"]);
         break;
 
     case 'live-traffic':
@@ -64,8 +88,8 @@ switch ($action) {
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST' || $_SERVER['REQUEST_METHOD'] === 'PUT') {
-            $enabled = !empty($data->enabled);
-            $ends_at = isset($data->ends_at) ? $data->ends_at : null;
+            $enabled = !empty($data['enabled']);
+            $ends_at = $data['ends_at'] ?? null;
             echo json_encode($admin->updateSaleCountdownSettings($enabled, $ends_at));
             break;
         }
@@ -79,17 +103,17 @@ switch ($action) {
         break;
 
     case 'adjust-balance':
-        if (!empty($data->user_id) && !empty($data->amount) && !empty($data->type)) {
-            $res = $admin->adjustUserBalance($data->user_id, $data->amount, $data->type, $data->reason, 1);
+        if (!empty($data['user_id']) && !empty($data['amount']) && !empty($data['type'])) {
+            $res = $admin->adjustUserBalance($data['user_id'], $data['amount'], $data['type'], $data['reason'] ?? '', 1);
             echo json_encode(["success" => $res]);
         }
         break;
 
     case 'update-settings':
-        if (!empty($data->key) && isset($data->value)) {
+        if (!empty($data['key']) && array_key_exists('value', $data)) {
             $q = "UPDATE settings SET setting_value = ? WHERE setting_key = ?";
             $st = $db->prepare($q);
-            $res = $st->execute([$data->value, $data->key]);
+            $res = $st->execute([$data['value'], $data['key']]);
             echo json_encode(["success" => $res]);
         }
         break;

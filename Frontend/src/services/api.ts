@@ -61,6 +61,9 @@ export type CustomerResaleSummary = {
     email: string;
     resale_code: string;
     resale_balance: string | number;
+    resale_discount_percent?: string | number;
+    resale_commission_percent?: string | number;
+    resale_code_active?: number | boolean;
     total_referrals: string | number;
     total_commissions: string | number;
     referral_sales: string | number;
@@ -74,6 +77,15 @@ export type CustomerResaleLedgerEntry = {
     amount: string | number;
     description?: string;
     created_at: string;
+};
+
+export type ResaleCodePreview = {
+    user_id: number;
+    name: string;
+    resale_code: string;
+    discount_percent: number;
+    commission_percent: number;
+    active: boolean;
 };
 
 export type AuthUser = {
@@ -580,6 +592,29 @@ export async function fetchCustomerOrder(orderId: string | number, userId: strin
 
     if (!response.ok) {
         throw new Error(`Error fetching order: ${response.statusText}`);
+    }
+
+    return response.json();
+}
+
+export async function fetchResaleCodePreview(code: string): Promise<ResaleCodePreview | null> {
+    const trimmed = code.trim();
+    if (!trimmed) return null;
+
+    const response = await fetch(
+        getBackendUrl('resale', { code: trimmed }).toString(),
+        {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+        }
+    );
+
+    if (response.status === 404) {
+        return null;
+    }
+
+    if (!response.ok) {
+        throw new Error(`Error fetching resale code: ${response.statusText}`);
     }
 
     return response.json();

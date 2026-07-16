@@ -31,7 +31,7 @@ export const productSchema = z
     price: z.number().min(0).optional(),
     stock: z.number().int().min(0, 'Stock must be non-negative'),
     images: z.array(z.string()),
-    colors: z.array(productColorSchema).default([]),
+    colors: z.array(productColorSchema),
     is_active: z.number().int().min(0).max(1),
     created_at: z.string().optional(),
   })

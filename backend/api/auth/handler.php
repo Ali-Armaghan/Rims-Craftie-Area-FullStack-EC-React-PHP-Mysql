@@ -22,6 +22,10 @@ switch ($action) {
             $user->password = $data->password;
             $user->phone = isset($data->phone) ? $data->phone : "";
             $user->referred_by_code = isset($data->referred_by_code) ? $data->referred_by_code : null;
+            $user->resale_code = isset($data->resale_code) ? $data->resale_code : null;
+            $user->resale_discount_percent = isset($data->resale_discount_percent) ? $data->resale_discount_percent : 0;
+            $user->resale_commission_percent = isset($data->resale_commission_percent) ? $data->resale_commission_percent : 5;
+            $user->resale_code_active = isset($data->resale_code_active) ? $data->resale_code_active : 1;
 
             if ($user->register()) {
                 http_response_code(201);

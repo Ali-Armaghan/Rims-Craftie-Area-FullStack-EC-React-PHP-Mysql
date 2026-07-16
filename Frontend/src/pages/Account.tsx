@@ -290,17 +290,25 @@ const Account = () => {
           {activeTab === "resale" && (
             <div className="space-y-6">
               <h2 className="font-display text-3xl text-foreground">ReSale Dashboard</h2>
-              <div className="grid gap-4 md:grid-cols-4">
+              <div className="grid gap-4 md:grid-cols-5">
                 <div className="border border-border p-5">
                   <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Your Code</p>
                   <p className="font-body text-xl text-foreground mt-2">{resale?.resale_code ?? user.resale_code}</p>
+                </div>
+                <div className="border border-border p-5">
+                  <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Buyer Discount</p>
+                  <p className="font-display text-2xl text-foreground mt-2">
+                    {Number(resale?.resale_discount_percent ?? 0)}%
+                  </p>
                 </div>
                 <div className="border border-border p-5">
                   <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Referral Sales</p>
                   <p className="font-display text-2xl text-foreground mt-2">{money(resale?.referral_sales)}</p>
                 </div>
                 <div className="border border-border p-5">
-                  <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">5% Commission</p>
+                  <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">
+                    {Number(resale?.resale_commission_percent ?? 5)}% Commission
+                  </p>
                   <p className="font-display text-2xl text-foreground mt-2">{money(resale?.total_commissions)}</p>
                 </div>
                 <div className="border border-border p-5">
@@ -312,7 +320,8 @@ const Account = () => {
                 <div className="flex items-center gap-3 text-primary">
                   <BadgeDollarSign size={18} />
                   <p className="font-body text-sm">
-                    Commission is credited when an order placed with your resale code is marked as delivered.
+                    Your code gives buyers {Number(resale?.resale_discount_percent ?? 0)}% off, and you earn{" "}
+                    {Number(resale?.resale_commission_percent ?? 5)}% commission when those orders are marked delivered.
                   </p>
                 </div>
               </div>

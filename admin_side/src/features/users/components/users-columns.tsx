@@ -77,6 +77,22 @@ export const usersColumns: ColumnDef<User>[] = [
     cell: ({ row }) => <Badge variant='outline'>{row.getValue('resale_code')}</Badge>,
   },
   {
+    accessorKey: 'resale_discount_percent',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Discount %' />
+    ),
+    cell: ({ row }) => <div>{Number(row.getValue('resale_discount_percent') ?? 0).toFixed(2)}%</div>,
+    enableSorting: false,
+  },
+  {
+    accessorKey: 'resale_commission_percent',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Commission %' />
+    ),
+    cell: ({ row }) => <div>{Number(row.getValue('resale_commission_percent') ?? 0).toFixed(2)}%</div>,
+    enableSorting: false,
+  },
+  {
     accessorKey: 'resale_balance',
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title='Balance' />

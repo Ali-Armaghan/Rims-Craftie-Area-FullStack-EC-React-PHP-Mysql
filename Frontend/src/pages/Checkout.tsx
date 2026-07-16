@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { useCart } from "@/context/CartContext";
 import { Lock, ArrowLeft, Loader2, BadgePercent } from "lucide-react";
-import { createOrder, fetchLoyaltyStatus, loginCustomer, OrderPayload, signupCustomer } from "@/services/api";
+import { createOrder, fetchLoyaltyStatus, fetchResaleCodePreview, loginCustomer, OrderPayload, signupCustomer } from "@/services/api";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { calculateLoyaltyDiscount } from "@/lib/loyalty";
@@ -45,12 +45,47 @@ const Checkout = () => {
     enabled: !!user?.id,
   });
 
+  const resaleCode = formData.referralCode.trim().toUpperCase();
+  const { data: resalePreview } = useQuery({
+    queryKey: ["resale-code-preview", resaleCode],
+    queryFn: () => fetchResaleCodePreview(resaleCode),
+    enabled: resaleCode.length > 0,
+  });
+
   const loyaltySavings = useMemo(() => {
     if (!user || !loyaltyStatus) {
       return { discountPercent: 0, discountAmount: 0, totalAfterDiscount: totalPrice };
     }
     return calculateLoyaltyDiscount(totalPrice, loyaltyStatus.lifetime_spent);
   }, [user, loyaltyStatus, totalPrice]);
+
+  const resaleSavings = useMemo(() => {
+    const percent = resalePreview?.discount_percent ?? 0;
+    const discountAmount = Math.round(totalPrice * (percent / 100));
+    return {
+      discountPercent: percent,
+      discountAmount,
+      totalAfterDiscount: Math.max(0, totalPrice - discountAmount),
+    };
+  }, [resalePreview, totalPrice]);
+
+  const appliedSavings = useMemo(() => {
+    if (resaleSavings.discountAmount >= loyaltySavings.discountAmount) {
+      return {
+        source: resaleSavings.discountAmount > 0 ? "resale" : "none",
+        discountPercent: resaleSavings.discountPercent,
+        discountAmount: resaleSavings.discountAmount,
+        totalAfterDiscount: resaleSavings.totalAfterDiscount,
+      };
+    }
+
+    return {
+      source: loyaltySavings.discountAmount > 0 ? "loyalty" : "none",
+      discountPercent: loyaltySavings.discountPercent,
+      discountAmount: loyaltySavings.discountAmount,
+      totalAfterDiscount: loyaltySavings.totalAfterDiscount,
+    };
+  }, [loyaltySavings, resaleSavings]);
 
   const resolveOrderUserId = async () => {
     if (user) return Number(user.id);
@@ -86,7 +121,7 @@ const Checkout = () => {
       const orderPayload: OrderPayload = {
         user_id: userId,
         subtotal: totalPrice,
-        total: loyaltySavings.totalAfterDiscount,
+        total: appliedSavings.totalAfterDiscount,
         apply_loyalty: Boolean(user),
         referred_by_code: formData.referralCode || undefined,
         shipping_address: {
@@ -154,7 +189,7 @@ const Checkout = () => {
   }
 
   const shipping = 0;
-  const orderTotal = loyaltySavings.totalAfterDiscount + shipping;
+  const orderTotal = appliedSavings.totalAfterDiscount + shipping;
 
   return (
     <section className="container py-16">
@@ -197,7 +232,7 @@ const Checkout = () => {
                   <input type="text" name="state" value={formData.state} onChange={handleInputChange} placeholder="State (Optional)" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
                   <input type="text" name="zip" value={formData.zip} onChange={handleInputChange} placeholder="ZIP (Optional)" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
                 </div>
-                <input type="text" name="referralCode" value={formData.referralCode} onChange={handleInputChange} placeholder="Referral / ReSale Code (Optional)" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
+                <input type="text" name="referralCode" value={formData.referralCode} onChange={(e) => setFormData(prev => ({ ...prev, referralCode: e.target.value.toUpperCase() }))} placeholder="Referral / ReSale Code (Optional)" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm uppercase placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
               </div>
             </div>
 
@@ -265,18 +300,30 @@ const Checkout = () => {
                 <span className="text-muted-foreground">Subtotal</span>
                 <span className="text-foreground">Rs. {totalPrice.toLocaleString()}</span>
               </div>
-              {user && loyaltySavings.discountAmount > 0 && (
+              {appliedSavings.discountAmount > 0 && (
                 <div className="flex justify-between font-body text-sm">
                   <span className="inline-flex items-center gap-1.5 text-emerald-700">
                     <BadgePercent size={14} />
-                    Loyalty discount ({loyaltySavings.discountPercent}%)
+                    {appliedSavings.source === "resale"
+                      ? `Resale code discount (${appliedSavings.discountPercent}%)`
+                      : `Loyalty discount (${appliedSavings.discountPercent}%)`}
                   </span>
                   <span className="font-semibold text-emerald-700">
-                    - Rs. {loyaltySavings.discountAmount.toLocaleString()}
+                    - Rs. {appliedSavings.discountAmount.toLocaleString()}
                   </span>
                 </div>
               )}
-              {user && loyaltySavings.discountAmount === 0 && loyaltyStatus && loyaltyStatus.lifetime_spent < 5000 && (
+              {resaleCode && !resalePreview && (
+                <div className="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 font-body text-xs text-destructive">
+                  This resale code is invalid or inactive.
+                </div>
+              )}
+              {resalePreview && appliedSavings.source === "resale" && (
+                <div className="rounded-md border border-emerald-700/20 bg-emerald-700/5 px-3 py-2 font-body text-xs text-emerald-700">
+                  Code <strong>{resalePreview.resale_code}</strong> applied from {resalePreview.name}.
+                </div>
+              )}
+              {user && appliedSavings.discountAmount === 0 && loyaltyStatus && loyaltyStatus.lifetime_spent < 5000 && (
                 <div className="rounded-md border border-border/70 bg-secondary/30 px-3 py-2 font-body text-xs text-muted-foreground">
                   Spend Rs. {Math.max(0, 5000 - loyaltyStatus.lifetime_spent).toLocaleString()} more while logged in to unlock 5% loyalty savings.{" "}
                   <Link to="/loyalty" className="text-primary underline underline-offset-2">

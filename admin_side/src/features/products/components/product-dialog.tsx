@@ -71,6 +71,7 @@ export function ProductDialog() {
       long_description: '',
       stock: 0,
       images: [],
+      colors: [],
       is_active: 1,
     },
   })
@@ -115,6 +116,7 @@ export function ProductDialog() {
         long_description: '',
         stock: 0,
         images: [],
+        colors: [],
         is_active: 1,
       })
     }

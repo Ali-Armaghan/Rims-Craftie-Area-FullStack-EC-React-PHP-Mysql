@@ -6,6 +6,103 @@ class Admin {
 
     public function __construct($db) {
         $this->conn = $db;
+        $this->ensureUserResaleColumns();
+        $this->ensureOrderResaleColumns();
+    }
+
+    private function ensureColumn($table, $column, $sql) {
+        try {
+            $this->conn->query("SELECT $column FROM $table LIMIT 1");
+        } catch (Exception $e) {
+            try {
+                $this->conn->exec($sql);
+            } catch (Exception $ignored) {
+            }
+        }
+    }
+
+    private function ensureUserResaleColumns() {
+        static $done = false;
+        if ($done) {
+            return;
+        }
+
+        $this->ensureColumn(
+            'users',
+            'resale_discount_percent',
+            "ALTER TABLE users ADD COLUMN resale_discount_percent DECIMAL(5,2) NOT NULL DEFAULT 0.00 AFTER resale_code"
+        );
+        $this->ensureColumn(
+            'users',
+            'resale_commission_percent',
+            "ALTER TABLE users ADD COLUMN resale_commission_percent DECIMAL(5,2) NOT NULL DEFAULT 5.00 AFTER resale_discount_percent"
+        );
+        $this->ensureColumn(
+            'users',
+            'resale_code_active',
+            "ALTER TABLE users ADD COLUMN resale_code_active TINYINT(1) NOT NULL DEFAULT 1 AFTER resale_commission_percent"
+        );
+
+        $done = true;
+    }
+
+    private function ensureOrderResaleColumns() {
+        static $done = false;
+        if ($done) {
+            return;
+        }
+
+        $this->ensureColumn(
+            'orders',
+            'referrer_user_id',
+            "ALTER TABLE orders ADD COLUMN referrer_user_id INT NULL DEFAULT NULL AFTER referred_by_code"
+        );
+        $this->ensureColumn(
+            'orders',
+            'resale_discount_percent',
+            "ALTER TABLE orders ADD COLUMN resale_discount_percent DECIMAL(5,2) NOT NULL DEFAULT 0.00 AFTER referrer_user_id"
+        );
+        $this->ensureColumn(
+            'orders',
+            'resale_discount_amount',
+            "ALTER TABLE orders ADD COLUMN resale_discount_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER resale_discount_percent"
+        );
+        $this->ensureColumn(
+            'orders',
+            'resale_commission_percent',
+            "ALTER TABLE orders ADD COLUMN resale_commission_percent DECIMAL(5,2) NOT NULL DEFAULT 0.00 AFTER resale_discount_amount"
+        );
+
+        $done = true;
+    }
+
+    private function sanitizeResaleCode($value) {
+        $code = strtoupper(trim((string) $value));
+        return preg_replace('/[^A-Z0-9-]/', '', $code);
+    }
+
+    private function clampPercent($value, $default = 0) {
+        if ($value === null || $value === '') {
+            return (float) $default;
+        }
+
+        $number = round((float) $value, 2);
+        return max(0, min(100, $number));
+    }
+
+    private function generateUniqueResaleCode() {
+        $characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        do {
+            $code = 'RS-';
+            for ($i = 0; $i < 8; $i++) {
+                $code .= $characters[rand(0, strlen($characters) - 1)];
+            }
+
+            $stmt = $this->conn->prepare("SELECT id FROM users WHERE resale_code = ? LIMIT 1");
+            $stmt->execute([$code]);
+        } while ($stmt->fetch(PDO::FETCH_ASSOC));
+
+        return $code;
     }
 
     public function getDashboardStats() {
@@ -354,7 +451,9 @@ class Admin {
     }
 
     public function getReSaleManagement() {
-        $query = "SELECT id, name, email, resale_code, resale_balance FROM users ORDER BY resale_balance DESC";
+        $query = "SELECT id, name, email, resale_code, resale_balance,
+                         resale_discount_percent, resale_commission_percent, resale_code_active
+                  FROM users ORDER BY resale_balance DESC";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -380,10 +479,131 @@ class Admin {
         }
     }
     public function getUsers() {
-        $query = "SELECT id, name, email, phone, resale_code, resale_balance, status, created_at FROM users ORDER BY created_at DESC";
+        $query = "SELECT id, name, email, phone, resale_code, resale_balance,
+                         resale_discount_percent, resale_commission_percent, resale_code_active,
+                         status, created_at
+                  FROM users ORDER BY created_at DESC";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function createUser($data) {
+        $name = trim((string) ($data['name'] ?? ''));
+        $email = strtolower(trim((string) ($data['email'] ?? '')));
+        $password = (string) ($data['password'] ?? '');
+        $phone = trim((string) ($data['phone'] ?? ''));
+        $status = ($data['status'] ?? 'active') === 'inactive' ? 'inactive' : 'active';
+        $resaleCode = !empty($data['resale_code'])
+            ? $this->sanitizeResaleCode($data['resale_code'])
+            : $this->generateUniqueResaleCode();
+        $discountPercent = $this->clampPercent($data['resale_discount_percent'] ?? 0, 0);
+        $commissionPercent = $this->clampPercent($data['resale_commission_percent'] ?? 5, 5);
+        $codeActive = !empty($data['resale_code_active']) ? 1 : 0;
+
+        if ($name === '' || $email === '' || $password === '' || $resaleCode === '') {
+            return ['success' => false, 'message' => 'Missing required fields'];
+        }
+
+        $emailStmt = $this->conn->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
+        $emailStmt->execute([$email]);
+        if ($emailStmt->fetch(PDO::FETCH_ASSOC)) {
+            return ['success' => false, 'message' => 'Email already exists'];
+        }
+
+        $codeStmt = $this->conn->prepare("SELECT id FROM users WHERE resale_code = ? LIMIT 1");
+        $codeStmt->execute([$resaleCode]);
+        if ($codeStmt->fetch(PDO::FETCH_ASSOC)) {
+            return ['success' => false, 'message' => 'Resale code already exists'];
+        }
+
+        $query = "INSERT INTO users
+                  SET name=?, email=?, password=?, phone=?, resale_code=?,
+                      resale_discount_percent=?, resale_commission_percent=?,
+                      resale_code_active=?, status=?";
+        $stmt = $this->conn->prepare($query);
+        $ok = $stmt->execute([
+            $name,
+            $email,
+            password_hash($password, PASSWORD_BCRYPT),
+            $phone,
+            $resaleCode,
+            $discountPercent,
+            $commissionPercent,
+            $codeActive,
+            $status,
+        ]);
+
+        if (!$ok) {
+            return ['success' => false, 'message' => 'Unable to create user'];
+        }
+
+        return ['success' => true, 'id' => (int) $this->conn->lastInsertId(), 'resale_code' => $resaleCode];
+    }
+
+    public function updateUser($id, $data) {
+        $id = (int) $id;
+        if ($id <= 0) {
+            return ['success' => false, 'message' => 'Invalid user id'];
+        }
+
+        $currentStmt = $this->conn->prepare("SELECT id, email, resale_code FROM users WHERE id = ? LIMIT 1");
+        $currentStmt->execute([$id]);
+        $current = $currentStmt->fetch(PDO::FETCH_ASSOC);
+        if (!$current) {
+            return ['success' => false, 'message' => 'User not found'];
+        }
+
+        $name = trim((string) ($data['name'] ?? ''));
+        $email = strtolower(trim((string) ($data['email'] ?? '')));
+        $phone = trim((string) ($data['phone'] ?? ''));
+        $status = ($data['status'] ?? 'active') === 'inactive' ? 'inactive' : 'active';
+        $resaleCode = !empty($data['resale_code'])
+            ? $this->sanitizeResaleCode($data['resale_code'])
+            : $current['resale_code'];
+        $discountPercent = $this->clampPercent($data['resale_discount_percent'] ?? 0, 0);
+        $commissionPercent = $this->clampPercent($data['resale_commission_percent'] ?? 5, 5);
+        $codeActive = !empty($data['resale_code_active']) ? 1 : 0;
+        $password = isset($data['password']) ? trim((string) $data['password']) : '';
+
+        if ($name === '' || $email === '' || $resaleCode === '') {
+            return ['success' => false, 'message' => 'Missing required fields'];
+        }
+
+        $emailStmt = $this->conn->prepare("SELECT id FROM users WHERE email = ? AND id != ? LIMIT 1");
+        $emailStmt->execute([$email, $id]);
+        if ($emailStmt->fetch(PDO::FETCH_ASSOC)) {
+            return ['success' => false, 'message' => 'Email already exists'];
+        }
+
+        $codeStmt = $this->conn->prepare("SELECT id FROM users WHERE resale_code = ? AND id != ? LIMIT 1");
+        $codeStmt->execute([$resaleCode, $id]);
+        if ($codeStmt->fetch(PDO::FETCH_ASSOC)) {
+            return ['success' => false, 'message' => 'Resale code already exists'];
+        }
+
+        $query = "UPDATE users
+                  SET name=?, email=?, phone=?, resale_code=?,
+                      resale_discount_percent=?, resale_commission_percent=?,
+                      resale_code_active=?, status=?";
+        $params = [$name, $email, $phone, $resaleCode, $discountPercent, $commissionPercent, $codeActive, $status];
+
+        if ($password !== '') {
+            $query .= ", password=?";
+            $params[] = password_hash($password, PASSWORD_BCRYPT);
+        }
+
+        $query .= " WHERE id=?";
+        $params[] = $id;
+
+        $stmt = $this->conn->prepare($query);
+        $ok = $stmt->execute($params);
+
+        if (!$ok) {
+            return ['success' => false, 'message' => 'Unable to update user'];
+        }
+
+        return ['success' => true, 'id' => $id, 'resale_code' => $resaleCode];
     }
 
     public function getSaleCountdownSettings() {

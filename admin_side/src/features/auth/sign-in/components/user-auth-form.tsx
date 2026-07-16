@@ -2,12 +2,15 @@ import { useState } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link, useNavigate } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { Loader2, LogIn } from 'lucide-react'
 import { toast } from 'sonner'
-import { IconFacebook, IconGithub } from '@/assets/brand-icons'
+import {
+  ADMIN_SESSION_TOKEN,
+  createAdminSessionUser,
+  validateAdminCredentials,
+} from '@/lib/admin-auth'
 import { useAuthStore } from '@/stores/auth-store'
-import apiClient from '@/lib/api-client'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -25,10 +28,7 @@ const formSchema = z.object({
   email: z.email({
     error: (iss) => (iss.input === '' ? 'Please enter your email' : undefined),
   }),
-  password: z
-    .string()
-    .min(1, 'Please enter your password')
-    .min(7, 'Password must be at least 7 characters long'),
+  password: z.string().min(1, 'Please enter your password'),
 })
 
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLFormElement> {
@@ -56,21 +56,19 @@ export function UserAuthForm({
     setIsLoading(true)
 
     try {
-      const response = await apiClient.post('/auth/login', data)
-      const user = response.data.user
+      await new Promise((resolve) => setTimeout(resolve, 250))
 
-      auth.setUser({
-        accountNo: String(user.id),
-        email: user.email,
-        role: ['user'],
-        exp: Date.now() + 24 * 60 * 60 * 1000,
-      })
-      auth.setAccessToken(String(user.id))
+      if (!validateAdminCredentials(data.email, data.password)) {
+        toast.error('Invalid email or password')
+        return
+      }
 
-      toast.success(`Welcome back, ${user.name ?? user.email}!`)
+      const user = createAdminSessionUser()
+      auth.setUser(user)
+      auth.setAccessToken(ADMIN_SESSION_TOKEN)
+
+      toast.success('Welcome back, Ateeqo Admin!')
       navigate({ to: redirectTo || '/', replace: true })
-    } catch {
-      toast.error('Invalid email or password')
     } finally {
       setIsLoading(false)
     }
@@ -90,7 +88,7 @@ export function UserAuthForm({
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder='name@example.com' {...field} />
+                <Input placeholder='ateeq@gmail.com' {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -100,18 +98,12 @@ export function UserAuthForm({
           control={form.control}
           name='password'
           render={({ field }) => (
-            <FormItem className='relative'>
+            <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
                 <PasswordInput placeholder='********' {...field} />
               </FormControl>
               <FormMessage />
-              <Link
-                to='/forgot-password'
-                className='absolute end-0 -top-0.5 text-sm font-medium text-muted-foreground hover:opacity-75'
-              >
-                Forgot password?
-              </Link>
             </FormItem>
           )}
         />
@@ -119,26 +111,6 @@ export function UserAuthForm({
           {isLoading ? <Loader2 className='animate-spin' /> : <LogIn />}
           Sign in
         </Button>
-
-        <div className='relative my-2'>
-          <div className='absolute inset-0 flex items-center'>
-            <span className='w-full border-t' />
-          </div>
-          <div className='relative flex justify-center text-xs uppercase'>
-            <span className='bg-background px-2 text-muted-foreground'>
-              Or continue with
-            </span>
-          </div>
-        </div>
-
-        <div className='grid grid-cols-2 gap-2'>
-          <Button variant='outline' type='button' disabled={isLoading}>
-            <IconGithub className='h-4 w-4' /> GitHub
-          </Button>
-          <Button variant='outline' type='button' disabled={isLoading}>
-            <IconFacebook className='h-4 w-4' /> Facebook
-          </Button>
-        </div>
       </form>
     </Form>
   )

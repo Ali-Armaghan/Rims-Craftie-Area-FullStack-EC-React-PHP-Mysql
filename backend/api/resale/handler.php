@@ -4,11 +4,54 @@ require_once __DIR__ . '/../../config/database.php';
 $database = new Database();
 $db = $database->getConnection();
 
+// Ensure per-user resale settings columns exist
+try {
+    $db->query("SELECT resale_discount_percent, resale_commission_percent, resale_code_active FROM users LIMIT 1");
+} catch (Exception $e) {
+    try {
+        $db->exec("ALTER TABLE users ADD COLUMN resale_discount_percent DECIMAL(5,2) NOT NULL DEFAULT 0.00 AFTER resale_code");
+    } catch (Exception $ignored) {
+    }
+    try {
+        $db->exec("ALTER TABLE users ADD COLUMN resale_commission_percent DECIMAL(5,2) NOT NULL DEFAULT 5.00 AFTER resale_discount_percent");
+    } catch (Exception $ignored) {
+    }
+    try {
+        $db->exec("ALTER TABLE users ADD COLUMN resale_code_active TINYINT(1) NOT NULL DEFAULT 1 AFTER resale_commission_percent");
+    } catch (Exception $ignored) {
+    }
+}
+
 $data = json_decode(file_get_contents("php://input"), true);
 
 switch ($_SERVER['REQUEST_METHOD']) {
     case 'GET':
-        if ($action === 'ledger') {
+        if (!empty($_GET['code'])) {
+            $code = strtoupper(trim((string) $_GET['code']));
+            $query = "SELECT id, name, resale_code, resale_discount_percent, resale_commission_percent, resale_code_active
+                      FROM users
+                      WHERE resale_code = ?
+                      LIMIT 1";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$code]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$row || (int) ($row['resale_code_active'] ?? 1) !== 1) {
+                http_response_code(404);
+                echo json_encode(['message' => 'Invalid or inactive resale code']);
+                break;
+            }
+
+            echo json_encode([
+                'user_id' => (int) $row['id'],
+                'name' => $row['name'],
+                'resale_code' => $row['resale_code'],
+                'discount_percent' => (float) ($row['resale_discount_percent'] ?? 0),
+                'commission_percent' => (float) ($row['resale_commission_percent'] ?? 0),
+                'active' => (int) ($row['resale_code_active'] ?? 1) === 1,
+            ]);
+            break;
+        } elseif ($action === 'ledger') {
             if (!empty($_GET['user_id'])) {
                 $query = "SELECT rl.*, u.name as user_name, u.resale_code 
                           FROM resale_ledger rl 
@@ -32,6 +75,7 @@ switch ($_SERVER['REQUEST_METHOD']) {
             echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
         } elseif (!empty($_GET['user_id'])) {
             $query = "SELECT u.id, u.name, u.email, u.resale_code, u.resale_balance,
+                             u.resale_discount_percent, u.resale_commission_percent, u.resale_code_active,
                              COUNT(o.id) as total_referrals,
                              COALESCE(SUM(CASE WHEN o.resale_credited = 1 THEN o.commission_earned ELSE 0 END), 0) as total_commissions,
                              COALESCE(SUM(CASE WHEN o.referred_by_code = u.resale_code THEN o.total ELSE 0 END), 0) as referral_sales
@@ -47,6 +91,9 @@ switch ($_SERVER['REQUEST_METHOD']) {
                 http_response_code(404);
                 echo json_encode(['message' => 'User resale data not found']);
             } else {
+                $summary['resale_discount_percent'] = (float) ($summary['resale_discount_percent'] ?? 0);
+                $summary['resale_commission_percent'] = (float) ($summary['resale_commission_percent'] ?? 5);
+                $summary['resale_code_active'] = (int) ($summary['resale_code_active'] ?? 1);
                 echo json_encode($summary);
             }
         } else {

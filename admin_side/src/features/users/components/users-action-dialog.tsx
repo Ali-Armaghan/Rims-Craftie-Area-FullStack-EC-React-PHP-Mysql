@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useMemo } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -26,73 +27,73 @@ import {
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
 import { SelectDropdown } from '@/components/select-dropdown'
-import { roles } from '../data/data'
+import { Switch } from '@/components/ui/switch'
 import { type User } from '../data/schema'
 
 const formSchema = z
   .object({
     firstName: z.string().min(1, 'First Name is required.'),
     lastName: z.string().min(1, 'Last Name is required.'),
-    username: z.string().min(1, 'Username is required.'),
     phoneNumber: z.string().min(1, 'Phone number is required.'),
     email: z.email({
       error: (iss) => (iss.input === '' ? 'Email is required.' : undefined),
     }),
-    password: z.string().transform((pwd) => pwd.trim()),
-    role: z.string().min(1, 'Role is required.'),
-    confirmPassword: z.string().transform((pwd) => pwd.trim()),
+    resaleCode: z.string().min(1, 'Resale code is required.'),
+    resaleDiscountPercent: z.number().min(0).max(100),
+    resaleCommissionPercent: z.number().min(0).max(100),
+    resaleCodeActive: z.boolean(),
+    status: z.enum(['active', 'inactive']),
+    password: z.string(),
+    confirmPassword: z.string(),
     isEdit: z.boolean(),
   })
-  .refine(
-    (data) => {
-      if (data.isEdit && !data.password) return true
-      return data.password.length > 0
-    },
-    {
-      message: 'Password is required.',
-      path: ['password'],
-    }
-  )
-  .refine(
-    ({ isEdit, password }) => {
-      if (isEdit && !password) return true
-      return password.length >= 8
-    },
-    {
-      message: 'Password must be at least 8 characters long.',
-      path: ['password'],
-    }
-  )
-  .refine(
-    ({ isEdit, password }) => {
-      if (isEdit && !password) return true
-      return /[a-z]/.test(password)
-    },
-    {
-      message: 'Password must contain at least one lowercase letter.',
-      path: ['password'],
-    }
-  )
-  .refine(
-    ({ isEdit, password }) => {
-      if (isEdit && !password) return true
-      return /\d/.test(password)
-    },
-    {
-      message: 'Password must contain at least one number.',
-      path: ['password'],
-    }
-  )
-  .refine(
-    ({ isEdit, password, confirmPassword }) => {
-      if (isEdit && !password) return true
-      return password === confirmPassword
-    },
-    {
-      message: "Passwords don't match.",
-      path: ['confirmPassword'],
-    }
-  )
+    .superRefine((data, ctx) => {
+      const password = data.password.trim()
+      const confirmPassword = data.confirmPassword.trim()
+
+      if (data.isEdit && !password) return
+
+      if (!password) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Password is required.',
+          path: ['password'],
+        })
+        return
+      }
+
+      if (password.length < 8) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Password must be at least 8 characters long.',
+          path: ['password'],
+        })
+      }
+
+      if (!/[a-z]/.test(password)) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Password must contain at least one lowercase letter.',
+          path: ['password'],
+        })
+      }
+
+      if (!/\d/.test(password)) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Password must contain at least one number.',
+          path: ['password'],
+        })
+      }
+
+      if (password !== confirmPassword) {
+        ctx.addIssue({
+          code: 'custom',
+          message: "Passwords don't match.",
+          path: ['confirmPassword'],
+        })
+      }
+    })
 type UserForm = z.infer<typeof formSchema>
 
 type UserActionDialogProps = {
@@ -108,52 +109,159 @@ export function UsersActionDialog({
 }: UserActionDialogProps) {
   const isEdit = !!currentRow
   const queryClient = useQueryClient()
+  const nameParts = useMemo(() => {
+    const full = currentRow?.name?.trim() ?? ''
+    if (!full) return { firstName: '', lastName: '' }
+    const [firstName, ...rest] = full.split(/\s+/)
+    return { firstName, lastName: rest.join(' ') }
+  }, [currentRow?.name])
+
   const form = useForm<UserForm>({
     resolver: zodResolver(formSchema),
     defaultValues: isEdit
       ? {
-          ...currentRow,
+          firstName: nameParts.firstName,
+          lastName: nameParts.lastName,
+          email: currentRow.email,
           password: '',
           confirmPassword: '',
+          phoneNumber: currentRow.phone ?? '',
+          resaleCode: currentRow.resale_code,
+          resaleDiscountPercent: Number(
+            currentRow.resale_discount_percent ?? 0
+          ),
+          resaleCommissionPercent: Number(
+            currentRow.resale_commission_percent ?? 5
+          ),
+          resaleCodeActive: Boolean(currentRow.resale_code_active ?? 1),
+          status: currentRow.status,
           isEdit,
         }
       : {
           firstName: '',
           lastName: '',
-          username: '',
           email: '',
-          role: '',
           phoneNumber: '',
+          resaleCode: '',
+          resaleDiscountPercent: 0,
+          resaleCommissionPercent: 5,
+          resaleCodeActive: true,
+          status: 'active',
           password: '',
           confirmPassword: '',
           isEdit,
         },
   })
 
-  const onSubmit = async (values: UserForm) => {
-    if (isEdit) {
-      toast.error('User edit is not available yet')
+  useEffect(() => {
+    if (!open) return
+
+    if (isEdit && currentRow) {
+      form.reset({
+        firstName: nameParts.firstName,
+        lastName: nameParts.lastName,
+        email: currentRow.email,
+        phoneNumber: currentRow.phone ?? '',
+        resaleCode: currentRow.resale_code,
+        resaleDiscountPercent: Number(currentRow.resale_discount_percent ?? 0),
+        resaleCommissionPercent: Number(
+          currentRow.resale_commission_percent ?? 5
+        ),
+        resaleCodeActive: Boolean(currentRow.resale_code_active ?? 1),
+        status: currentRow.status,
+        password: '',
+        confirmPassword: '',
+        isEdit: true,
+      })
       return
     }
 
+    form.reset({
+      firstName: '',
+      lastName: '',
+      email: '',
+      phoneNumber: '',
+      resaleCode: '',
+      resaleDiscountPercent: 0,
+      resaleCommissionPercent: 5,
+      resaleCodeActive: true,
+      status: 'active',
+      password: '',
+      confirmPassword: '',
+      isEdit: false,
+    })
+  }, [open, isEdit, currentRow, form, nameParts])
+
+  const onSubmit = async (values: UserForm) => {
     try {
-      await apiClient.post('/auth/register', {
+      const payload = {
         name: `${values.firstName} ${values.lastName}`.trim(),
         email: values.email,
         phone: values.phoneNumber,
-        password: values.password,
-      })
+        password: values.password.trim() || undefined,
+        resale_code: values.resaleCode,
+        resale_discount_percent: values.resaleDiscountPercent,
+        resale_commission_percent: values.resaleCommissionPercent,
+        resale_code_active: values.resaleCodeActive ? 1 : 0,
+        status: values.status,
+      }
+
+      if (isEdit && currentRow) {
+        await apiClient.put('/admin/users', {
+          ...payload,
+          id: currentRow.id,
+        })
+      } else {
+        await apiClient.post('/admin/users', payload)
+      }
 
       await queryClient.invalidateQueries({ queryKey: ['users'] })
-      toast.success('User created successfully')
+      toast.success(isEdit ? 'User updated successfully' : 'User created successfully')
       form.reset()
       onOpenChange(false)
-    } catch {
-      toast.error('Failed to create user. Email may already exist.')
+    } catch (error: unknown) {
+      const message =
+        typeof error === 'object' &&
+        error &&
+        'response' in error &&
+        typeof (error as { response?: { data?: { message?: string } } }).response
+          ?.data?.message === 'string'
+          ? (error as { response?: { data?: { message?: string } } }).response!.data!.message!
+          : isEdit
+            ? 'Failed to update user.'
+            : 'Failed to create user.'
+      toast.error(message)
     }
   }
 
   const isPasswordTouched = !!form.formState.dirtyFields.password
+  const generateResaleCode = () => {
+    const suffix = Math.random().toString(36).slice(2, 8).toUpperCase()
+    form.setValue('resaleCode', `RS-${suffix}`, {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
+  }
+  const generatePassword = () => {
+    const chars = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+    let password = 'At'
+    for (let i = 0; i < 8; i++) {
+      password += chars[Math.floor(Math.random() * chars.length)]
+    }
+    password += '1'
+    form.setValue('password', password, {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
+    form.setValue('confirmPassword', password, {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
+    toast.message('Password generated', {
+      description: `Share this login password with the user: ${password}`,
+      duration: 12000,
+    })
+  }
 
   return (
     <Dialog
@@ -163,38 +271,32 @@ export function UsersActionDialog({
         onOpenChange(state)
       }}
     >
-      <DialogContent className='sm:max-w-lg'>
+      <DialogContent className='flex max-h-[90vh] w-[95vw] max-w-5xl flex-col gap-4 overflow-hidden sm:max-w-5xl'>
         <DialogHeader className='text-start'>
           <DialogTitle>{isEdit ? 'Edit User' : 'Add New User'}</DialogTitle>
           <DialogDescription>
-            {isEdit ? 'Update the user here. ' : 'Create new user here. '}
-            Click save when you&apos;re done.
+            Create an account and configure its resale code, buyer discount,
+            and influencer commission.
           </DialogDescription>
         </DialogHeader>
-        <div className='h-105 w-[calc(100%+0.75rem)] overflow-y-auto py-1 pe-3'>
+
+        <div className='min-h-0 flex-1 overflow-y-auto pe-1'>
           <Form {...form}>
             <form
               id='user-form'
               onSubmit={form.handleSubmit(onSubmit)}
-              className='space-y-4 px-0.5'
+              className='grid gap-4 md:grid-cols-2'
             >
               <FormField
                 control={form.control}
                 name='firstName'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                    <FormLabel className='col-span-2 text-end'>
-                      First Name
-                    </FormLabel>
+                  <FormItem>
+                    <FormLabel>First Name</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder='John'
-                        className='col-span-4'
-                        autoComplete='off'
-                        {...field}
-                      />
+                      <Input placeholder='John' autoComplete='off' {...field} />
                     </FormControl>
-                    <FormMessage className='col-span-4 col-start-3' />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -202,38 +304,12 @@ export function UsersActionDialog({
                 control={form.control}
                 name='lastName'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                    <FormLabel className='col-span-2 text-end'>
-                      Last Name
-                    </FormLabel>
+                  <FormItem>
+                    <FormLabel>Last Name</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder='Doe'
-                        className='col-span-4'
-                        autoComplete='off'
-                        {...field}
-                      />
+                      <Input placeholder='Doe' autoComplete='off' {...field} />
                     </FormControl>
-                    <FormMessage className='col-span-4 col-start-3' />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='username'
-                render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                    <FormLabel className='col-span-2 text-end'>
-                      Username
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder='john_doe'
-                        className='col-span-4'
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage className='col-span-4 col-start-3' />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -241,16 +317,12 @@ export function UsersActionDialog({
                 control={form.control}
                 name='email'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                    <FormLabel className='col-span-2 text-end'>Email</FormLabel>
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder='john.doe@gmail.com'
-                        className='col-span-4'
-                        {...field}
-                      />
+                      <Input placeholder='john.doe@gmail.com' {...field} />
                     </FormControl>
-                    <FormMessage className='col-span-4 col-start-3' />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -258,57 +330,136 @@ export function UsersActionDialog({
                 control={form.control}
                 name='phoneNumber'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                    <FormLabel className='col-span-2 text-end'>
-                      Phone Number
-                    </FormLabel>
+                  <FormItem>
+                    <FormLabel>Phone Number</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder='+123456789'
-                        className='col-span-4'
-                        {...field}
-                      />
+                      <Input placeholder='+123456789' {...field} />
                     </FormControl>
-                    <FormMessage className='col-span-4 col-start-3' />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='resaleCode'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Resale Code</FormLabel>
+                    <div className='flex gap-2'>
+                      <FormControl>
+                        <Input
+                          placeholder='RS-INFLUENCER10'
+                          className='uppercase'
+                          {...field}
+                          onChange={(event) =>
+                            field.onChange(event.target.value.toUpperCase())
+                          }
+                        />
+                      </FormControl>
+                      <Button
+                        type='button'
+                        variant='outline'
+                        onClick={generateResaleCode}
+                      >
+                        Generate
+                      </Button>
+                    </div>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
               <FormField
                 control={form.control}
-                name='role'
+                name='status'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                    <FormLabel className='col-span-2 text-end'>Role</FormLabel>
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
                     <SelectDropdown
                       defaultValue={field.value}
                       onValueChange={field.onChange}
-                      placeholder='Select a role'
-                      className='col-span-4'
-                      items={roles.map(({ label, value }) => ({
-                        label,
-                        value,
-                      }))}
+                      placeholder='Select status'
+                      isControlled
+                      items={[
+                        { label: 'Active', value: 'active' },
+                        { label: 'Inactive', value: 'inactive' },
+                      ]}
                     />
-                    <FormMessage className='col-span-4 col-start-3' />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name='resaleDiscountPercent'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Buyer Discount %</FormLabel>
+                    <FormControl>
+                      <Input
+                        type='number'
+                        min='0'
+                        max='100'
+                        step='0.01'
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='resaleCommissionPercent'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Commission %</FormLabel>
+                    <FormControl>
+                      <Input
+                        type='number'
+                        min='0'
+                        max='100'
+                        step='0.01'
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name='password'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                    <FormLabel className='col-span-2 text-end'>
-                      Password
-                    </FormLabel>
-                    <FormControl>
-                      <PasswordInput
-                        placeholder='e.g., S3cur3P@ssw0rd'
-                        className='col-span-4'
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage className='col-span-4 col-start-3' />
+                  <FormItem>
+                    <FormLabel>Login Password</FormLabel>
+                    <div className='flex gap-2'>
+                      <FormControl>
+                        <PasswordInput
+                          placeholder={
+                            isEdit
+                              ? 'Leave blank to keep current password'
+                              : 'User login password'
+                          }
+                          {...field}
+                        />
+                      </FormControl>
+                      <Button
+                        type='button'
+                        variant='outline'
+                        onClick={generatePassword}
+                      >
+                        Generate
+                      </Button>
+                    </div>
+                    <p className='text-xs text-muted-foreground'>
+                      {isEdit
+                        ? 'Optional on edit. Blank = old password same rahega.'
+                        : 'Yahi password user website login pe use karega.'}
+                    </p>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -316,25 +467,51 @@ export function UsersActionDialog({
                 control={form.control}
                 name='confirmPassword'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                    <FormLabel className='col-span-2 text-end'>
-                      Confirm Password
-                    </FormLabel>
+                  <FormItem>
+                    <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
                       <PasswordInput
                         disabled={!isPasswordTouched}
-                        placeholder='e.g., S3cur3P@ssw0rd'
-                        className='col-span-4'
+                        placeholder={
+                          isEdit
+                            ? 'Confirm only if changing password'
+                            : 'Confirm login password'
+                        }
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage className='col-span-4 col-start-3' />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='resaleCodeActive'
+                render={({ field }) => (
+                  <FormItem className='md:col-span-2'>
+                    <div className='flex items-center justify-between rounded-md border px-4 py-3'>
+                      <div>
+                        <FormLabel>Code Active</FormLabel>
+                        <p className='text-xs text-muted-foreground'>
+                          Inactive code checkout pe apply nahi hoga.
+                        </p>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </div>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
             </form>
           </Form>
         </div>
+
         <DialogFooter>
           <Button type='submit' form='user-form' disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting ? 'Saving...' : 'Save changes'}
