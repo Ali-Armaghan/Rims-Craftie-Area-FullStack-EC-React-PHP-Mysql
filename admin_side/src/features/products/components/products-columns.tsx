@@ -1,7 +1,11 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { Link } from '@tanstack/react-router'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { MoreHorizontal, Edit, Trash } from 'lucide-react'
+import { toast } from 'sonner'
+import apiClient from '@/lib/api-client'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,6 +50,64 @@ function ProductRowActions({ product }: { product: Product }) {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+  )
+}
+
+function SoldOutToggle({ product }: { product: Product }) {
+  const queryClient = useQueryClient()
+  const isSoldOut = Number(product.is_sold_out ?? 0) === 1
+
+  const mutation = useMutation({
+    mutationFn: async (nextValue: number) => {
+      await apiClient.put('/products', {
+        ...product,
+        id: product.id,
+        category_ids:
+          product.category_ids?.length
+            ? product.category_ids
+            : product.category_id
+              ? [Number(product.category_id)]
+              : [],
+        sale_price: Number(product.sale_price ?? product.price ?? 0),
+        price: Number(product.sale_price ?? product.price ?? 0),
+        stock: Number(product.stock ?? 0),
+        images: product.images ?? [],
+        colors: product.colors ?? [],
+        is_active: Number(product.is_active ?? 1),
+        is_sold_out: nextValue,
+      })
+    },
+    onSuccess: (_data, nextValue) => {
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+      toast.success(
+        nextValue === 1
+          ? 'Product marked as Sold Out'
+          : 'Sold Out removed — product available again'
+      )
+    },
+    onError: () => {
+      toast.error('Failed to update sold out status')
+    },
+  })
+
+  return (
+    <div className='flex items-center gap-2'>
+      <Switch
+        checked={isSoldOut}
+        disabled={mutation.isPending}
+        onCheckedChange={(checked) => mutation.mutate(checked ? 1 : 0)}
+        aria-label={`Mark ${product.name} as sold out`}
+      />
+      <span
+        className={
+          isSoldOut
+            ? 'text-xs font-medium text-destructive'
+            : 'text-xs text-muted-foreground'
+        }
+      >
+        {isSoldOut ? 'Sold Out' : 'Available'}
+      </span>
+    </div>
   )
 }
 
@@ -100,6 +162,11 @@ export const productsColumns: ColumnDef<Product>[] = [
   {
     accessorKey: 'stock',
     header: 'Stock',
+  },
+  {
+    accessorKey: 'is_sold_out',
+    header: 'Sold Out',
+    cell: ({ row }) => <SoldOutToggle product={row.original} />,
   },
   {
     accessorKey: 'is_active',

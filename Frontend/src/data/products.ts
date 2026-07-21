@@ -23,6 +23,7 @@ export interface Product {
   details: string[];
   material: string;
   inStock: boolean;
+  isSoldOut?: boolean;
   badge?: string;
   variations?: { id: number; name: string }[];
   colors?: { name: string; hex: string }[];

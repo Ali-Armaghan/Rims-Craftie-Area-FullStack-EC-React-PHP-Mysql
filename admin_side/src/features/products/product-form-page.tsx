@@ -16,6 +16,7 @@ import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import {
   Card,
   CardContent,
@@ -164,7 +165,8 @@ function normalizeProduct(product: Product, categories: Category[]): Product {
     stock: Number(product.stock),
     images: parseProductImages(product.images).map(resolveImageUrl),
     colors: parseProductColors(product.colors),
-    is_active: Number(product.is_active),
+    is_active: Number(product.is_active ?? 1),
+    is_sold_out: Number(product.is_sold_out ?? 0) === 1 ? 1 : 0,
     short_description:
       product.short_description ?? product.description ?? '',
     long_description: product.long_description ?? '',
@@ -235,6 +237,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
       images: [],
       colors: [],
       is_active: 1,
+      is_sold_out: 0,
     },
   })
   const { getValues, reset, setValue, watch } = form
@@ -781,6 +784,30 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
                     )}
                   />
                 </div>
+
+                <FormField
+                  control={form.control}
+                  name='is_sold_out'
+                  render={({ field }) => (
+                    <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
+                      <div className='space-y-0.5'>
+                        <FormLabel className='text-base'>Sold Out</FormLabel>
+                        <p className='text-sm text-muted-foreground'>
+                          Enable to show &quot;Sold Out&quot; on the store and
+                          disable buying. Product stays visible in listings.
+                        </p>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={Number(field.value) === 1}
+                          onCheckedChange={(checked) =>
+                            field.onChange(checked ? 1 : 0)
+                          }
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
 
                 <FormField
                   control={form.control}

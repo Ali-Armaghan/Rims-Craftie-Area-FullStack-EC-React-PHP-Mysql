@@ -73,6 +73,7 @@ export function ProductDialog() {
       images: [],
       colors: [],
       is_active: 1,
+      is_sold_out: 0,
     },
   })
   const { reset, setValue } = form
@@ -93,6 +94,8 @@ export function ProductDialog() {
         sale_price: Number(currentRow.sale_price ?? currentRow.price ?? 0),
         price: Number(currentRow.sale_price ?? currentRow.price ?? 0),
         stock: Number(currentRow.stock),
+        colors: currentRow.colors ?? [],
+        is_sold_out: Number(currentRow.is_sold_out ?? 0) === 1 ? 1 : 0,
         short_description:
           currentRow.short_description ?? currentRow.description ?? '',
         long_description: currentRow.long_description ?? '',
@@ -118,6 +121,7 @@ export function ProductDialog() {
         images: [],
         colors: [],
         is_active: 1,
+        is_sold_out: 0,
       })
     }
   }, [open, currentRow, isEdit, categories, reset])

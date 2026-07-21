@@ -33,6 +33,7 @@ export const productSchema = z
     images: z.array(z.string()),
     colors: z.array(productColorSchema),
     is_active: z.number().int().min(0).max(1),
+    is_sold_out: z.number().int().min(0).max(1),
     created_at: z.string().optional(),
   })
   .refine(

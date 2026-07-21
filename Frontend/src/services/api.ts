@@ -143,6 +143,7 @@ type BackendProduct = {
     stock?: number | string | null;
     images?: string[] | string | null;
     is_active?: number | string | boolean;
+    is_sold_out?: number | string | boolean;
     average_rating?: number | string | null;
     review_count?: number | string | null;
     colors?: { name?: string; hex?: string }[] | string | null;
@@ -277,6 +278,7 @@ function mapBackendProduct(product: BackendProduct): Product {
     const parsedImages = parseImages(product.images).filter(Boolean).map(resolveImageUrl);
     const image = parsedImages[0] ?? 'https://placehold.co/600x600?text=No+Image';
     const stockQuantity = Number(product.stock ?? 0);
+    const isSoldOut = Number(product.is_sold_out ?? 0) === 1;
     const salePrice = Number(product.sale_price ?? product.price ?? 0);
     const originalPriceValue =
         product.original_price != null ? Number(product.original_price) : null;
@@ -320,7 +322,11 @@ function mapBackendProduct(product: BackendProduct): Product {
         longDescription: product.long_description || undefined,
         details: [],
         material: 'Premium Quality',
-        inStock: stockQuantity > 0 && Number(product.is_active ?? 1) === 1,
+        inStock:
+            stockQuantity > 0 &&
+            Number(product.is_active ?? 1) === 1 &&
+            !isSoldOut,
+        isSoldOut,
         stockQuantity,
         colors,
         variations: colors.map((color, index) => ({

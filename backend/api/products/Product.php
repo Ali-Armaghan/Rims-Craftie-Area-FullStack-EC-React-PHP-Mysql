@@ -13,6 +13,41 @@ class Product {
         $this->ensureOriginalPriceColumn();
         $this->ensureLongDescriptionColumn();
         $this->ensureColorsColumn();
+        $this->ensureSoldOutColumn();
+    }
+
+    private function ensureSoldOutColumn() {
+        static $done = false;
+        if ($done) {
+            return;
+        }
+
+        try {
+            $this->conn->query("SELECT is_sold_out FROM " . $this->table_name . " LIMIT 1");
+        } catch (Exception $e) {
+            try {
+                $this->conn->exec(
+                    "ALTER TABLE " . $this->table_name . "
+                     ADD COLUMN is_sold_out TINYINT(1) NOT NULL DEFAULT 0 AFTER is_active"
+                );
+            } catch (Exception $ignored) {
+            }
+        }
+
+        $done = true;
+    }
+
+    private function resolveSoldOutFlag($data) {
+        if (!array_key_exists('is_sold_out', $data)) {
+            return 0;
+        }
+
+        $value = $data['is_sold_out'];
+        if (is_bool($value)) {
+            return $value ? 1 : 0;
+        }
+
+        return (int)$value === 1 ? 1 : 0;
     }
 
     private function ensureColorsColumn() {
@@ -460,7 +495,7 @@ class Product {
         $query = "INSERT INTO " . $this->table_name . " 
                   SET name=:name, slug=:slug, category_id=:cat_id, 
                       description=:desc, long_description=:long_desc, price=:price, original_price=:original_price,
-                      stock=:stock, images=:images, colors=:colors";
+                      stock=:stock, images=:images, colors=:colors, is_sold_out=:is_sold_out";
         $stmt = $this->conn->prepare($query);
 
         $images = json_encode($data['images']);
@@ -469,6 +504,7 @@ class Product {
         $originalPrice = $this->resolveOriginalPrice($data);
         $shortDescription = $this->resolveShortDescription($data);
         $longDescription = $this->resolveLongDescription($data);
+        $isSoldOut = $this->resolveSoldOutFlag($data);
 
         $stmt->bindParam(":name", $data['name']);
         $stmt->bindParam(":slug", $data['slug']);
@@ -480,6 +516,7 @@ class Product {
         $stmt->bindParam(":stock", $data['stock']);
         $stmt->bindParam(":images", $images);
         $stmt->bindParam(":colors", $colors);
+        $stmt->bindParam(":is_sold_out", $isSoldOut, PDO::PARAM_INT);
 
         if (!$stmt->execute()) {
             return false;
@@ -499,7 +536,7 @@ class Product {
         $query = "UPDATE " . $this->table_name . " 
                   SET name=:name, slug=:slug, category_id=:cat_id, 
                       description=:desc, long_description=:long_desc, price=:price, original_price=:original_price,
-                      stock=:stock, images=:images, colors=:colors, is_active=:is_active
+                      stock=:stock, images=:images, colors=:colors, is_active=:is_active, is_sold_out=:is_sold_out
                   WHERE id=:id";
         $stmt = $this->conn->prepare($query);
 
@@ -510,6 +547,8 @@ class Product {
         $originalPrice = $this->resolveOriginalPrice($data);
         $shortDescription = $this->resolveShortDescription($data);
         $longDescription = $this->resolveLongDescription($data);
+        $isSoldOut = $this->resolveSoldOutFlag($data);
+        $isActive = array_key_exists('is_active', $data) ? (int)$data['is_active'] : 1;
 
         $stmt->bindParam(":name", $data['name']);
         $stmt->bindParam(":slug", $data['slug']);
@@ -521,7 +560,8 @@ class Product {
         $stmt->bindParam(":stock", $data['stock']);
         $stmt->bindParam(":images", $images);
         $stmt->bindParam(":colors", $colors);
-        $stmt->bindParam(":is_active", $data['is_active']);
+        $stmt->bindParam(":is_active", $isActive, PDO::PARAM_INT);
+        $stmt->bindParam(":is_sold_out", $isSoldOut, PDO::PARAM_INT);
         $stmt->bindParam(":id", $id);
 
         $updated = $stmt->execute();

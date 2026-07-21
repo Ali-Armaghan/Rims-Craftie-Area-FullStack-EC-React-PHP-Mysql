@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS products (
     images JSON, -- Store as array of paths
     colors JSON NULL DEFAULT NULL, -- [{ "name": "Black", "hex": "#000000" }, ...]
     is_active TINYINT(1) DEFAULT 1,
+    is_sold_out TINYINT(1) NOT NULL DEFAULT 0, -- 1 = Sold Out on storefront
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
 );

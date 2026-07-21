@@ -35,7 +35,16 @@ const ProductCard = ({
       className="w-full min-w-0 overflow-hidden text-center"
     >
       <div className={cn("relative overflow-hidden", compact ? "mb-1.5" : "mb-4")}>
-        {discountPercent != null && (
+        {product.isSoldOut || !product.inStock ? (
+          <span
+            className={cn(
+              "absolute left-2 top-2 z-10 rounded-full bg-foreground font-nav font-bold uppercase tracking-normal text-background shadow",
+              compact ? "px-2 py-0.5 text-[9px] sm:text-[10px]" : "px-3 py-1 text-[10px] sm:text-xs"
+            )}
+          >
+            {product.isSoldOut ? "Sold Out" : "Out of stock"}
+          </span>
+        ) : discountPercent != null ? (
           <span
             className={cn(
               "absolute left-2 top-2 z-10 rounded-full bg-primary font-nav font-bold uppercase tracking-normal text-primary-foreground shadow",
@@ -44,7 +53,7 @@ const ProductCard = ({
           >
             OFF {discountPercent}%
           </span>
-        )}
+        ) : null}
         <FavoriteHeartButton
           favorited={favorited}
           onToggle={() => toggleFavorite(product)}

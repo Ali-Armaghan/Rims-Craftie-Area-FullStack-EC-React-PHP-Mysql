@@ -444,7 +444,7 @@ const ProductDetail = () => {
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-3 py-1 font-body text-xs font-semibold text-destructive">
-                    Out of stock
+                    {product.isSoldOut ? "Sold Out" : "Out of stock"}
                   </span>
                 )}
               </motion.div>
@@ -466,7 +466,11 @@ const ProductDetail = () => {
                 </span>
                 <span className="hidden h-4 w-px bg-border sm:block" />
                 <span className="font-body text-sm text-muted-foreground">
-                  {product.inStock ? "Available for order" : "Out of stock"}
+                  {product.inStock
+                    ? "Available for order"
+                    : product.isSoldOut
+                      ? "Sold Out"
+                      : "Out of stock"}
                 </span>
               </div>
 
