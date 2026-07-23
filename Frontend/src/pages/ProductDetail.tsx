@@ -26,6 +26,13 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchSaleCountdown } from "@/services/api";
 import { getProductUrl } from "@/lib/product-url";
 import { buildWhatsAppOrderUrl } from "@/lib/whatsapp-order";
+import { trackViewContent } from "@/lib/meta-pixel";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 function formatDeliveryStepDate(date: Date) {
   return date.toLocaleDateString("en-PK", {
@@ -112,6 +119,7 @@ const ProductDetail = () => {
   const [slideDirection, setSlideDirection] = useState(1);
   const [selectedOption, setSelectedOption] = useState("Large");
   const [now, setNow] = useState(() => Date.now());
+  const [descriptionOpen, setDescriptionOpen] = useState(false);
 
   // Review form state
   const [reviewForm, setReviewForm] = useState({
@@ -158,9 +166,15 @@ const ProductDetail = () => {
     }
   }, [product, slug, navigate]);
 
+  useEffect(() => {
+    if (!product) return;
+    trackViewContent(product);
+  }, [product?.id]);
+
   // Reset states when slug changes
   useEffect(() => {
     setCurrentImageIndex(0);
+    setDescriptionOpen(false);
     if (product?.colors && product.colors.length > 0) {
       setSelectedOption(product.colors[0].name);
     } else if (product?.variations && product.variations.length > 0) {
@@ -419,9 +433,31 @@ const ProductDetail = () => {
                   <h2 className="mb-4 font-nav text-[11px] font-bold uppercase tracking-wide text-foreground">
                     Description
                   </h2>
-                  <p className="font-body text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
+                  <p className="line-clamp-1 font-body text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
                     {product.longDescription}
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => setDescriptionOpen(true)}
+                    className="mt-3 font-nav text-xs font-semibold uppercase tracking-wide text-primary underline underline-offset-4 transition hover:text-primary/80"
+                  >
+                    See more
+                  </button>
+
+                  <Dialog open={descriptionOpen} onOpenChange={setDescriptionOpen}>
+                    <DialogContent className="flex max-h-[85vh] w-[calc(100%-2rem)] max-w-lg flex-col gap-0 overflow-hidden p-0 sm:rounded-2xl">
+                      <DialogHeader className="shrink-0 border-b border-border px-6 py-4 pr-12 text-left">
+                        <DialogTitle className="font-display text-xl text-foreground">
+                          Description
+                        </DialogTitle>
+                      </DialogHeader>
+                      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5">
+                        <p className="font-body text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
+                          {product.longDescription}
+                        </p>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </motion.div>
               )}
             </div>
@@ -743,7 +779,7 @@ const ProductDetail = () => {
                 ))}
               </div>
 
-              <div className="rounded-3xl border border-border/70 bg-card/40 p-5">
+              {/* <div className="rounded-3xl border border-border/70 bg-card/40 p-5">
                 <h2 className="mb-4 font-nav text-[11px] font-bold uppercase tracking-wide text-foreground">
                   Product Highlights
                 </h2>
@@ -772,7 +808,7 @@ const ProductDetail = () => {
                   </>
                 )}
               </div>
-              </div>
+              </div> */}
 
             </motion.div>
           </div>

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { signupCustomer } from "@/services/api";
+import { trackCompleteRegistration } from "@/lib/meta-pixel";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -38,6 +39,7 @@ const Signup = () => {
         password: formData.password,
         referred_by_code: formData.referred_by_code || undefined,
       });
+      trackCompleteRegistration("email");
       toast.success("Account created. Please login.");
       navigate("/login");
     } catch (error) {

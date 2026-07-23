@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import ProductCard from "@/components/ProductCard";
 import { useProducts } from "@/hooks/useProducts";
 import ProductCardSkeleton from "@/components/skeletons/ProductCardSkeleton";
+import { trackSearch } from "@/lib/meta-pixel";
 
 const Products = () => {
   const location = useLocation();
@@ -18,6 +19,12 @@ const Products = () => {
       setActiveCategory(categoryFromNav);
     }
   }, [categoryFromNav]);
+
+  useEffect(() => {
+    if (searchQuery) {
+      trackSearch(searchQuery);
+    }
+  }, [searchQuery]);
 
   const filtered = useMemo(() => {
     const byCategory =

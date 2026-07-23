@@ -8,12 +8,17 @@ import { createOrder, fetchLoyaltyStatus, fetchResaleCodePreview, loginCustomer,
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { calculateLoyaltyDiscount } from "@/lib/loyalty";
+import {
+  trackInitiateCheckout,
+  trackPurchase,
+} from "@/lib/meta-pixel";
 
 const Checkout = () => {
   const { items, totalPrice, clearCart } = useCart();
   const { user, login } = useAuth();
   const [placed, setPlaced] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [checkoutTracked, setCheckoutTracked] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
@@ -38,6 +43,21 @@ const Checkout = () => {
       email: prev.email || user.email,
     }));
   }, [user]);
+
+  useEffect(() => {
+    if (checkoutTracked || items.length === 0) return;
+
+    trackInitiateCheckout({
+      contents: items.map((item) => ({
+        id: String(item.product.id),
+        quantity: item.quantity,
+        item_price: item.product.price,
+      })),
+      value: totalPrice,
+      numItems: items.reduce((sum, item) => sum + item.quantity, 0),
+    });
+    setCheckoutTracked(true);
+  }, [checkoutTracked, items, totalPrice]);
 
   const { data: loyaltyStatus } = useQuery({
     queryKey: ["loyalty-status", user?.id],
@@ -144,7 +164,23 @@ const Checkout = () => {
         })),
       };
 
-      await createOrder(orderPayload);
+      const orderResult = await createOrder(orderPayload);
+
+      if (!orderResult?.success) {
+        throw new Error(orderResult?.message || "Failed to place order. Please try again.");
+      }
+
+      trackPurchase({
+        orderId: orderResult.order_id,
+        orderNumber: orderResult.order_number,
+        contents: items.map((item) => ({
+          id: String(item.product.id),
+          quantity: item.quantity,
+          item_price: item.product.price,
+        })),
+        value: Number(orderResult.total ?? appliedSavings.totalAfterDiscount),
+        numItems: items.reduce((sum, item) => sum + item.quantity, 0),
+      });
 
       setPlaced(true);
       clearCart();

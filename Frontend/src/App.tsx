@@ -26,10 +26,12 @@ import { AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import PageTransition from "./components/PageTransition";
 import { useVisitorTracking } from "@/hooks/useVisitorTracking";
+import { useMetaPixelPageView } from "@/hooks/useMetaPixelPageView";
 
 const AnimatedRoutes = () => {
   const location = useLocation();
   useVisitorTracking();
+  useMetaPixelPageView();
 
   return (
     <AnimatePresence mode="wait">

@@ -6,6 +6,7 @@ import React, {
   useState,
 } from "react";
 import { Product } from "@/data/products";
+import { trackAddToWishlist } from "@/lib/meta-pixel";
 
 const FAVORITES_STORAGE_KEY = "ateeqo_favorites";
 
@@ -67,17 +68,6 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({
     [favorites]
   );
 
-  const addFavorite = useCallback((product: Product) => {
-    setFavorites((prev) => {
-      if (prev.some((item) => item.id === product.id)) return prev;
-      return [...prev, product];
-    });
-  }, []);
-
-  const removeFavorite = useCallback((productId: string) => {
-    setFavorites((prev) => prev.filter((item) => item.id !== productId));
-  }, []);
-
   const toggleFavorite = useCallback((product: Product) => {
     let added = false;
     setFavorites((prev) => {
@@ -88,7 +78,24 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({
       added = true;
       return [...prev, product];
     });
+
+    if (added) {
+      trackAddToWishlist(product);
+    }
+
     return added;
+  }, []);
+
+  const addFavorite = useCallback((product: Product) => {
+    setFavorites((prev) => {
+      if (prev.some((item) => item.id === product.id)) return prev;
+      trackAddToWishlist(product);
+      return [...prev, product];
+    });
+  }, []);
+
+  const removeFavorite = useCallback((productId: string) => {
+    setFavorites((prev) => prev.filter((item) => item.id !== productId));
   }, []);
 
   const clearFavorites = useCallback(() => {

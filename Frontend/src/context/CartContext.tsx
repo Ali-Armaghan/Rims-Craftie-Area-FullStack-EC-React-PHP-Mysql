@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { Product } from "@/data/products";
+import { trackAddToCart } from "@/lib/meta-pixel";
 
 export type SelectedColor = {
   name: string;
@@ -112,6 +113,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           );
         }
         return [...prev, { product, quantity, selectedColor: color }];
+      });
+
+      trackAddToCart(product, quantity, {
+        color: color?.name ?? null,
       });
     },
     []

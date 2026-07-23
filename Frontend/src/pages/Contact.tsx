@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { CONTACT } from "@/lib/contact";
+import { trackContact, trackLead } from "@/lib/meta-pixel";
 
 const contactInfo = [
   {
@@ -82,6 +83,9 @@ const Contact = () => {
     try {
       // TODO: connect SMTP / contact API endpoint
       await new Promise((resolve) => setTimeout(resolve, 600));
+
+      trackContact();
+      trackLead();
 
       toast({
         title: "Message sent",
