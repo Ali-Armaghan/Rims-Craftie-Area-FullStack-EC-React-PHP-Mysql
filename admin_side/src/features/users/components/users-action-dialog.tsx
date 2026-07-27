@@ -402,7 +402,16 @@ export function UsersActionDialog({
                         min='0'
                         max='100'
                         step='0.01'
-                        {...field}
+                        value={field.value ?? 0}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                        onChange={(e) => {
+                          const raw = e.target.value
+                          field.onChange(
+                            raw === '' ? 0 : Number(raw)
+                          )
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -421,7 +430,16 @@ export function UsersActionDialog({
                         min='0'
                         max='100'
                         step='0.01'
-                        {...field}
+                        value={field.value ?? 0}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                        onChange={(e) => {
+                          const raw = e.target.value
+                          field.onChange(
+                            raw === '' ? 0 : Number(raw)
+                          )
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
