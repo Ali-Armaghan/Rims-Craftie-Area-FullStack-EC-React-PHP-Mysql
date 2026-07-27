@@ -15,17 +15,17 @@ const steps = [
   {
     icon: UserPlus,
     title: "Create your free account",
-    body: "Sign up on Ateeqo to get your personal ReSale code automatically. This code is your unique identity in our rewards and affiliation program.",
+    body: "Sign up on Ateeqo to get your personal ReSale code and share link automatically. This is your unique identity in our rewards and affiliation program.",
   },
   {
     icon: Share2,
-    title: "Share your code",
-    body: "Send your code to friends, family, or your audience on WhatsApp, Instagram, or anywhere you sell. When they shop, they enter your code at checkout.",
+    title: "Share your link (or code)",
+    body: "Copy your personal link from Account → ReSale, or share your code. Send it on WhatsApp, Instagram, or anywhere you sell. Shoppers who open your link get the code applied automatically.",
   },
   {
     icon: ShoppingBag,
     title: "They place an order",
-    body: "Your referral adds your ReSale / referral code in the checkout form. The order is linked to you so rewards can be tracked correctly.",
+    body: "If they used your link, checkout is already prefilled. They can also type your ReSale code manually. The order is linked to you so rewards track correctly.",
   },
   {
     icon: Wallet,
@@ -37,7 +37,7 @@ const steps = [
 const faqs = [
   {
     q: "What is the difference between loyalty points and the affiliation program?",
-    a: "On Ateeqo, your reward balance works like loyalty points you earn through referrals. The affiliation (ReSale) program is how you earn those points — by sharing your code and earning commission on successful referred orders.",
+    a: "On Ateeqo, your reward balance works like loyalty points you earn through referrals. The affiliation (ReSale) program is how you earn those points — by sharing your link or code and earning commission on successful referred orders.",
   },
   {
     q: "How much do I earn per referral?",
@@ -48,16 +48,16 @@ const faqs = [
     a: "Your balance updates after a referred order reaches delivered status. Until then, the order may appear in referral sales but commission is credited on delivery.",
   },
   {
-    q: "Where do I find my ReSale code?",
-    a: "Log in and open your Account dashboard. Your code appears under Overview and in the ReSale tab. Copy it and share it with customers.",
+    q: "Where do I find my ReSale link and code?",
+    a: "Log in and open your Account dashboard. Your code appears under Overview and in the ReSale tab, where you can also copy your share link or send it via WhatsApp.",
   },
   {
     q: "Can shoppers use a code without creating an account?",
-    a: "Yes. Guests can checkout without logging in. They simply enter your referral / ReSale code in the checkout field before placing the order.",
+    a: "Yes. Guests can checkout without logging in. If they opened your share link, the code is applied automatically. They can also enter your referral / ReSale code manually at checkout.",
   },
   {
     q: "Can I use someone else's code when I sign up?",
-    a: "Yes. During registration you can enter an optional referral code if someone invited you. That links your new account to their network where applicable.",
+    a: "Yes. During registration you can enter an optional referral code if someone invited you — or open their share link first and it will be prefilled. That links your new account to their network where applicable.",
   },
 ];
 
@@ -77,14 +77,14 @@ const RewardsProgram = () => {
             </h1>
             <p className="font-body text-base leading-relaxed text-muted-foreground md:text-lg">
               Shop, share, and earn. Join our ReSale rewards program to collect loyalty-style earnings
-              every time someone buys from Ateeqo using your personal code.
+              every time someone buys from Ateeqo using your personal link or code.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Link
                 to="/signup"
                 className="inline-flex items-center gap-2 bg-foreground px-8 py-3.5 font-nav text-xs uppercase tracking-wide text-primary-foreground transition-colors hover:bg-foreground/90"
               >
-                Join &amp; get your code
+                Join &amp; get your link
                 <ArrowRight size={14} />
               </Link>
               <Link
@@ -223,8 +223,8 @@ const RewardsProgram = () => {
             <h3 className="mb-3 font-display text-xl text-foreground">For earners (affiliates)</h3>
             <ol className="list-decimal space-y-3 pl-4 font-body text-sm leading-relaxed text-muted-foreground">
               <li>Create an account at Sign Up.</li>
-              <li>Open Account → ReSale tab and copy your code.</li>
-              <li>Share the code with buyers and tell them to enter it at checkout.</li>
+              <li>Open Account → ReSale tab and copy your share link (or code).</li>
+              <li>Share the link on WhatsApp or elsewhere — buyers who open it get your code applied automatically.</li>
               <li>Check Overview for balance and Ledger for each earning.</li>
             </ol>
             <Link
@@ -237,12 +237,12 @@ const RewardsProgram = () => {
 
           <div className="rounded-2xl border border-border p-6 lg:col-span-1">
             <ShoppingBag className="mb-3 text-primary" size={22} />
-            <h3 className="mb-3 font-display text-xl text-foreground">For shoppers (using a code)</h3>
+            <h3 className="mb-3 font-display text-xl text-foreground">For shoppers (using a link or code)</h3>
             <ol className="list-decimal space-y-3 pl-4 font-body text-sm leading-relaxed text-muted-foreground">
-              <li>Add products to cart and go to Checkout.</li>
+              <li>Open a friend’s share link, or add products to cart and go to Checkout.</li>
               <li>Fill in name, phone, and delivery address.</li>
               <li>
-                Enter the referral / ReSale code in the optional field (labeled Referral / ReSale Code).
+                If you used a share link, the Referral / ReSale Code field is already filled. Otherwise enter the code manually.
               </li>
               <li>Place order with Cash on Delivery — no login required for guests.</li>
             </ol>
@@ -259,8 +259,8 @@ const RewardsProgram = () => {
             <h3 className="mb-3 font-display text-xl">What you see in your account</h3>
             <ul className="space-y-3 font-body text-sm leading-relaxed text-primary-foreground/85">
               <li>
-                <span className="font-semibold text-primary-foreground">Resale Code</span> — your shareable
-                affiliation ID
+                <span className="font-semibold text-primary-foreground">Share link &amp; Resale Code</span> — share
+                your personal link or code; both work the same at checkout
               </li>
               <li>
                 <span className="font-semibold text-primary-foreground">Earning Balance</span> — loyalty-style

@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { signupCustomer } from "@/services/api";
 import { trackCompleteRegistration } from "@/lib/meta-pixel";
+import { getReferralCode, setReferralCode } from "@/lib/referral";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -14,11 +15,26 @@ const Signup = () => {
     phone: "",
     password: "",
     confirmPassword: "",
-    referred_by_code: "",
+    referred_by_code: getReferralCode(),
   });
 
+  useEffect(() => {
+    const stored = getReferralCode();
+    if (!stored) return;
+    setFormData((current) =>
+      current.referred_by_code
+        ? current
+        : { ...current, referred_by_code: stored }
+    );
+  }, []);
+
   const updateField = (field: keyof typeof formData, value: string) => {
-    setFormData((current) => ({ ...current, [field]: value }));
+    const nextValue =
+      field === "referred_by_code" ? value.toUpperCase() : value;
+    setFormData((current) => ({ ...current, [field]: nextValue }));
+    if (field === "referred_by_code") {
+      setReferralCode(nextValue);
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -151,7 +167,7 @@ const Signup = () => {
               onChange={(event) =>
                 updateField("referred_by_code", event.target.value)
               }
-              className="mt-2 w-full border border-border bg-transparent px-4 py-3 font-body text-sm focus:border-primary focus:outline-none"
+              className="mt-2 w-full border border-border bg-transparent px-4 py-3 font-body text-sm uppercase focus:border-primary focus:outline-none"
               placeholder="Optional"
             />
           </div>

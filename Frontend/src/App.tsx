@@ -27,11 +27,13 @@ import { useLocation } from "react-router-dom";
 import PageTransition from "./components/PageTransition";
 import { useVisitorTracking } from "@/hooks/useVisitorTracking";
 import { useMetaPixelPageView } from "@/hooks/useMetaPixelPageView";
+import { useReferralCapture } from "@/hooks/useReferralCapture";
 
 const AnimatedRoutes = () => {
   const location = useLocation();
   useVisitorTracking();
   useMetaPixelPageView();
+  useReferralCapture();
 
   return (
     <AnimatePresence mode="wait">

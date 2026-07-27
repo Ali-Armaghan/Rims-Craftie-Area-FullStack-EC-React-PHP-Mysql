@@ -12,6 +12,7 @@ import {
   trackInitiateCheckout,
   trackPurchase,
 } from "@/lib/meta-pixel";
+import { getReferralCode, setReferralCode } from "@/lib/referral";
 
 const Checkout = () => {
   const { items, totalPrice, clearCart } = useCart();
@@ -27,12 +28,17 @@ const Checkout = () => {
     city: '',
     state: '',
     zip: '',
-    referralCode: '',
+    referralCode: getReferralCode(),
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const nextValue =
+      name === "referralCode" ? value.toUpperCase() : value;
+    setFormData((prev) => ({ ...prev, [name]: nextValue }));
+    if (name === "referralCode") {
+      setReferralCode(nextValue);
+    }
   };
 
   useEffect(() => {
@@ -43,6 +49,14 @@ const Checkout = () => {
       email: prev.email || user.email,
     }));
   }, [user]);
+
+  useEffect(() => {
+    const stored = getReferralCode();
+    if (!stored) return;
+    setFormData((prev) =>
+      prev.referralCode ? prev : { ...prev, referralCode: stored }
+    );
+  }, []);
 
   useEffect(() => {
     if (checkoutTracked || items.length === 0) return;
@@ -268,7 +282,7 @@ const Checkout = () => {
                   <input type="text" name="state" value={formData.state} onChange={handleInputChange} placeholder="State (Optional)" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
                   <input type="text" name="zip" value={formData.zip} onChange={handleInputChange} placeholder="ZIP (Optional)" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
                 </div>
-                <input type="text" name="referralCode" value={formData.referralCode} onChange={(e) => setFormData(prev => ({ ...prev, referralCode: e.target.value.toUpperCase() }))} placeholder="Referral / ReSale Code (Optional)" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm uppercase placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
+                <input type="text" name="referralCode" value={formData.referralCode} onChange={handleInputChange} placeholder="Referral / ReSale Code (Optional)" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm uppercase placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
               </div>
             </div>
 

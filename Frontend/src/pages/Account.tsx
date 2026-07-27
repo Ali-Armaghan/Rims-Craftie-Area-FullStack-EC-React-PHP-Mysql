@@ -2,7 +2,18 @@ import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
-import { BadgeDollarSign, ClipboardList, Gift, LayoutDashboard, LogOut, ReceiptText } from "lucide-react";
+import {
+  BadgeDollarSign,
+  Check,
+  ClipboardList,
+  Copy,
+  Gift,
+  LayoutDashboard,
+  LogOut,
+  ReceiptText,
+  Share2,
+} from "lucide-react";
+import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import {
   CustomerOrder,
@@ -13,6 +24,10 @@ import {
   fetchCustomerResaleLedger,
   fetchLoyaltyStatus,
 } from "@/services/api";
+import {
+  buildReferralShareLink,
+  buildReferralWhatsAppShareUrl,
+} from "@/lib/referral";
 
 type DashboardTab = "overview" | "orders" | "resale" | "ledger";
 
@@ -41,6 +56,7 @@ const Account = () => {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const userId = user?.id;
 
@@ -81,6 +97,21 @@ const Account = () => {
   const selectedShipping = selectedOrder
     ? parseShippingAddress(selectedOrder.shipping_address)
     : null;
+
+  const resaleCode = resale?.resale_code ?? user.resale_code ?? "";
+  const shareLink = resaleCode ? buildReferralShareLink(resaleCode) : "";
+
+  const copyShareLink = async () => {
+    if (!shareLink) return;
+    try {
+      await navigator.clipboard.writeText(shareLink);
+      setLinkCopied(true);
+      toast.success("Referral link copied");
+      window.setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      toast.error("Could not copy link");
+    }
+  };
 
   return (
     <section className="container py-12">
@@ -144,7 +175,7 @@ const Account = () => {
                 </div>
                 <div className="border border-border p-5">
                   <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Resale Code</p>
-                  <p className="font-body text-lg text-foreground mt-2">{resale?.resale_code ?? user.resale_code ?? "N/A"}</p>
+                  <p className="font-body text-lg text-foreground mt-2">{resaleCode || "N/A"}</p>
                 </div>
                 <div className="border border-border p-5">
                   <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Balance</p>
@@ -293,7 +324,7 @@ const Account = () => {
               <div className="grid gap-4 md:grid-cols-5">
                 <div className="border border-border p-5">
                   <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Your Code</p>
-                  <p className="font-body text-xl text-foreground mt-2">{resale?.resale_code ?? user.resale_code}</p>
+                  <p className="font-body text-xl text-foreground mt-2">{resaleCode || "N/A"}</p>
                 </div>
                 <div className="border border-border p-5">
                   <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Buyer Discount</p>
@@ -316,6 +347,42 @@ const Account = () => {
                   <p className="font-display text-2xl text-foreground mt-2">{money(resale?.resale_balance ?? user.resale_balance)}</p>
                 </div>
               </div>
+
+              {shareLink ? (
+                <div className="border border-border p-6 space-y-4">
+                  <div>
+                    <p className="font-nav text-xs tracking-wide uppercase text-primary mb-2">
+                      Your share link
+                    </p>
+                    <p className="font-body text-sm text-muted-foreground">
+                      Anyone who opens this link and orders will get your discount — same as entering your code at checkout.
+                    </p>
+                  </div>
+                  <div className="break-all border border-border bg-secondary/40 px-4 py-3 font-body text-sm text-foreground">
+                    {shareLink}
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={copyShareLink}
+                      className="inline-flex items-center gap-2 border border-foreground px-4 py-3 font-nav text-xs uppercase tracking-wide text-foreground hover:bg-foreground hover:text-primary-foreground"
+                    >
+                      {linkCopied ? <Check size={14} /> : <Copy size={14} />}
+                      {linkCopied ? "Copied" : "Copy link"}
+                    </button>
+                    <a
+                      href={buildReferralWhatsAppShareUrl(resaleCode)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 bg-foreground px-4 py-3 font-nav text-xs uppercase tracking-wide text-primary-foreground hover:bg-foreground/90"
+                    >
+                      <Share2 size={14} />
+                      Share on WhatsApp
+                    </a>
+                  </div>
+                </div>
+              ) : null}
+
               <div className="border border-border p-6">
                 <div className="flex items-center gap-3 text-primary">
                   <BadgeDollarSign size={18} />
