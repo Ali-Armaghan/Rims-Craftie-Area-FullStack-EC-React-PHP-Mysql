@@ -422,17 +422,18 @@ const ProductDetail = () => {
                 </div>
               )}
 
+              {/* Desktop: description under gallery */}
               {product.longDescription?.trim() && (
                 <motion.div
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.15 }}
-                  className="mt-8 rounded-3xl border border-border/70 bg-card/40 p-6"
+                  className="mt-8 hidden rounded-3xl border border-border/70 bg-card/40 p-6 lg:block"
                 >
                   <h2 className="mb-4 font-nav text-[11px] font-bold uppercase tracking-wide text-foreground">
                     Description
                   </h2>
-                  <p className="line-clamp-1 font-body text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
+                  <p className="line-clamp-1 font-body text-sm leading-relaxed text-muted-foreground">
                     {product.longDescription}
                   </p>
                   <button
@@ -442,21 +443,6 @@ const ProductDetail = () => {
                   >
                     See more
                   </button>
-
-                  <Dialog open={descriptionOpen} onOpenChange={setDescriptionOpen}>
-                    <DialogContent className="flex max-h-[85vh] w-[calc(100%-2rem)] max-w-lg flex-col gap-0 overflow-hidden p-0 sm:rounded-2xl">
-                      <DialogHeader className="shrink-0 border-b border-border px-6 py-4 pr-12 text-left">
-                        <DialogTitle className="font-display text-xl text-foreground">
-                          Description
-                        </DialogTitle>
-                      </DialogHeader>
-                      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5">
-                        <p className="font-body text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
-                          {product.longDescription}
-                        </p>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
                 </motion.div>
               )}
             </div>
@@ -812,6 +798,47 @@ const ProductDetail = () => {
             </motion.div>
           </div>
         </section>
+
+        {/* Mobile: description above reviews, below product info */}
+        {product.longDescription?.trim() && (
+          <section className="container pt-10 lg:hidden">
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="rounded-3xl border border-border/70 bg-card/40 p-6"
+            >
+              <h2 className="mb-4 font-nav text-[11px] font-bold uppercase tracking-wide text-foreground">
+                Description
+              </h2>
+              <p className="line-clamp-1 font-body text-sm leading-relaxed text-muted-foreground">
+                {product.longDescription}
+              </p>
+              <button
+                type="button"
+                onClick={() => setDescriptionOpen(true)}
+                className="mt-3 font-nav text-xs font-semibold uppercase tracking-wide text-primary underline underline-offset-4 transition hover:text-primary/80"
+              >
+                See more
+              </button>
+            </motion.div>
+          </section>
+        )}
+
+        <Dialog open={descriptionOpen} onOpenChange={setDescriptionOpen}>
+          <DialogContent className="flex max-h-[85vh] w-[calc(100%-2rem)] max-w-lg flex-col gap-0 overflow-hidden p-0 sm:rounded-2xl">
+            <DialogHeader className="shrink-0 border-b border-border px-6 py-4 pr-12 text-left">
+              <DialogTitle className="font-display text-xl text-foreground">
+                Description
+              </DialogTitle>
+            </DialogHeader>
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5">
+              <p className="font-body text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
+                {product.longDescription}
+              </p>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Reviews Section */}
         <section className="container pt-24 pb-12">
