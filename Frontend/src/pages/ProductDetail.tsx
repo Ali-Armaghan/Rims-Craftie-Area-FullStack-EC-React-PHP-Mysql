@@ -6,7 +6,6 @@ import {
   ChevronRight,
   CreditCard,
   PackageCheck,
-  RotateCcw,
   ShieldCheck,
   ShoppingBag,
   Truck,
@@ -227,8 +226,8 @@ const ProductDetail = () => {
   // Can be reimplemented via a separate fetchFeaturedProducts() query if desired.
   const related: any[] = [];
   const trustBadges = [
-    { icon: Truck, title: "Fast Delivery", desc: "Quick dispatch nationwide" },
-    { icon: RotateCcw, title: "Easy Returns", desc: "Hassle-free return support" },
+    { icon: Truck, title: "Free Delivery", desc: "Free shipping nationwide" },
+    { icon: CreditCard, title: "Cash on Delivery", desc: "Pay when you receive" },
     { icon: ShieldCheck, title: "Secure Checkout", desc: "Protected payment process" },
     { icon: CreditCard, title: "Cash / Card", desc: "Flexible payment options" },
   ];
