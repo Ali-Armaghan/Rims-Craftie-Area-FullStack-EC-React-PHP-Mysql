@@ -25,6 +25,7 @@ declare global {
 }
 
 const CURRENCY = "PKR";
+const FIRED_EVENT_IDS_KEY = "ateeqo_meta_fired_event_ids";
 
 function fbq(...args: unknown[]) {
   if (typeof window === "undefined" || typeof window.fbq !== "function") {
@@ -33,12 +34,43 @@ function fbq(...args: unknown[]) {
   window.fbq(...args);
 }
 
+function hasFiredEventId(eventId: string) {
+  try {
+    const raw = sessionStorage.getItem(FIRED_EVENT_IDS_KEY);
+    const ids: string[] = raw ? JSON.parse(raw) : [];
+    return ids.includes(eventId);
+  } catch {
+    return false;
+  }
+}
+
+function markFiredEventId(eventId: string) {
+  try {
+    const raw = sessionStorage.getItem(FIRED_EVENT_IDS_KEY);
+    const ids: string[] = raw ? JSON.parse(raw) : [];
+    if (!ids.includes(eventId)) {
+      ids.push(eventId);
+      // Keep the list bounded
+      sessionStorage.setItem(
+        FIRED_EVENT_IDS_KEY,
+        JSON.stringify(ids.slice(-50))
+      );
+    }
+  } catch {
+    // ignore
+  }
+}
+
 export function trackMetaEvent(
   event: string,
   params?: Record<string, unknown>,
   eventId?: string
 ) {
   if (eventId) {
+    if (hasFiredEventId(eventId)) {
+      return;
+    }
+    markFiredEventId(eventId);
     fbq("track", event, params ?? {}, { eventID: eventId });
     return;
   }
@@ -126,14 +158,23 @@ export function trackInitiateCheckout(params: {
   value: number;
   numItems: number;
 }) {
-  trackMetaEvent("InitiateCheckout", {
-    content_ids: params.contents.map((item) => item.id),
-    content_type: "product",
-    contents: params.contents,
-    currency: CURRENCY,
-    value: params.value,
-    num_items: params.numItems,
-  });
+  const contentKey = params.contents
+    .map((item) => `${item.id}x${item.quantity ?? 1}`)
+    .join("-");
+  const eventId = `initiate_checkout_${contentKey}_${Math.round(params.value)}`;
+
+  trackMetaEvent(
+    "InitiateCheckout",
+    {
+      content_ids: params.contents.map((item) => item.id),
+      content_type: "product",
+      contents: params.contents,
+      currency: CURRENCY,
+      value: params.value,
+      num_items: params.numItems,
+    },
+    eventId
+  );
 }
 
 export function trackPurchase(params: {
@@ -143,11 +184,12 @@ export function trackPurchase(params: {
   value: number;
   numItems: number;
 }) {
-  const eventId = params.orderId
-    ? `purchase_${params.orderId}`
-    : params.orderNumber
-      ? `purchase_${params.orderNumber}`
-      : undefined;
+  const eventId =
+    params.orderId != null && String(params.orderId)
+      ? `purchase_${params.orderId}`
+      : params.orderNumber
+        ? `purchase_${params.orderNumber}`
+        : `purchase_${Date.now()}_${params.value}_${params.numItems}`;
 
   trackMetaEvent(
     "Purchase",

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
@@ -19,15 +19,14 @@ const Checkout = () => {
   const { user, login } = useAuth();
   const [placed, setPlaced] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [checkoutTracked, setCheckoutTracked] = useState(false);
+  const submitLockRef = useRef(false);
+  const checkoutTrackedRef = useRef(false);
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
     email: '',
     address: '',
     city: '',
-    state: '',
-    zip: '',
     referralCode: getReferralCode(),
   });
 
@@ -59,7 +58,8 @@ const Checkout = () => {
   }, []);
 
   useEffect(() => {
-    if (checkoutTracked || items.length === 0) return;
+    if (checkoutTrackedRef.current || items.length === 0) return;
+    checkoutTrackedRef.current = true;
 
     trackInitiateCheckout({
       contents: items.map((item) => ({
@@ -70,8 +70,7 @@ const Checkout = () => {
       value: totalPrice,
       numItems: items.reduce((sum, item) => sum + item.quantity, 0),
     });
-    setCheckoutTracked(true);
-  }, [checkoutTracked, items, totalPrice]);
+  }, [items, totalPrice]);
 
   const { data: loyaltyStatus } = useQuery({
     queryKey: ["loyalty-status", user?.id],
@@ -147,6 +146,9 @@ const Checkout = () => {
       return;
     }
 
+    // Sync lock — React state alone can miss fast double-clicks
+    if (submitLockRef.current || isSubmitting) return;
+    submitLockRef.current = true;
     setIsSubmitting(true);
 
     try {
@@ -162,8 +164,8 @@ const Checkout = () => {
           full_name: formData.fullName,
           address: formData.address,
           city: formData.city,
-          state: formData.state.trim() || "N/A",
-          zip: formData.zip.trim() || "",
+          state: "N/A",
+          zip: "",
           country: 'PK',
           email: formData.email || 'no-email@cod.com',
           phone: formData.phone,
@@ -203,6 +205,7 @@ const Checkout = () => {
       console.error('Checkout error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to place order. Please try again.';
       toast.error(errorMessage);
+      submitLockRef.current = false;
     } finally {
       setIsSubmitting(false);
     }
@@ -277,12 +280,15 @@ const Checkout = () => {
               <div className="space-y-4">
                 <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange} placeholder="Full Name" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
                 <input type="text" name="address" value={formData.address} onChange={handleInputChange} placeholder="Address" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
-                <div className="grid grid-cols-3 gap-4">
-                  <input type="text" name="city" value={formData.city} onChange={handleInputChange} placeholder="City" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
-                  <input type="text" name="state" value={formData.state} onChange={handleInputChange} placeholder="State (Optional)" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
-                  <input type="text" name="zip" value={formData.zip} onChange={handleInputChange} placeholder="ZIP (Optional)" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
-                </div>
-                <input type="text" name="referralCode" value={formData.referralCode} onChange={handleInputChange} placeholder="Referral / ReSale Code (Optional)" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm uppercase placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
+                <input type="text" name="city" value={formData.city} onChange={handleInputChange} placeholder="City" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
+                <input
+                  type="text"
+                  name="referralCode"
+                  value={formData.referralCode}
+                  onChange={handleInputChange}
+                  placeholder="Referral code (optional)"
+                  className="w-full max-w-[220px] border border-border bg-transparent px-3 py-2 font-body text-xs uppercase placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+                />
               </div>
             </div>
 

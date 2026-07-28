@@ -166,8 +166,10 @@ const ProductDetail = () => {
   }, [product, slug, navigate]);
 
   useEffect(() => {
-    if (!product) return;
+    if (!product?.id) return;
     trackViewContent(product);
+    // Fire once per product id (avoid remount / refetch duplicates)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only when product id changes
   }, [product?.id]);
 
   // Reset states when slug changes
