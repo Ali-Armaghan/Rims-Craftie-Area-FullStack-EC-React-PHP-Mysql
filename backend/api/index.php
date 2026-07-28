@@ -38,6 +38,9 @@ switch ($module) {
     case 'orders':
         require_once __DIR__ . '/orders/handler.php';
         break;
+    case 'checkout-drafts':
+        require_once __DIR__ . '/checkout-drafts/handler.php';
+        break;
     case 'resale':
         require_once __DIR__ . '/resale/handler.php';
         break;

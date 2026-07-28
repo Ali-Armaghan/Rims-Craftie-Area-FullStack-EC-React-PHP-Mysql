@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { useCart } from "@/context/CartContext";
 import { Lock, ArrowLeft, Loader2, BadgePercent } from "lucide-react";
-import { createOrder, fetchLoyaltyStatus, fetchResaleCodePreview, loginCustomer, OrderPayload, signupCustomer } from "@/services/api";
+import { createOrder, convertCheckoutDraft, fetchLoyaltyStatus, fetchResaleCodePreview, loginCustomer, OrderPayload, saveCheckoutDraft, signupCustomer } from "@/services/api";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { calculateLoyaltyDiscount } from "@/lib/loyalty";
@@ -13,6 +13,11 @@ import {
   trackPurchase,
 } from "@/lib/meta-pixel";
 import { getReferralCode, setReferralCode } from "@/lib/referral";
+import {
+  clearCheckoutDraftToken,
+  getCheckoutDraftToken,
+  isCheckoutDraftPhoneReady,
+} from "@/lib/checkout-draft";
 
 const Checkout = () => {
   const { items, totalPrice, clearCart } = useCart();
@@ -21,6 +26,17 @@ const Checkout = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submitLockRef = useRef(false);
   const checkoutTrackedRef = useRef(false);
+  const draftTokenRef = useRef(getCheckoutDraftToken());
+  const formDataRef = useRef({
+    fullName: '',
+    phone: '',
+    email: '',
+    address: '',
+    city: '',
+    referralCode: getReferralCode(),
+  });
+  const itemsRef = useRef(items);
+  const totalPriceRef = useRef(totalPrice);
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
@@ -39,6 +55,76 @@ const Checkout = () => {
       setReferralCode(nextValue);
     }
   };
+
+  useEffect(() => {
+    formDataRef.current = formData;
+  }, [formData]);
+
+  useEffect(() => {
+    itemsRef.current = items;
+    totalPriceRef.current = totalPrice;
+  }, [items, totalPrice]);
+
+  const buildDraftPayload = () => {
+    const current = formDataRef.current;
+    const cartItems = itemsRef.current.map((item) => ({
+      product_id: Number(item.product.id),
+      name: item.product.name,
+      price: item.product.price,
+      quantity: item.quantity,
+      color_name: item.selectedColor?.name ?? null,
+      color_hex: item.selectedColor?.hex ?? null,
+      image: item.product.image,
+    }));
+
+    return {
+      draft_token: draftTokenRef.current,
+      user_id: user?.id ? Number(user.id) : null,
+      full_name: current.fullName.trim(),
+      phone: current.phone.trim(),
+      email: current.email.trim(),
+      address: current.address.trim(),
+      city: current.city.trim(),
+      referral_code: current.referralCode.trim(),
+      cart_json: cartItems,
+      cart_total: totalPriceRef.current,
+    };
+  };
+
+  const flushCheckoutDraft = (keepalive = false) => {
+    const current = formDataRef.current;
+    if (!isCheckoutDraftPhoneReady(current.phone) || placed) return;
+    void saveCheckoutDraft(buildDraftPayload(), { keepalive });
+  };
+
+  useEffect(() => {
+    if (placed) return;
+    if (!isCheckoutDraftPhoneReady(formData.phone)) return;
+
+    const timer = window.setTimeout(() => {
+      flushCheckoutDraft(false);
+    }, 1500);
+
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- debounce on form + cart
+  }, [formData, items, totalPrice, placed, user?.id]);
+
+  useEffect(() => {
+    const onHide = () => {
+      if (document.visibilityState === "hidden") {
+        flushCheckoutDraft(true);
+      }
+    };
+    const onPageHide = () => flushCheckoutDraft(true);
+
+    document.addEventListener("visibilitychange", onHide);
+    window.addEventListener("pagehide", onPageHide);
+    return () => {
+      document.removeEventListener("visibilitychange", onHide);
+      window.removeEventListener("pagehide", onPageHide);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [placed, user?.id]);
 
   useEffect(() => {
     if (!user) return;
@@ -197,6 +283,13 @@ const Checkout = () => {
         value: Number(orderResult.total ?? appliedSavings.totalAfterDiscount),
         numItems: items.reduce((sum, item) => sum + item.quantity, 0),
       });
+
+      await convertCheckoutDraft({
+        draft_token: draftTokenRef.current,
+        order_id: orderResult.order_id ?? null,
+      });
+      clearCheckoutDraftToken();
+      draftTokenRef.current = getCheckoutDraftToken();
 
       setPlaced(true);
       clearCart();

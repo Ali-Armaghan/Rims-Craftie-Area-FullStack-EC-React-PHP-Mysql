@@ -8,6 +8,7 @@ import {
   Users,
   Timer,
   FolderTree,
+  ClipboardList,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -47,6 +48,11 @@ export const sidebarData: SidebarData = {
           title: 'Orders',
           url: '/orders',
           icon: ShoppingCart,
+        },
+        {
+          title: 'Abandoned Checkouts',
+          url: '/checkout-drafts',
+          icon: ClipboardList,
         },
         {
           title: 'Reviews',

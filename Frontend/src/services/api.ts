@@ -569,6 +569,71 @@ export async function createOrder(orderData: OrderPayload) {
     }
 }
 
+export type CheckoutDraftPayload = {
+    draft_token: string;
+    user_id?: number | null;
+    full_name?: string;
+    phone: string;
+    email?: string;
+    address?: string;
+    city?: string;
+    referral_code?: string;
+    cart_json?: unknown[];
+    cart_total?: number;
+};
+
+export async function saveCheckoutDraft(
+    payload: CheckoutDraftPayload,
+    options?: { keepalive?: boolean }
+) {
+    try {
+        const response = await fetch(getBackendUrl('checkout-drafts').toString(), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+            },
+            body: JSON.stringify(payload),
+            keepalive: options?.keepalive ?? false,
+        });
+
+        if (!response.ok) {
+            return null;
+        }
+
+        return await response.json().catch(() => null);
+    } catch {
+        return null;
+    }
+}
+
+export async function convertCheckoutDraft(payload: {
+    draft_token: string;
+    order_id?: number | null;
+}) {
+    try {
+        const response = await fetch(
+            getBackendUrl('checkout-drafts', { action: 'convert' }).toString(),
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                },
+                body: JSON.stringify(payload),
+            }
+        );
+
+        if (!response.ok) {
+            return null;
+        }
+
+        return await response.json().catch(() => null);
+    } catch {
+        return null;
+    }
+}
+
 export async function fetchCustomerOrders(userId: string | number): Promise<CustomerOrder[]> {
     const response = await fetch(getBackendUrl('orders', { user_id: userId }).toString(), {
         method: 'GET',
