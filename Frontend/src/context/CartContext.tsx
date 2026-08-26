@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { Product } from "@/data/products";
 import { trackAddToCart } from "@/lib/meta-pixel";
+import { trackGAAddToCart } from "@/lib/google-analytics";
 
 export type SelectedColor = {
   name: string;
@@ -116,6 +117,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       trackAddToCart(product, quantity, {
+        color: color?.name ?? null,
+      });
+      trackGAAddToCart(product, quantity, {
         color: color?.name ?? null,
       });
     },

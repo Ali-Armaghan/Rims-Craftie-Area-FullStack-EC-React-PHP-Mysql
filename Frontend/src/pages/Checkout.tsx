@@ -12,6 +12,10 @@ import {
   trackInitiateCheckout,
   trackPurchase,
 } from "@/lib/meta-pixel";
+import {
+  trackGABeginCheckout,
+  trackGAPurchase,
+} from "@/lib/google-analytics";
 import { getReferralCode, setReferralCode } from "@/lib/referral";
 import {
   clearCheckoutDraftToken,
@@ -156,6 +160,16 @@ const Checkout = () => {
       value: totalPrice,
       numItems: items.reduce((sum, item) => sum + item.quantity, 0),
     });
+
+    trackGABeginCheckout({
+      contents: items.map((item) => ({
+        id: String(item.product.id),
+        quantity: item.quantity,
+        item_price: item.product.price,
+      })),
+      value: totalPrice,
+      numItems: items.reduce((sum, item) => sum + item.quantity, 0),
+    });
   }, [items, totalPrice]);
 
   const { data: loyaltyStatus } = useQuery({
@@ -273,6 +287,18 @@ const Checkout = () => {
       }
 
       trackPurchase({
+        orderId: orderResult.order_id,
+        orderNumber: orderResult.order_number,
+        contents: items.map((item) => ({
+          id: String(item.product.id),
+          quantity: item.quantity,
+          item_price: item.product.price,
+        })),
+        value: Number(orderResult.total ?? appliedSavings.totalAfterDiscount),
+        numItems: items.reduce((sum, item) => sum + item.quantity, 0),
+      });
+
+      trackGAPurchase({
         orderId: orderResult.order_id,
         orderNumber: orderResult.order_number,
         contents: items.map((item) => ({

@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { CONTACT } from "@/lib/contact";
 import { trackContact, trackLead } from "@/lib/meta-pixel";
+import { trackGALead } from "@/lib/google-analytics";
 
 const contactInfo = [
   {
@@ -86,6 +87,7 @@ const Contact = () => {
 
       trackContact();
       trackLead();
+      trackGALead("contact_form");
 
       toast({
         title: "Message sent",
