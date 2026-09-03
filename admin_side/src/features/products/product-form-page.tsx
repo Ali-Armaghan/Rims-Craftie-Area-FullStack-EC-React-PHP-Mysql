@@ -7,7 +7,7 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, ImagePlus, Loader2, Plus, Trash2, X } from 'lucide-react'
+import { ArrowLeft, ImagePlus, Loader2, Plus, Trash2, Video, X } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { Header } from '@/components/layout/header'
@@ -164,6 +164,9 @@ function normalizeProduct(product: Product, categories: Category[]): Product {
     price: Number(product.sale_price ?? product.price ?? 0),
     stock: Number(product.stock),
     images: parseProductImages(product.images).map(resolveImageUrl),
+    video: product.video ? resolveImageUrl(product.video) : null,
+    video_position:
+      product.video_position != null ? Number(product.video_position) : 2,
     colors: parseProductColors(product.colors),
     is_active: Number(product.is_active ?? 1),
     is_sold_out: Number(product.is_sold_out ?? 0) === 1 ? 1 : 0,
@@ -178,6 +181,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [isSaving, setIsSaving] = useState(false)
+  const [isVideoUploading, setIsVideoUploading] = useState(false)
   const [cropSession, setCropSession] = useState<CropSession | null>(null)
   const [cropZoom, setCropZoom] = useState(1)
   const [cropOffset, setCropOffset] = useState({ x: 0, y: 0 })
@@ -235,6 +239,8 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
       long_description: '',
       stock: 0,
       images: [],
+      video: null,
+      video_position: 2,
       colors: [],
       is_active: 1,
       is_sold_out: 0,
@@ -263,7 +269,42 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
 
   const selectedCategoryIds = watch('category_ids') ?? []
   const productImages = watch('images') ?? []
+  const productVideo = watch('video')
+  const videoPosition = watch('video_position') ?? 2
   const productColors = watch('colors') ?? []
+
+  const onVideoChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error('Video must be 50MB or less')
+      return
+    }
+
+    setIsVideoUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('video', file)
+      const response = await apiClient.post('/uploads/products', formData)
+      if (response.data?.video) {
+        const fullUrl = resolveImageUrl(response.data.video)
+        setValue('video', fullUrl, { shouldDirty: true, shouldValidate: true })
+        toast.success('Video uploaded successfully')
+      } else {
+        toast.error('Failed to upload video')
+      }
+    } catch {
+      toast.error('Failed to upload video')
+    } finally {
+      setIsVideoUploading(false)
+    }
+  }
+
+  const removeVideo = () => {
+    setValue('video', null, { shouldDirty: true, shouldValidate: true })
+  }
 
   const addColor = () => {
     const nextIndex = productColors.length + 1
@@ -558,6 +599,8 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
       category_id: data.category_ids[0],
       price: data.sale_price,
       original_price: data.original_price ?? null,
+      video: data.video || null,
+      video_position: Number(data.video_position ?? 2),
       description: data.short_description ?? data.description ?? '',
       short_description: data.short_description ?? data.description ?? '',
       long_description: data.long_description ?? '',
@@ -1009,6 +1052,111 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
                           ))}
                         </div>
                       )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='video'
+                  render={() => (
+                    <FormItem className='rounded-lg border p-4'>
+                      <div className='flex items-center justify-between gap-3'>
+                        <div>
+                          <FormLabel className='text-base flex items-center gap-2'>
+                            <Video className='h-4 w-4 text-primary' /> Product Video (Optional)
+                          </FormLabel>
+                          <p className='text-xs text-muted-foreground'>
+                            Upload a video for this product (MP4, WebM, MOV, max 50MB) and choose its position among images.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className='mt-3 grid gap-4 md:grid-cols-2 items-start'>
+                        <div className='space-y-3'>
+                          <Input
+                            type='file'
+                            accept='video/mp4,video/webm,video/quicktime,video/ogg'
+                            disabled={isSaving || isVideoUploading}
+                            onChange={onVideoChange}
+                          />
+                          {isVideoUploading && (
+                            <div className='flex items-center gap-2 text-xs text-primary font-medium'>
+                              <Loader2 className='h-3.5 w-3.5 animate-spin' /> Uploading video...
+                            </div>
+                          )}
+
+                          {productVideo && (
+                            <FormField
+                              control={form.control}
+                              name='video_position'
+                              render={({ field }) => (
+                                <FormItem className='space-y-1.5 pt-2'>
+                                  <FormLabel className='text-xs font-semibold'>
+                                    Video Display Position among Images
+                                  </FormLabel>
+                                  <FormControl>
+                                    <div className='flex items-center gap-2'>
+                                      <Input
+                                        type='number'
+                                        min='1'
+                                        max='20'
+                                        placeholder='2'
+                                        value={field.value ?? 2}
+                                        onChange={(e) =>
+                                          field.onChange(
+                                            Math.max(1, Number(e.target.value) || 1)
+                                          )
+                                        }
+                                        className='w-24'
+                                      />
+                                      <span className='text-xs text-muted-foreground'>
+                                        {Number(field.value) === 1
+                                          ? '(1st / Main media slot)'
+                                          : `(Slot #${field.value || 2} in carousel)`}
+                                      </span>
+                                    </div>
+                                  </FormControl>
+                                  <p className='text-[11px] text-muted-foreground'>
+                                    Position 1 = first item before images, Position 2 = after 1st image, etc.
+                                  </p>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          )}
+                        </div>
+
+                        {productVideo ? (
+                          <div className='relative overflow-hidden rounded-md border bg-black/90 p-2'>
+                            <video
+                              src={productVideo}
+                              controls
+                              className='max-h-48 w-full rounded object-contain'
+                            />
+                            <div className='mt-2 flex items-center justify-between'>
+                              <span className='text-xs text-white/80 font-medium truncate max-w-[200px]'>
+                                Video active (Slot #{videoPosition})
+                              </span>
+                              <Button
+                                type='button'
+                                variant='destructive'
+                                size='sm'
+                                onClick={removeVideo}
+                                className='h-7 text-xs'
+                              >
+                                <Trash2 className='mr-1 h-3.5 w-3.5' /> Remove
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className='flex h-32 flex-col items-center justify-center rounded-md border border-dashed text-xs text-muted-foreground'>
+                            <Video className='mb-2 h-6 w-6 opacity-40' />
+                            No video uploaded yet
+                          </div>
+                        )}
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}

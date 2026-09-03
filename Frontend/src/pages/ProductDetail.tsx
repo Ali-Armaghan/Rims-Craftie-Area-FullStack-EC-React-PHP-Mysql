@@ -6,9 +6,11 @@ import {
   ChevronRight,
   CreditCard,
   PackageCheck,
+  Play,
   ShieldCheck,
   ShoppingBag,
   Truck,
+  Video,
   type LucideIcon,
 } from "lucide-react";
 import { useProduct } from "@/hooks/useProduct";
@@ -141,7 +143,29 @@ const ProductDetail = () => {
     return Math.max(reviews.length, product.reviewCount || 0);
   }, [reviews.length, product?.reviewCount]);
 
-  const images = product?.images?.length ? product.images : (product ? [product.image] : []);
+  const mediaItems: { type: "image" | "video"; url: string }[] = useMemo(() => {
+    if (!product) return [];
+    const imgs: string[] = product.images?.length
+      ? product.images
+      : product.image
+      ? [product.image]
+      : [];
+
+    const list: { type: "image" | "video"; url: string }[] = imgs.map((url) => ({
+      type: "image",
+      url,
+    }));
+
+    if (product.video && product.video.trim() !== "") {
+      const pos = Math.max(1, product.videoPosition ?? 2);
+      const insertIdx = Math.min(pos - 1, list.length);
+      list.splice(insertIdx, 0, { type: "video", url: product.video });
+    }
+
+    return list;
+  }, [product]);
+
+  const currentMedia = mediaItems[currentImageIndex] ?? mediaItems[0];
 
   const lowStockCount = useMemo(() => {
     if (!slug) return 8;
@@ -189,15 +213,17 @@ const ProductDetail = () => {
 
   // Auto-sliding Carousel Effect
   useEffect(() => {
-    if (images.length <= 1) return;
+    if (mediaItems.length <= 1) return;
+    // Don't auto-slide away while user is viewing a video
+    if (mediaItems[currentImageIndex]?.type === "video") return;
 
     const intervalId = setInterval(() => {
       setSlideDirection(1);
-      setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
-    }, 5000); // Change image every 5 seconds
+      setCurrentImageIndex((prev) => (prev >= mediaItems.length - 1 ? 0 : prev + 1));
+    }, 5000);
 
     return () => clearInterval(intervalId);
-  }, [images.length]); // Intentionally removed currentImageIndex from deps to avoid rapid resetting if user clicks
+  }, [mediaItems, currentImageIndex]);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => setNow(Date.now()), 1000);
@@ -255,12 +281,12 @@ const ProductDetail = () => {
 
   const handleNextImage = () => {
     setSlideDirection(1);
-    setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+    setCurrentImageIndex((prev) => (prev >= mediaItems.length - 1 ? 0 : prev + 1));
   };
 
   const handlePrevImage = () => {
     setSlideDirection(-1);
-    setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+    setCurrentImageIndex((prev) => (prev <= 0 ? mediaItems.length - 1 : prev - 1));
   };
 
   const handleAdd = () => {
@@ -367,32 +393,54 @@ const ProductDetail = () => {
                 )}
 
                 <AnimatePresence initial={false} custom={slideDirection} mode="wait">
-                  <motion.img
-                    key={currentImageIndex}
-                    src={images[currentImageIndex]}
-                    alt={product.name}
-                    custom={slideDirection}
-                    variants={slideVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                    className="h-full w-full object-contain p-5 md:p-8"
-                  />
+                  {currentMedia?.type === "video" ? (
+                    <motion.div
+                      key={`video-${currentMedia.url}`}
+                      custom={slideDirection}
+                      variants={slideVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      className="flex h-full w-full items-center justify-center p-3 md:p-6"
+                    >
+                      <video
+                        src={currentMedia.url}
+                        controls
+                        autoPlay
+                        muted
+                        playsInline
+                        loop
+                        className="max-h-full max-w-full rounded-2xl object-contain shadow-sm"
+                      />
+                    </motion.div>
+                  ) : (
+                    <motion.img
+                      key={currentMedia?.url || currentImageIndex}
+                      src={currentMedia?.url || product.image}
+                      alt={product.name}
+                      custom={slideDirection}
+                      variants={slideVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      className="h-full w-full object-contain p-5 md:p-8"
+                    />
+                  )}
                 </AnimatePresence>
 
-                {images.length > 1 && (
+                {mediaItems.length > 1 && (
                   <>
                     <button
                       onClick={handlePrevImage}
                       className="absolute left-5 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 text-foreground shadow-md transition hover:bg-background"
-                      aria-label="Previous image"
+                      aria-label="Previous item"
                     >
                       <ChevronLeft size={20} strokeWidth={1.5} />
                     </button>
                     <button
                       onClick={handleNextImage}
                       className="absolute right-5 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 text-foreground shadow-md transition hover:bg-background"
-                      aria-label="Next image"
+                      aria-label="Next item"
                     >
                       <ChevronRight size={20} strokeWidth={1.5} />
                     </button>
@@ -400,27 +448,45 @@ const ProductDetail = () => {
                 )}
               </motion.div>
 
-              {images.length > 1 && (
+              {mediaItems.length > 1 && (
                 <div className="mt-4 grid grid-cols-5 gap-3">
-                  {images.slice(0, 5).map((image, idx) => (
+                  {mediaItems.slice(0, 6).map((item, idx) => (
                     <button
-                      key={`${image}-${idx}`}
+                      key={`${item.url}-${idx}`}
                       onClick={() => {
                         setSlideDirection(idx > currentImageIndex ? 1 : -1);
                         setCurrentImageIndex(idx);
                       }}
-                      className={`aspect-square overflow-hidden rounded-2xl border bg-card transition ${
+                      className={`aspect-square overflow-hidden rounded-2xl border bg-card transition relative ${
                         currentImageIndex === idx
                           ? "border-primary ring-2 ring-primary/20"
                           : "border-border/60 hover:border-primary/50"
                       }`}
-                      aria-label={`View image ${idx + 1}`}
+                      aria-label={`View ${item.type === "video" ? "video" : `image ${idx + 1}`}`}
                     >
-                      <img
-                        src={image}
-                        alt={`${product.name} ${idx + 1}`}
-                        className="h-full w-full object-contain p-2"
-                      />
+                      {item.type === "video" ? (
+                        <div className="relative flex h-full w-full items-center justify-center bg-zinc-900 text-white">
+                          <video
+                            src={item.url}
+                            className="h-full w-full object-cover opacity-60"
+                            preload="metadata"
+                          />
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30">
+                            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground shadow">
+                              <Play size={12} className="ml-0.5 fill-current" />
+                            </div>
+                            <span className="mt-1 font-nav text-[9px] font-bold uppercase tracking-wider text-white">
+                              Video
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <img
+                          src={item.url}
+                          alt={`${product.name} ${idx + 1}`}
+                          className="h-full w-full object-contain p-2"
+                        />
+                      )}
                     </button>
                   ))}
                 </div>

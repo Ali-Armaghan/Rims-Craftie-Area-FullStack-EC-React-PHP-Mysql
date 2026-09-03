@@ -13,6 +13,8 @@ export interface Product {
   originalPrice?: number;
   image: string;
   images: string[];
+  video?: string | null;
+  videoPosition?: number;
   category: string;
   categories?: string[];
   categoryId?: number;

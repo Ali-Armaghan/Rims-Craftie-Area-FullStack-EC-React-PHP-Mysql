@@ -97,6 +97,14 @@ function normalize_product_row(array $row): array
         $row['short_description'] = $row['description'];
     }
 
+    if (array_key_exists('video', $row)) {
+        $row['video'] = normalize_upload_url($row['video']);
+    }
+
+    if (array_key_exists('video_position', $row)) {
+        $row['video_position'] = $row['video_position'] !== null ? max(1, (int)$row['video_position']) : 2;
+    }
+
     if (array_key_exists('colors', $row)) {
         $colors = $row['colors'];
         if (is_string($colors) && trim($colors) !== '') {

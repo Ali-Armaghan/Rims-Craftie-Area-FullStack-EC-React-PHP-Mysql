@@ -14,6 +14,35 @@ class Product {
         $this->ensureLongDescriptionColumn();
         $this->ensureColorsColumn();
         $this->ensureSoldOutColumn();
+        $this->ensureVideoColumns();
+    }
+
+    private function ensureVideoColumns() {
+        static $done = false;
+        if ($done) {
+            return;
+        }
+
+        try {
+            $this->conn->query("SELECT video, video_position FROM " . $this->table_name . " LIMIT 1");
+        } catch (Exception $e) {
+            try {
+                $this->conn->exec(
+                    "ALTER TABLE " . $this->table_name . "
+                     ADD COLUMN video VARCHAR(500) NULL DEFAULT NULL AFTER images,
+                     ADD COLUMN video_position INT NOT NULL DEFAULT 2 AFTER video"
+                );
+            } catch (Exception $ignored) {
+                try {
+                    $this->conn->exec("ALTER TABLE " . $this->table_name . " ADD COLUMN video VARCHAR(500) NULL DEFAULT NULL AFTER images");
+                } catch (Exception $ignored2) {}
+                try {
+                    $this->conn->exec("ALTER TABLE " . $this->table_name . " ADD COLUMN video_position INT NOT NULL DEFAULT 2 AFTER video");
+                } catch (Exception $ignored3) {}
+            }
+        }
+
+        $done = true;
     }
 
     private function ensureSoldOutColumn() {
@@ -348,6 +377,45 @@ class Product {
         }
     }
 
+    private function getVideoById($id) {
+        $query = "SELECT video FROM " . $this->table_name . " WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$id]);
+        return $stmt->fetchColumn() ?: null;
+    }
+
+    private function deleteLocalVideo($videoUrl) {
+        if (!$videoUrl || !is_string($videoUrl)) {
+            return;
+        }
+
+        $path = parse_url($videoUrl, PHP_URL_PATH);
+        if (!$path || strpos($path, '/uploads/products/') === false) {
+            return;
+        }
+
+        $fileName = basename($path);
+        if ($fileName === '' || $fileName === '.' || $fileName === '..') {
+            return;
+        }
+
+        $uploadDir = realpath(__DIR__ . '/../../uploads/products');
+        if (!$uploadDir) {
+            return;
+        }
+
+        $filePath = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
+        $realFilePath = realpath($filePath);
+
+        if (
+            $realFilePath &&
+            strpos($realFilePath, $uploadDir) === 0 &&
+            is_file($realFilePath)
+        ) {
+            unlink($realFilePath);
+        }
+    }
+
     public function read($params = []) {
         $query = "SELECT p.*, c.name as category_name,
                          COALESCE(ROUND(AVG(r.rating), 1), 0) as average_rating,
@@ -495,10 +563,12 @@ class Product {
         $query = "INSERT INTO " . $this->table_name . " 
                   SET name=:name, slug=:slug, category_id=:cat_id, 
                       description=:desc, long_description=:long_desc, price=:price, original_price=:original_price,
-                      stock=:stock, images=:images, colors=:colors, is_sold_out=:is_sold_out";
+                      stock=:stock, images=:images, video=:video, video_position=:video_position, colors=:colors, is_sold_out=:is_sold_out";
         $stmt = $this->conn->prepare($query);
 
         $images = json_encode($data['images']);
+        $video = isset($data['video']) && trim((string)$data['video']) !== '' ? trim((string)$data['video']) : null;
+        $videoPosition = isset($data['video_position']) ? max(1, (int)$data['video_position']) : 2;
         $colors = $this->resolveColorsJson($data);
         $salePrice = $this->resolveSalePrice($data);
         $originalPrice = $this->resolveOriginalPrice($data);
@@ -515,6 +585,8 @@ class Product {
         $stmt->bindParam(":original_price", $originalPrice, $originalPrice === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
         $stmt->bindParam(":stock", $data['stock']);
         $stmt->bindParam(":images", $images);
+        $stmt->bindParam(":video", $video, $video === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
+        $stmt->bindParam(":video_position", $videoPosition, PDO::PARAM_INT);
         $stmt->bindParam(":colors", $colors);
         $stmt->bindParam(":is_sold_out", $isSoldOut, PDO::PARAM_INT);
 
@@ -530,18 +602,23 @@ class Product {
 
     public function update($id, $data) {
         $oldImages = $this->getImagesById($id);
+        $oldVideo = $this->getVideoById($id);
         $categoryIds = $this->extractCategoryIds($data);
         $primaryCategoryId = $categoryIds ? $categoryIds[0] : null;
 
         $query = "UPDATE " . $this->table_name . " 
                   SET name=:name, slug=:slug, category_id=:cat_id, 
                       description=:desc, long_description=:long_desc, price=:price, original_price=:original_price,
-                      stock=:stock, images=:images, colors=:colors, is_active=:is_active, is_sold_out=:is_sold_out
+                      stock=:stock, images=:images, video=:video, video_position=:video_position, colors=:colors, is_active=:is_active, is_sold_out=:is_sold_out
                   WHERE id=:id";
         $stmt = $this->conn->prepare($query);
 
         $newImages = $this->parseImages(isset($data['images']) ? $data['images'] : []);
         $images = json_encode($newImages);
+        $video = array_key_exists('video', $data)
+            ? (trim((string)$data['video']) !== '' ? trim((string)$data['video']) : null)
+            : $oldVideo;
+        $videoPosition = isset($data['video_position']) ? max(1, (int)$data['video_position']) : 2;
         $colors = $this->resolveColorsJson($data);
         $salePrice = $this->resolveSalePrice($data);
         $originalPrice = $this->resolveOriginalPrice($data);
@@ -559,6 +636,8 @@ class Product {
         $stmt->bindParam(":original_price", $originalPrice, $originalPrice === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
         $stmt->bindParam(":stock", $data['stock']);
         $stmt->bindParam(":images", $images);
+        $stmt->bindParam(":video", $video, $video === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
+        $stmt->bindParam(":video_position", $videoPosition, PDO::PARAM_INT);
         $stmt->bindParam(":colors", $colors);
         $stmt->bindParam(":is_active", $isActive, PDO::PARAM_INT);
         $stmt->bindParam(":is_sold_out", $isSoldOut, PDO::PARAM_INT);
@@ -569,6 +648,9 @@ class Product {
         if ($updated) {
             $this->syncProductCategories((int)$id, $categoryIds);
             $this->deleteRemovedImages($oldImages, $newImages);
+            if ($oldVideo && $oldVideo !== $video) {
+                $this->deleteLocalVideo($oldVideo);
+            }
         }
 
         return $updated;
@@ -580,6 +662,7 @@ class Product {
 
     public function delete($id) {
         $oldImages = $this->getImagesById($id);
+        $oldVideo = $this->getVideoById($id);
         $query = "DELETE FROM " . $this->table_name . " WHERE id = ?";
         $stmt = $this->conn->prepare($query);
         $deleted = $stmt->execute([$id]);
@@ -587,6 +670,9 @@ class Product {
         if ($deleted) {
             foreach ($oldImages as $image) {
                 $this->deleteLocalImage($image);
+            }
+            if ($oldVideo) {
+                $this->deleteLocalVideo($oldVideo);
             }
         }
 

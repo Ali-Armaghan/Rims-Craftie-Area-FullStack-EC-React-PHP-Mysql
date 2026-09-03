@@ -22,19 +22,20 @@ import {
   getCheckoutDraftToken,
   isCheckoutDraftPhoneReady,
 } from "@/lib/checkout-draft";
+import { validatePhoneNumber } from "@/lib/phone-validation";
 
 const Checkout = () => {
   const { items, totalPrice, clearCart } = useCart();
   const { user, login } = useAuth();
   const [placed, setPlaced] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [phoneTouched, setPhoneTouched] = useState(false);
   const submitLockRef = useRef(false);
   const checkoutTrackedRef = useRef(false);
   const draftTokenRef = useRef(getCheckoutDraftToken());
   const formDataRef = useRef({
     fullName: '',
     phone: '',
-    email: '',
     address: '',
     city: '',
     referralCode: getReferralCode(),
@@ -44,14 +45,23 @@ const Checkout = () => {
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
-    email: '',
     address: '',
     city: '',
     referralCode: getReferralCode(),
   });
 
+  const phoneValidation = useMemo(() => {
+    if (!formData.phone && !phoneTouched) {
+      return { isValid: true, message: undefined };
+    }
+    return validatePhoneNumber(formData.phone);
+  }, [formData.phone, phoneTouched]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    if (name === "phone") {
+      setPhoneTouched(true);
+    }
     const nextValue =
       name === "referralCode" ? value.toUpperCase() : value;
     setFormData((prev) => ({ ...prev, [name]: nextValue }));
@@ -86,7 +96,7 @@ const Checkout = () => {
       user_id: user?.id ? Number(user.id) : null,
       full_name: current.fullName.trim(),
       phone: current.phone.trim(),
-      email: current.email.trim(),
+      email: "",
       address: current.address.trim(),
       city: current.city.trim(),
       referral_code: current.referralCode.trim(),
@@ -135,7 +145,6 @@ const Checkout = () => {
     setFormData((prev) => ({
       ...prev,
       fullName: prev.fullName || user.name,
-      email: prev.email || user.email,
     }));
   }, [user]);
 
@@ -241,8 +250,16 @@ const Checkout = () => {
   };
 
   const handlePlaceOrder = async () => {
-    if (!formData.fullName || !formData.phone || !formData.address || !formData.city) {
+    setPhoneTouched(true);
+
+    if (!formData.fullName.trim() || !formData.phone.trim() || !formData.address.trim() || !formData.city.trim()) {
       toast.error('Please fill in all required fields.');
+      return;
+    }
+
+    const phoneValidationResult = validatePhoneNumber(formData.phone);
+    if (!phoneValidationResult.isValid) {
+      toast.error(phoneValidationResult.message || 'Please enter a valid contact number.');
       return;
     }
 
@@ -261,14 +278,14 @@ const Checkout = () => {
         apply_loyalty: Boolean(user),
         referred_by_code: formData.referralCode || undefined,
         shipping_address: {
-          full_name: formData.fullName,
-          address: formData.address,
-          city: formData.city,
+          full_name: formData.fullName.trim(),
+          address: formData.address.trim(),
+          city: formData.city.trim(),
           state: "N/A",
           zip: "",
           country: 'PK',
-          email: formData.email || 'no-email@cod.com',
-          phone: formData.phone,
+          email: 'no-email@cod.com',
+          phone: formData.phone.trim(),
         },
         items: items.map(item => ({
           product_id: parseInt(item.product.id),
@@ -388,9 +405,25 @@ const Checkout = () => {
           <div className="space-y-8">
             <div>
               <h3 className="font-nav text-xs tracking-wide uppercase text-foreground mb-4">Contact Information</h3>
-              <div className="space-y-4">
-                <input type="text" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="Contact Number (Required)" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
-                <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="Email Address (Optional)" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
+              <div className="space-y-1.5">
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  onBlur={() => setPhoneTouched(true)}
+                  placeholder="Contact Number (e.g. 0300 1234567)"
+                  className={`w-full border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none transition-colors ${
+                    phoneTouched && !phoneValidation.isValid
+                      ? "border-destructive focus:border-destructive text-destructive"
+                      : "border-border focus:border-primary text-foreground"
+                  }`}
+                />
+                {phoneTouched && !phoneValidation.isValid && (
+                  <p className="font-body text-xs text-destructive">
+                    {phoneValidation.message}
+                  </p>
+                )}
               </div>
             </div>
 

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { CONTACT } from "@/lib/contact";
+import { validatePhoneNumber } from "@/lib/phone-validation";
 import { trackContact, trackLead } from "@/lib/meta-pixel";
 import { trackGALead } from "@/lib/google-analytics";
 
@@ -58,22 +59,39 @@ const initialFormData: ContactFormData = {
 
 const Contact = () => {
   const [formData, setFormData] = useState<ContactFormData>(initialFormData);
+  const [phoneTouched, setPhoneTouched] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const phoneValidation = validatePhoneNumber(formData.phone);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
+    if (name === "phone") {
+      setPhoneTouched(true);
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setPhoneTouched(true);
 
     if (!formData.name.trim() || !formData.phone.trim() || !formData.message.trim()) {
       toast({
         title: "Please fill all fields",
         description: "Name, phone, and message are required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const check = validatePhoneNumber(formData.phone);
+    if (!check.isValid) {
+      toast({
+        title: "Invalid phone number",
+        description: check.message || "Please enter a valid phone number (e.g. 0300 1234567).",
         variant: "destructive",
       });
       return;
@@ -220,11 +238,21 @@ const Contact = () => {
                   type="tel"
                   value={formData.phone}
                   onChange={handleChange}
+                  onBlur={() => setPhoneTouched(true)}
                   placeholder="e.g. 03XX XXXXXXX"
                   autoComplete="tel"
                   required
-                  className="h-11 rounded-lg border-border font-body"
+                  className={`h-11 rounded-lg font-body ${
+                    phoneTouched && !phoneValidation.isValid && formData.phone.trim()
+                      ? "border-destructive focus-visible:ring-destructive"
+                      : "border-border"
+                  }`}
                 />
+                {phoneTouched && !phoneValidation.isValid && formData.phone.trim() && (
+                  <p className="font-body text-xs text-destructive">
+                    {phoneValidation.message}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">

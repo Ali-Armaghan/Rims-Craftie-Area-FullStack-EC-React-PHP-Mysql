@@ -142,6 +142,8 @@ type BackendProduct = {
     original_price?: number | string | null;
     stock?: number | string | null;
     images?: string[] | string | null;
+    video?: string | null;
+    video_position?: number | string | null;
     is_active?: number | string | boolean;
     is_sold_out?: number | string | boolean;
     average_rating?: number | string | null;
@@ -307,6 +309,9 @@ function mapBackendProduct(product: BackendProduct): Product {
                 : undefined,
         image,
         images: parsedImages.length ? parsedImages : [image],
+        video: product.video ? resolveImageUrl(product.video) : undefined,
+        videoPosition:
+            product.video_position != null ? Number(product.video_position) : 2,
         category: categoryNames[0] || 'Uncategorized',
         categories: categoryNames,
         categoryId: categoryIds[0],
