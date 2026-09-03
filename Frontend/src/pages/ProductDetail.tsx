@@ -410,6 +410,17 @@ const ProductDetail = () => {
                         muted
                         playsInline
                         loop
+                        preload="auto"
+                        ref={(el) => {
+                          if (el) {
+                            el.muted = true;
+                            el.play().catch(() => {});
+                          }
+                        }}
+                        onLoadedData={(e) => {
+                          e.currentTarget.muted = true;
+                          e.currentTarget.play().catch(() => {});
+                        }}
                         className="max-h-full max-w-full rounded-2xl object-contain shadow-sm"
                       />
                     </motion.div>

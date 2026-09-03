@@ -1133,6 +1133,16 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
                             <video
                               src={productVideo}
                               controls
+                              autoPlay
+                              muted
+                              playsInline
+                              loop
+                              ref={(el) => {
+                                if (el) {
+                                  el.muted = true
+                                  el.play().catch(() => {})
+                                }
+                              }}
                               className='max-h-48 w-full rounded object-contain'
                             />
                             <div className='mt-2 flex items-center justify-between'>
