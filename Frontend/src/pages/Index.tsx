@@ -8,15 +8,16 @@ import { useHomeCategorySections } from "@/hooks/useHomeCategorySections";
 import { useStoreCategories } from "@/hooks/useStoreCategories";
 
 const categorySlides = [
-  { title: "Under 1499", image: "/sliders/1499_c11d8b4e-1884-4246-9895-4d0a5c7b016e-424378_300x300.avif" },
-  { title: "Under 1999", image: "/sliders/04-686859_300x300.avif" },
-  { title: "Under 2499", image: "/sliders/05-148189_300x300.avif" },
-  { title: "Laptop Bags", image: "/sliders/13.1-619880_300x300.jpg" },
-  { title: "Shoulder Bags", image: "/sliders/7d58bbc0-6f73-4d0c-9897-dbdec998c397-909777_300x300.avif" },
-  { title: "HandBags", image: "/sliders/hand_6180fef1-bc90-403e-ab5e-a4b2de6ad0c8-680402_300x300.avif" },
-  { title: "Crossbody", image: "/sliders/SAVE-20211214-065611-444689_300x300.avif" },
-  { title: "All Bags", image: "/sliders/WhatsApp_Image_2022-01-03_at_6.33.11_PM-796593_300x300.avif" },
-  { title: "Premium Bags", image: "/sliders/WhatsApp_Image_2023-02-02_at_5.36.23_PM-771757_300x300.avif" },
+  { title: "Resin Trays", image: "/craft/categories/cat_resin_trays.jpg" },
+  { title: "Nikkah Nama", image: "/craft/categories/cat_nikkah_nama.jpg" },
+  { title: "Resin Plaques", image: "/craft/categories/cat_nikkah_plaques.jpg" },
+  { title: "Nikkah Pens", image: "/craft/categories/cat_nikkah_pens.jpg" },
+  { title: "Resin Jewellery", image: "/craft/categories/cat_resin_jewellery.jpg" },
+  { title: "Car Hangings", image: "/craft/categories/cat_car_hangings.jpg" },
+  { title: "Keychains", image: "/craft/categories/cat_keychains.jpg" },
+  { title: "Bookmarks", image: "/craft/categories/cat_bookmarks.jpg" },
+  { title: "Favors & Gifts", image: "/craft/categories/cat_favors.jpg" },
+  { title: "Resin Diaries", image: "/craft/categories/cat_diaries.jpg" },
 ];
 
 const loopingCategorySlides = [...categorySlides, ...categorySlides, ...categorySlides];
@@ -29,8 +30,6 @@ const Index = () => {
     <>
       <HeroSlider />
 
-      
-
       {/* Category Slider */}
       <section className="overflow-x-hidden border-b border-border bg-background">
         <div className="overflow-hidden py-6">
@@ -39,16 +38,16 @@ const Index = () => {
               <Link
                 key={`${category.title}-${i}`}
                 to="/products"
-                className="flex w-24 shrink-0 flex-col items-center text-center sm:w-28 md:w-32"
+                className="flex w-24 shrink-0 flex-col items-center text-center sm:w-28 md:w-32 group"
               >
-                <div className="h-20 w-20 overflow-hidden rounded-full bg-secondary sm:h-24 sm:w-24 md:h-28 md:w-28">
+                <div className="h-20 w-20 overflow-hidden rounded-full bg-secondary shadow-sm ring-1 ring-border/50 transition-transform duration-300 group-hover:scale-105 sm:h-24 sm:w-24 md:h-28 md:w-28">
                   <img
                     src={category.image}
                     alt={category.title}
                     className="h-full w-full object-cover"
                   />
                 </div>
-                <span className="mt-3 font-body text-sm font-medium text-foreground">
+                <span className="mt-3 font-body text-xs sm:text-sm font-medium text-foreground transition-colors group-hover:text-primary">
                   {category.title}
                 </span>
               </Link>
@@ -83,7 +82,7 @@ const Index = () => {
             viewport={{ once: true }}
             className="text-center mb-14"
           >
-            <p className="text-label mb-3">Explore</p>
+            <p className="text-label mb-3">Explore Collections</p>
             <h2 className="font-display text-3xl md:text-4xl text-foreground">Shop by Category</h2>
           </motion.div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -134,18 +133,18 @@ const Index = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <p className="text-label text-gold-light mb-4">Gift-ready packaging</p>
+            <p className="text-label text-gold-light mb-4">Handcrafted with Love</p>
             <h2 className="font-display text-3xl md:text-4xl text-primary-foreground mb-6">
-              Carry Style Every Day
+              Bespoke Resin Art & Bridal Keepsakes
             </h2>
             <p className="font-body text-base md:text-lg text-primary-foreground/75 max-w-lg mx-auto mb-8">
-              Thoughtful details, everyday practicality, and finishes made to last season after season.
+              Handmade resin trays, custom Nikkah stationery, preserved wedding florals, and timeless personalized gifts.
             </p>
             <Link
               to="/products"
               className="inline-block border border-primary-foreground/40 text-primary-foreground font-nav text-xs tracking-wide uppercase px-10 py-4 hover:bg-primary-foreground hover:text-foreground transition-all duration-500"
             >
-              Shop Gift Guide
+              Shop Craft Collection
             </Link>
           </motion.div>
         </div>
