@@ -16,7 +16,7 @@ const testimonials = [
   },
   {
     quote:
-      "Pehli dafa online order kiya tha, thora doubt tha lekin Ateeqo ne impress kar diya. Bag durable hai aur style bhi unique hai.",
+      "Pehli dafa online order kiya tha, thora doubt tha lekin Craftie._.Area ne impress kar diya. Quality durable hai aur style bhi unique hai.",
     name: "Hira Malik",
     city: "Islamabad",
   },

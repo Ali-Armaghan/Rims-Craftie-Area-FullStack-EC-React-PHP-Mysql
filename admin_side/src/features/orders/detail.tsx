@@ -46,9 +46,6 @@ type Order = {
   discount?: string
   total: string
   shipping_address?: string | Record<string, unknown>
-  referred_by_code?: string | null
-  commission_earned: string
-  resale_credited: number
   created_at: string
 }
 
@@ -346,18 +343,20 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
               </div>
               <div className='rounded-md border p-4'>
                 <p className='text-xs uppercase text-muted-foreground'>
-                  ReSale Code
+                  Discount
                 </p>
-                <p className='font-medium'>{order.referred_by_code ?? '-'}</p>
+                <p className='font-medium'>
+                  {Number(order.discount ?? 0) > 0
+                    ? formatCurrency(order.discount)
+                    : '—'}
+                </p>
               </div>
               <div className='rounded-md border p-4'>
                 <p className='text-xs uppercase text-muted-foreground'>
-                  Commission
+                  Total
                 </p>
-                <p className='font-medium'>
-                  {Number(order.commission_earned ?? 0) > 0
-                    ? formatCurrency(order.commission_earned)
-                    : '-'}
+                <p className='font-medium font-display text-lg'>
+                  {formatCurrency(order.total)}
                 </p>
               </div>
             </div>

@@ -14,7 +14,6 @@ class Tracker {
         $ip = $_SERVER['REMOTE_ADDR'];
         $ua = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
         $referer = isset($data->referer) ? $data->referer : '';
-        $resale_code = isset($data->resale_code) ? $data->resale_code : null;
         $landing_page = isset($data->landing_page) ? $data->landing_page : null;
         $device_type = isset($data->device_type) ? $data->device_type : null;
         $browser = isset($data->browser) ? $data->browser : null;
@@ -44,7 +43,7 @@ class Tracker {
             // New Session
             $query = "INSERT INTO visitor_sessions 
                       SET session_uuid=:uuid, user_id=:user_id, ip_address=:ip, 
-                          user_agent=:ua, referer_url=:referer, resale_code_used=:res_code,
+                          user_agent=:ua, referer_url=:referer,
                           landing_page=:landing_page, device_type=:device_type,
                           browser=:browser, os=:os, screen_resolution=:screen_resolution,
                           language=:language, timezone=:timezone, utm_source=:utm_source,
@@ -56,7 +55,6 @@ class Tracker {
             $stmt->bindParam(":ip", $ip);
             $stmt->bindParam(":ua", $ua);
             $stmt->bindParam(":referer", $referer);
-            $stmt->bindParam(":res_code", $resale_code);
             $stmt->bindParam(":landing_page", $landing_page);
             $stmt->bindParam(":device_type", $device_type);
             $stmt->bindParam(":browser", $browser);

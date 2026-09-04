@@ -32,7 +32,7 @@ interface CartContextType {
   totalPrice: number;
 }
 
-const CART_STORAGE_KEY = "ateeqo_cart";
+const CART_STORAGE_KEY = "craftie_area_cart";
 
 export function cartLineKey(
   productId: string,

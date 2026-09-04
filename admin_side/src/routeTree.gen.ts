@@ -37,8 +37,6 @@ import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes
 import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_authenticated/settings/display'
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
-import { Route as AuthenticatedResaleLedgerRouteImport } from './routes/_authenticated/resale/ledger'
-import { Route as AuthenticatedResaleCommissionsRouteImport } from './routes/_authenticated/resale/commissions'
 import { Route as AuthenticatedProductsNewRouteImport } from './routes/_authenticated/products/new'
 import { Route as AuthenticatedOrdersOrderIdRouteImport } from './routes/_authenticated/orders/$orderId'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
@@ -198,18 +196,6 @@ const AuthenticatedSettingsAccountRoute =
     path: '/account',
     getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
-const AuthenticatedResaleLedgerRoute =
-  AuthenticatedResaleLedgerRouteImport.update({
-    id: '/resale/ledger',
-    path: '/resale/ledger',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedResaleCommissionsRoute =
-  AuthenticatedResaleCommissionsRouteImport.update({
-    id: '/resale/commissions',
-    path: '/resale/commissions',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedProductsNewRoute =
   AuthenticatedProductsNewRouteImport.update({
     id: '/products/new',
@@ -251,8 +237,6 @@ export interface FileRoutesByFullPath {
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
   '/products/new': typeof AuthenticatedProductsNewRoute
-  '/resale/commissions': typeof AuthenticatedResaleCommissionsRoute
-  '/resale/ledger': typeof AuthenticatedResaleLedgerRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
@@ -285,8 +269,6 @@ export interface FileRoutesByTo {
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
   '/products/new': typeof AuthenticatedProductsNewRoute
-  '/resale/commissions': typeof AuthenticatedResaleCommissionsRoute
-  '/resale/ledger': typeof AuthenticatedResaleLedgerRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
@@ -322,8 +304,6 @@ export interface FileRoutesById {
   '/_authenticated/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/_authenticated/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
   '/_authenticated/products/new': typeof AuthenticatedProductsNewRoute
-  '/_authenticated/resale/commissions': typeof AuthenticatedResaleCommissionsRoute
-  '/_authenticated/resale/ledger': typeof AuthenticatedResaleLedgerRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayRoute
@@ -359,8 +339,6 @@ export interface FileRouteTypes {
     | '/errors/$error'
     | '/orders/$orderId'
     | '/products/new'
-    | '/resale/commissions'
-    | '/resale/ledger'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/display'
@@ -393,8 +371,6 @@ export interface FileRouteTypes {
     | '/errors/$error'
     | '/orders/$orderId'
     | '/products/new'
-    | '/resale/commissions'
-    | '/resale/ledger'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/display'
@@ -429,8 +405,6 @@ export interface FileRouteTypes {
     | '/_authenticated/errors/$error'
     | '/_authenticated/orders/$orderId'
     | '/_authenticated/products/new'
-    | '/_authenticated/resale/commissions'
-    | '/_authenticated/resale/ledger'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/appearance'
     | '/_authenticated/settings/display'
@@ -661,20 +635,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsAccountRouteImport
       parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
-    '/_authenticated/resale/ledger': {
-      id: '/_authenticated/resale/ledger'
-      path: '/resale/ledger'
-      fullPath: '/resale/ledger'
-      preLoaderRoute: typeof AuthenticatedResaleLedgerRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/resale/commissions': {
-      id: '/_authenticated/resale/commissions'
-      path: '/resale/commissions'
-      fullPath: '/resale/commissions'
-      preLoaderRoute: typeof AuthenticatedResaleCommissionsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/products/new': {
       id: '/_authenticated/products/new'
       path: '/products/new'
@@ -738,8 +698,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedErrorsErrorRoute: typeof AuthenticatedErrorsErrorRoute
   AuthenticatedOrdersOrderIdRoute: typeof AuthenticatedOrdersOrderIdRoute
   AuthenticatedProductsNewRoute: typeof AuthenticatedProductsNewRoute
-  AuthenticatedResaleCommissionsRoute: typeof AuthenticatedResaleCommissionsRoute
-  AuthenticatedResaleLedgerRoute: typeof AuthenticatedResaleLedgerRoute
   AuthenticatedTrackingLiveRoute: typeof AuthenticatedTrackingLiveRoute
   AuthenticatedTrackingPageAnalyticsRoute: typeof AuthenticatedTrackingPageAnalyticsRoute
   AuthenticatedTrackingSessionsRoute: typeof AuthenticatedTrackingSessionsRoute
@@ -758,8 +716,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedErrorsErrorRoute: AuthenticatedErrorsErrorRoute,
   AuthenticatedOrdersOrderIdRoute: AuthenticatedOrdersOrderIdRoute,
   AuthenticatedProductsNewRoute: AuthenticatedProductsNewRoute,
-  AuthenticatedResaleCommissionsRoute: AuthenticatedResaleCommissionsRoute,
-  AuthenticatedResaleLedgerRoute: AuthenticatedResaleLedgerRoute,
   AuthenticatedTrackingLiveRoute: AuthenticatedTrackingLiveRoute,
   AuthenticatedTrackingPageAnalyticsRoute:
     AuthenticatedTrackingPageAnalyticsRoute,

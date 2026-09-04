@@ -5,8 +5,8 @@ export const CONTACT = {
     url: "https://wa.me/923177219621",
   },
   email: {
-    address: "info@ateeqo.com",
-    mailto: "mailto:info@ateeqo.com",
+    address: "info@craftiearea.com",
+    mailto: "mailto:info@craftiearea.com",
   },
   location: {
     label: "View on Google Maps",
@@ -14,7 +14,7 @@ export const CONTACT = {
   },
   social: {
     facebook: "https://www.facebook.com/share/18gbM3gffu/",
-    instagram: "https://www.instagram.com/ateeqo2026?igsh=MTlhMzdtMTdhcDB6MA==",
-    tiktok: "https://www.tiktok.com/@ateeqo2026",
+    instagram: "https://www.instagram.com/craftie._.area",
+    tiktok: "https://www.tiktok.com/@craftie._.area",
   },
 } as const;

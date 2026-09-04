@@ -42,7 +42,7 @@ const Login = () => {
         </p>
         <h1 className="font-display text-3xl text-foreground mb-2">Login</h1>
         <p className="font-body text-sm text-muted-foreground mb-8">
-          Sign in to continue shopping and manage your resale balance.
+          Sign in to continue shopping and manage your orders.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-5">

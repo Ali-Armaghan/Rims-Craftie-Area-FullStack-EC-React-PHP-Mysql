@@ -95,8 +95,8 @@ const SizeAndCareGuide = () => {
               Size &amp; Care Guide
             </h1>
             <p className="font-body text-base leading-relaxed text-muted-foreground md:text-lg">
-              At Ateeqo, we want to make sure you choose the bag that fits your lifestyle
-              perfectly. Use this guide to understand our sizing and keep your bag looking its
+              At Craftie._.Area, we want to make sure you choose the product that fits your lifestyle
+              perfectly. Use this guide to understand our sizing and keep your piece looking its
               best for years to come.
             </p>
           </motion.div>
@@ -156,7 +156,7 @@ const SizeAndCareGuide = () => {
           </div>
 
           <div id="sizing" className="scroll-mt-28 mb-14">
-            <h2 className="mb-6 font-display text-3xl text-foreground">Ateeqo Sizing Chart</h2>
+            <h2 className="mb-6 font-display text-3xl text-foreground">Craftie._.Area Sizing Chart</h2>
             <div className="overflow-hidden rounded-2xl border border-border">
               <div className="hidden md:grid md:grid-cols-[1.1fr_1fr_1.4fr] bg-secondary/50">
                 {["Bag Size Category", "Dimensions (Approx.)", "Capacity & Usage"].map((h) => (
@@ -224,7 +224,7 @@ const SizeAndCareGuide = () => {
               <h2 className="font-display text-3xl text-foreground">Product Care Guide</h2>
             </div>
             <p className="mb-10 font-body text-sm leading-relaxed text-muted-foreground md:text-base">
-              To keep your Ateeqo bag looking its best for years to come, please follow these
+              To keep your Craftie._.Area piece looking its best for years to come, please follow these
               care and maintenance tips. Proper care ensures the longevity of the materials,
               hardware, and structural integrity of your accessory.
             </p>

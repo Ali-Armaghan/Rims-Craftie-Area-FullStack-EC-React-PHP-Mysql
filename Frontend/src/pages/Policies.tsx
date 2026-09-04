@@ -20,12 +20,12 @@ const faqSections = [
     title: "Products & Quality",
     items: [
       {
-        q: "What materials are used in Ateeqo handbags?",
+        q: "What materials are used in Craftie._.Area products?",
         a: "We prioritize durability and aesthetics. Each product description contains specific details about the materials (e.g., premium synthetic leather, heavy-duty hardware) to ensure you know exactly what you are purchasing.",
       },
       {
-        q: "How do I clean and maintain my bag?",
-        a: "To keep your Ateeqo bag looking new, we recommend wiping it down with a soft, damp cloth. Avoid harsh chemicals or prolonged exposure to direct sunlight. For specific material care, please refer to the care card included with your purchase.",
+        q: "How do I clean and maintain my items?",
+        a: "To keep your Craftie._.Area piece looking new, we recommend wiping it down with a soft, damp cloth. Avoid harsh chemicals or prolonged exposure to direct sunlight. For specific material care, please refer to the care instructions included with your purchase.",
       },
     ],
   },
@@ -46,7 +46,7 @@ const faqSections = [
       },
       {
         q: "Who covers the shipping cost for exchanges?",
-        a: "For standard exchanges (change of mind/preference), the customer is responsible for the return shipping costs. If the exchange is due to a mistake on our end or a damaged product, Ateeqo will cover the shipping expenses.",
+        a: "For standard exchanges (change of mind/preference), the customer is responsible for the return shipping costs. If the exchange is due to a mistake on our end or a damaged product, Craftie._.Area will cover the shipping expenses.",
       },
     ],
   },
@@ -63,7 +63,7 @@ const faqSections = [
     title: "General",
     items: [
       {
-        q: "How can I contact Ateeqo customer support?",
+        q: "How can I contact Craftie._.Area customer support?",
         a: `We are here to help! You can reach us at ${CONTACT.email.address} or message us on WhatsApp at ${CONTACT.whatsapp.display}. We strive to respond to all inquiries within 24 hours.`,
       },
     ],
@@ -96,7 +96,7 @@ const policySections = [
     id: "privacy",
     title: "Privacy Policy",
     points: [
-      "At Ateeqo, your privacy is our priority. This policy outlines how we collect, use, and protect your information.",
+      "At Craftie._.Area, your privacy is our priority. This policy outlines how we collect, use, and protect your information.",
       "Information We Collect: We collect information you provide directly, such as your name, shipping/billing address, email address, and phone number when you place an order. We also collect technical data (like IP addresses) to improve your website experience.",
       "How We Use Your Information: We use your data to process and fulfill your orders, communicate with you regarding your order status, and improve our store's performance.",
       "Data Sharing: We do not sell your personal information. We only share data with necessary third parties, such as shipping carriers to deliver your products and payment gateways to process your transactions securely.",
@@ -123,7 +123,7 @@ const Policies = () => {
             </h1>
             <p className="font-body text-base leading-relaxed text-muted-foreground md:text-lg">
               Everything you need to know about shipping, exchanges, payments, and how we
-              protect your privacy at Ateeqo.
+              protect your privacy at Craftie._.Area.
             </p>
           </motion.div>
         </div>
@@ -153,7 +153,7 @@ const Policies = () => {
           </motion.div>
 
           <div id="faq" className="scroll-mt-28">
-            <h2 className="mb-8 font-display text-3xl text-foreground">Ateeqo FAQ</h2>
+            <h2 className="mb-8 font-display text-3xl text-foreground">Craftie._.Area FAQ</h2>
             <div className="space-y-10">
               {faqSections.map((section) => (
                 <div key={section.title}>

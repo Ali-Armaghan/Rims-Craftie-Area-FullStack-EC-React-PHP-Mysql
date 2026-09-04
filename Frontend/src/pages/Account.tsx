@@ -3,39 +3,24 @@ import { Link, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import {
-  BadgeDollarSign,
-  Check,
   ClipboardList,
-  Copy,
-  Gift,
   LayoutDashboard,
   LogOut,
-  ReceiptText,
-  Share2,
 } from "lucide-react";
-import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import {
   CustomerOrder,
   CustomerOrderDetail,
   fetchCustomerOrder,
   fetchCustomerOrders,
-  fetchCustomerResale,
-  fetchCustomerResaleLedger,
   fetchLoyaltyStatus,
 } from "@/services/api";
-import {
-  buildReferralShareLink,
-  buildReferralWhatsAppShareUrl,
-} from "@/lib/referral";
 
-type DashboardTab = "overview" | "orders" | "resale" | "ledger";
+type DashboardTab = "overview" | "orders";
 
 const dashboardTabs: { id: DashboardTab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "orders", label: "Orders", icon: ClipboardList },
-  { id: "resale", label: "ReSale", icon: Gift },
-  { id: "ledger", label: "Ledger", icon: ReceiptText },
 ];
 
 function money(value: string | number | undefined | null) {
@@ -56,7 +41,6 @@ const Account = () => {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
-  const [linkCopied, setLinkCopied] = useState(false);
 
   const userId = user?.id;
 
@@ -72,18 +56,6 @@ const Account = () => {
     enabled: !!selectedOrderId && !!userId,
   });
 
-  const { data: resale } = useQuery({
-    queryKey: ["customer-resale", userId],
-    queryFn: () => fetchCustomerResale(userId!),
-    enabled: !!userId,
-  });
-
-  const { data: ledger = [], isLoading: ledgerLoading } = useQuery({
-    queryKey: ["customer-resale-ledger", userId],
-    queryFn: () => fetchCustomerResaleLedger(userId!),
-    enabled: !!userId,
-  });
-
   const { data: loyalty } = useQuery({
     queryKey: ["loyalty-status", userId],
     queryFn: () => fetchLoyaltyStatus(userId!),
@@ -97,21 +69,6 @@ const Account = () => {
   const selectedShipping = selectedOrder
     ? parseShippingAddress(selectedOrder.shipping_address)
     : null;
-
-  const resaleCode = resale?.resale_code ?? user.resale_code ?? "";
-  const shareLink = resaleCode ? buildReferralShareLink(resaleCode) : "";
-
-  const copyShareLink = async () => {
-    if (!shareLink) return;
-    try {
-      await navigator.clipboard.writeText(shareLink);
-      setLinkCopied(true);
-      toast.success("Referral link copied");
-      window.setTimeout(() => setLinkCopied(false), 2000);
-    } catch {
-      toast.error("Could not copy link");
-    }
-  };
 
   return (
     <section className="container py-12">
@@ -168,22 +125,14 @@ const Account = () => {
                 </h2>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-4">
+              <div className="grid gap-4 md:grid-cols-2">
                 <div className="border border-border p-5">
-                  <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Orders</p>
+                  <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Total Orders</p>
                   <p className="font-display text-3xl text-foreground mt-2">{orders.length}</p>
                 </div>
                 <div className="border border-border p-5">
-                  <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Resale Code</p>
-                  <p className="font-body text-lg text-foreground mt-2">{resaleCode || "N/A"}</p>
-                </div>
-                <div className="border border-border p-5">
-                  <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Balance</p>
-                  <p className="font-display text-2xl text-foreground mt-2">{money(resale?.resale_balance ?? user.resale_balance)}</p>
-                </div>
-                <div className="border border-border p-5">
-                  <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Commission</p>
-                  <p className="font-display text-2xl text-foreground mt-2">{money(resale?.total_commissions)}</p>
+                  <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Account Status</p>
+                  <p className="font-body text-xl font-medium text-foreground mt-2 capitalize">{user.status ?? "Active"}</p>
                 </div>
               </div>
 
@@ -315,105 +264,6 @@ const Account = () => {
                   <p className="font-body text-sm text-muted-foreground">Order not found.</p>
                 )}
               </div>
-            </div>
-          )}
-
-          {activeTab === "resale" && (
-            <div className="space-y-6">
-              <h2 className="font-display text-3xl text-foreground">ReSale Dashboard</h2>
-              <div className="grid gap-4 md:grid-cols-5">
-                <div className="border border-border p-5">
-                  <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Your Code</p>
-                  <p className="font-body text-xl text-foreground mt-2">{resaleCode || "N/A"}</p>
-                </div>
-                <div className="border border-border p-5">
-                  <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Buyer Discount</p>
-                  <p className="font-display text-2xl text-foreground mt-2">
-                    {Number(resale?.resale_discount_percent ?? 0)}%
-                  </p>
-                </div>
-                <div className="border border-border p-5">
-                  <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Referral Sales</p>
-                  <p className="font-display text-2xl text-foreground mt-2">{money(resale?.referral_sales)}</p>
-                </div>
-                <div className="border border-border p-5">
-                  <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">
-                    {Number(resale?.resale_commission_percent ?? 5)}% Commission
-                  </p>
-                  <p className="font-display text-2xl text-foreground mt-2">{money(resale?.total_commissions)}</p>
-                </div>
-                <div className="border border-border p-5">
-                  <p className="font-nav text-xs tracking-wide uppercase text-muted-foreground">Earning Balance</p>
-                  <p className="font-display text-2xl text-foreground mt-2">{money(resale?.resale_balance ?? user.resale_balance)}</p>
-                </div>
-              </div>
-
-              {shareLink ? (
-                <div className="border border-border p-6 space-y-4">
-                  <div>
-                    <p className="font-nav text-xs tracking-wide uppercase text-primary mb-2">
-                      Your share link
-                    </p>
-                    <p className="font-body text-sm text-muted-foreground">
-                      Anyone who opens this link and orders will get your discount — same as entering your code at checkout.
-                    </p>
-                  </div>
-                  <div className="break-all border border-border bg-secondary/40 px-4 py-3 font-body text-sm text-foreground">
-                    {shareLink}
-                  </div>
-                  <div className="flex flex-wrap gap-3">
-                    <button
-                      type="button"
-                      onClick={copyShareLink}
-                      className="inline-flex items-center gap-2 border border-foreground px-4 py-3 font-nav text-xs uppercase tracking-wide text-foreground hover:bg-foreground hover:text-primary-foreground"
-                    >
-                      {linkCopied ? <Check size={14} /> : <Copy size={14} />}
-                      {linkCopied ? "Copied" : "Copy link"}
-                    </button>
-                    <a
-                      href={buildReferralWhatsAppShareUrl(resaleCode)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-2 bg-foreground px-4 py-3 font-nav text-xs uppercase tracking-wide text-primary-foreground hover:bg-foreground/90"
-                    >
-                      <Share2 size={14} />
-                      Share on WhatsApp
-                    </a>
-                  </div>
-                </div>
-              ) : null}
-
-              <div className="border border-border p-6">
-                <div className="flex items-center gap-3 text-primary">
-                  <BadgeDollarSign size={18} />
-                  <p className="font-body text-sm">
-                    Your code gives buyers {Number(resale?.resale_discount_percent ?? 0)}% off, and you earn{" "}
-                    {Number(resale?.resale_commission_percent ?? 5)}% commission when those orders are marked delivered.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "ledger" && (
-            <div className="border border-border">
-              <div className="border-b border-border p-5">
-                <h2 className="font-display text-3xl text-foreground">Resale Earning Record</h2>
-              </div>
-              {ledgerLoading ? (
-                <div className="p-8 text-center text-muted-foreground">Loading ledger...</div>
-              ) : ledger.length ? (
-                ledger.map((entry) => (
-                  <div key={entry.id} className="grid gap-2 border-b border-border p-5 md:grid-cols-4">
-                    <span className={`font-body text-sm capitalize ${entry.type === "credit" ? "text-green-600" : "text-red-600"}`}>{entry.type}</span>
-                    <span className="font-body text-sm">{money(entry.amount)}</span>
-                    <span className="font-body text-sm text-muted-foreground md:col-span-1">{entry.description}</span>
-                    <span className="font-body text-sm text-muted-foreground">{new Date(entry.created_at).toLocaleDateString()}</span>
-                  </div>
-                ))
-              ) : (
-                <div className="p-8 text-center text-muted-foreground">No resale ledger records yet.</div>
-              )}
             </div>
           )}
         </main>

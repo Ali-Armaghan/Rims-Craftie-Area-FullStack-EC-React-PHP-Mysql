@@ -66,41 +66,8 @@ export const usersColumns: ColumnDef<User>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title='Phone' />
     ),
-    cell: ({ row }) => <div>{row.getValue('phone')}</div>,
+    cell: ({ row }) => <div>{row.getValue('phone') || '—'}</div>,
     enableSorting: false,
-  },
-  {
-    accessorKey: 'resale_code',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Resale Code' />
-    ),
-    cell: ({ row }) => <Badge variant='outline'>{row.getValue('resale_code')}</Badge>,
-  },
-  {
-    accessorKey: 'resale_discount_percent',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Discount %' />
-    ),
-    cell: ({ row }) => <div>{Number(row.getValue('resale_discount_percent') ?? 0).toFixed(2)}%</div>,
-    enableSorting: false,
-  },
-  {
-    accessorKey: 'resale_commission_percent',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Commission %' />
-    ),
-    cell: ({ row }) => <div>{Number(row.getValue('resale_commission_percent') ?? 0).toFixed(2)}%</div>,
-    enableSorting: false,
-  },
-  {
-    accessorKey: 'resale_balance',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Balance' />
-    ),
-    cell: ({ row }) => {
-      const balance = parseFloat(row.getValue('resale_balance'))
-      return <div className='font-medium'>PKR {balance.toFixed(2)}</div>
-    },
   },
   {
     accessorKey: 'status',

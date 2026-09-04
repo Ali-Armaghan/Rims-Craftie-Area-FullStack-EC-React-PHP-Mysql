@@ -1,4 +1,4 @@
-const DRAFT_TOKEN_KEY = "ateeqo_checkout_draft_token";
+const DRAFT_TOKEN_KEY = "craftie_area_checkout_draft_token";
 
 export function getCheckoutDraftToken() {
   try {

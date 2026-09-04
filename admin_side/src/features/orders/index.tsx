@@ -47,9 +47,6 @@ export type Order = {
   subtotal?: string
   total: string
   shipping_address?: string
-  referred_by_code?: string | null
-  commission_earned: string
-  resale_credited: number
   created_at: string
 }
 
@@ -240,7 +237,6 @@ export function Orders() {
                   <TableHead>Order #</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead>Total</TableHead>
-                  <TableHead>Commission</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead className='text-right'>Actions</TableHead>
@@ -270,16 +266,6 @@ export function Orders() {
                         <TableCell>{order.customer_name ?? 'Guest'}</TableCell>
                         <TableCell>
                           PKR {parseFloat(order.total).toLocaleString()}
-                        </TableCell>
-                        <TableCell>
-                          {parseFloat(order.commission_earned) > 0 ? (
-                            <span className='text-green-600'>
-                              PKR{' '}
-                              {parseFloat(order.commission_earned).toFixed(2)}
-                            </span>
-                          ) : (
-                            <span className='text-muted-foreground'>—</span>
-                          )}
                         </TableCell>
                         <TableCell>
                           <OrderStatusSelect order={order} />

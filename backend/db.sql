@@ -1,7 +1,7 @@
--- Database Schema for Online Store & ReSale System
+-- Database Schema for Craftie._.Area Storefront & Admin
 
-CREATE DATABASE IF NOT EXISTS online_store_resale;
-USE online_store_resale;
+CREATE DATABASE IF NOT EXISTS craftie_area;
+USE craftie_area;
 
 -- 1. Users Table
 CREATE TABLE IF NOT EXISTS users (
@@ -10,15 +10,8 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(150) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     phone VARCHAR(20),
-    resale_code VARCHAR(20) UNIQUE NOT NULL,
-    resale_discount_percent DECIMAL(5,2) NOT NULL DEFAULT 0.00,
-    resale_commission_percent DECIMAL(5,2) NOT NULL DEFAULT 5.00,
-    resale_code_active TINYINT(1) NOT NULL DEFAULT 1,
-    resale_balance DECIMAL(10,2) DEFAULT 0.00,
-    referred_by_id INT,
     status ENUM('active', 'inactive') DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (referred_by_id) REFERENCES users(id) ON DELETE SET NULL
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 2. Admins Table
@@ -94,13 +87,6 @@ CREATE TABLE IF NOT EXISTS orders (
     discount DECIMAL(10,2) DEFAULT 0.00,
     total DECIMAL(10,2) NOT NULL,
     shipping_address JSON NOT NULL,
-    referred_by_code VARCHAR(20),
-    referrer_user_id INT NULL DEFAULT NULL,
-    resale_discount_percent DECIMAL(5,2) NOT NULL DEFAULT 0.00,
-    resale_discount_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    resale_commission_percent DECIMAL(5,2) NOT NULL DEFAULT 0.00,
-    commission_earned DECIMAL(10,2) DEFAULT 0.00,
-    resale_credited TINYINT(1) DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
@@ -125,7 +111,7 @@ CREATE TABLE IF NOT EXISTS payments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT,
     user_id INT,
-    method ENUM('card', 'bank_transfer', 'cod', 'resale_balance') NOT NULL,
+    method ENUM('card', 'bank_transfer', 'cod') NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
     status ENUM('pending', 'completed', 'failed', 'refunded') DEFAULT 'pending',
     transaction_id VARCHAR(100),
@@ -135,20 +121,7 @@ CREATE TABLE IF NOT EXISTS payments (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- 9. ReSale Ledger (Balance History)
-CREATE TABLE IF NOT EXISTS resale_ledger (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    order_id INT, -- If linked to an order
-    type ENUM('credit', 'debit') NOT NULL, -- credit = earned, debit = spent
-    amount DECIMAL(10,2) NOT NULL,
-    description VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL
-);
-
--- 10. Visitor Sessions Table
+-- 9. Visitor Sessions Table
 CREATE TABLE IF NOT EXISTS visitor_sessions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     session_uuid VARCHAR(100) UNIQUE NOT NULL,
@@ -156,7 +129,6 @@ CREATE TABLE IF NOT EXISTS visitor_sessions (
     ip_address VARCHAR(45),
     user_agent TEXT,
     referer_url TEXT,
-    resale_code_used VARCHAR(20),
     landing_page VARCHAR(255),
     device_type VARCHAR(50),
     browser VARCHAR(100),
@@ -178,7 +150,7 @@ CREATE TABLE IF NOT EXISTS visitor_sessions (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- 11. Page Views Table
+-- 10. Page Views Table
 CREATE TABLE IF NOT EXISTS page_views (
     id INT AUTO_INCREMENT PRIMARY KEY,
     session_id INT,
@@ -196,7 +168,7 @@ CREATE TABLE IF NOT EXISTS page_views (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- 12. Visitor Events Table (clicks, custom actions, scroll, etc.)
+-- 11. Visitor Events Table (clicks, custom actions, scroll, etc.)
 CREATE TABLE IF NOT EXISTS visitor_events (
     id INT AUTO_INCREMENT PRIMARY KEY,
     session_id INT,
@@ -212,7 +184,7 @@ CREATE TABLE IF NOT EXISTS visitor_events (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- 13. Live Traffic Table (Lightweight Heartbeat)
+-- 12. Live Traffic Table (Lightweight Heartbeat)
 CREATE TABLE IF NOT EXISTS live_traffic (
     session_id INT PRIMARY KEY,
     last_ping_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -230,7 +202,7 @@ CREATE INDEX idx_page_views_user ON page_views(user_id);
 CREATE INDEX idx_visitor_events_session ON visitor_events(session_id);
 CREATE INDEX idx_visitor_events_page_view ON visitor_events(page_view_id);
 
--- 13b. Abandoned / incomplete checkout drafts
+-- 13. Abandoned / incomplete checkout drafts
 CREATE TABLE IF NOT EXISTS checkout_drafts (
     id INT AUTO_INCREMENT PRIMARY KEY,
     draft_token VARCHAR(64) NOT NULL,
@@ -240,7 +212,6 @@ CREATE TABLE IF NOT EXISTS checkout_drafts (
     email VARCHAR(150) NULL DEFAULT NULL,
     address TEXT NULL DEFAULT NULL,
     city VARCHAR(100) NULL DEFAULT NULL,
-    referral_code VARCHAR(40) NULL DEFAULT NULL,
     cart_json JSON NULL DEFAULT NULL,
     cart_total DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     status ENUM('abandoned', 'converted') NOT NULL DEFAULT 'abandoned',
@@ -262,8 +233,6 @@ CREATE TABLE IF NOT EXISTS settings (
 );
 
 -- Initial Settings
-INSERT INTO settings (setting_key, setting_value) VALUES ('commission_rate', '5');
-INSERT INTO settings (setting_key, setting_value) VALUES ('min_payout_amount', '500');
 INSERT INTO settings (setting_key, setting_value) VALUES ('currency', 'PKR');
 INSERT INTO settings (setting_key, setting_value) VALUES ('sale_countdown_enabled', '0');
 INSERT INTO settings (setting_key, setting_value) VALUES ('sale_countdown_ends_at', '');

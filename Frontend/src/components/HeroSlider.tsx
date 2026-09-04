@@ -5,12 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 const slides = [
   {
     image: "/5_0c8c2112-0b85-42c8-813f-2383eb7b4a38.webp",
-    alt: "Ateeqo banner",
+    alt: "Craftie._.Area banner",
     link: "/products",
   },
   {
     image: "/3_1d5c15e7-a904-48fc-845a-bf2b67e05724.webp",
-    alt: "Ateeqo collection banner",
+    alt: "Craftie._.Area collection banner",
     link: "/products",
   },
 ];

@@ -5,7 +5,6 @@ export interface OrderPayload {
     subtotal: number;
     total: number;
     apply_loyalty?: boolean;
-    referred_by_code?: string;
     shipping_address: {
         full_name: string;
         phone: string;
@@ -32,9 +31,6 @@ export type CustomerOrder = {
     status: string;
     subtotal: string | number;
     total: string | number;
-    referred_by_code?: string | null;
-    commission_earned?: string | number;
-    resale_credited?: number;
     created_at: string;
 };
 
@@ -55,45 +51,11 @@ export type CustomerOrderDetail = CustomerOrder & {
     items: CustomerOrderItem[];
 };
 
-export type CustomerResaleSummary = {
-    id: number;
-    name: string;
-    email: string;
-    resale_code: string;
-    resale_balance: string | number;
-    resale_discount_percent?: string | number;
-    resale_commission_percent?: string | number;
-    resale_code_active?: number | boolean;
-    total_referrals: string | number;
-    total_commissions: string | number;
-    referral_sales: string | number;
-};
-
-export type CustomerResaleLedgerEntry = {
-    id: number;
-    user_id: number;
-    order_id?: number | null;
-    type: 'credit' | 'debit';
-    amount: string | number;
-    description?: string;
-    created_at: string;
-};
-
-export type ResaleCodePreview = {
-    user_id: number;
-    name: string;
-    resale_code: string;
-    discount_percent: number;
-    commission_percent: number;
-    active: boolean;
-};
-
 export type AuthUser = {
     id: number | string;
     name: string;
     email: string;
-    resale_code?: string;
-    resale_balance?: string | number;
+    status?: string;
 };
 
 export type LoginPayload = {
@@ -106,7 +68,6 @@ export type SignupPayload = {
     email: string;
     phone?: string;
     password: string;
-    referred_by_code?: string;
 };
 
 export type TrackingPayload = Record<string, unknown>;
@@ -121,7 +82,7 @@ export type SaleCountdownSettings = {
  * Product API service for the custom PHP backend.
  *
  * Set this in Frontend/.env:
- * VITE_API_BASE_URL=http://localhost/ateeqo/backend/api
+ * VITE_API_BASE_URL=http://localhost/RCA/backend/api
  */
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '');
 
@@ -673,29 +634,6 @@ export async function fetchCustomerOrder(orderId: string | number, userId: strin
     return response.json();
 }
 
-export async function fetchResaleCodePreview(code: string): Promise<ResaleCodePreview | null> {
-    const trimmed = code.trim();
-    if (!trimmed) return null;
-
-    const response = await fetch(
-        getBackendUrl('resale', { code: trimmed }).toString(),
-        {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' },
-        }
-    );
-
-    if (response.status === 404) {
-        return null;
-    }
-
-    if (!response.ok) {
-        throw new Error(`Error fetching resale code: ${response.statusText}`);
-    }
-
-    return response.json();
-}
-
 export type LoyaltyStatus = {
     lifetime_spent: number;
     tier_label: string;
@@ -718,36 +656,6 @@ export async function fetchLoyaltyStatus(userId: string | number): Promise<Loyal
     }
 
     return response.json();
-}
-
-export async function fetchCustomerResale(userId: string | number): Promise<CustomerResaleSummary> {
-    const response = await fetch(getBackendUrl('resale', { user_id: userId }).toString(), {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' },
-    });
-
-    if (!response.ok) {
-        throw new Error(`Error fetching resale data: ${response.statusText}`);
-    }
-
-    return response.json();
-}
-
-export async function fetchCustomerResaleLedger(userId: string | number): Promise<CustomerResaleLedgerEntry[]> {
-    const response = await fetch(
-        getBackendUrl('resale/ledger', { user_id: userId }).toString(),
-        {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' },
-        }
-    );
-
-    if (!response.ok) {
-        throw new Error(`Error fetching resale ledger: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return Array.isArray(data) ? data : [];
 }
 
 /**

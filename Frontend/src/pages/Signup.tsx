@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { signupCustomer } from "@/services/api";
 import { trackCompleteRegistration } from "@/lib/meta-pixel";
 import { trackGASignUp } from "@/lib/google-analytics";
-import { getReferralCode, setReferralCode } from "@/lib/referral";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -16,26 +15,10 @@ const Signup = () => {
     phone: "",
     password: "",
     confirmPassword: "",
-    referred_by_code: getReferralCode(),
   });
 
-  useEffect(() => {
-    const stored = getReferralCode();
-    if (!stored) return;
-    setFormData((current) =>
-      current.referred_by_code
-        ? current
-        : { ...current, referred_by_code: stored }
-    );
-  }, []);
-
   const updateField = (field: keyof typeof formData, value: string) => {
-    const nextValue =
-      field === "referred_by_code" ? value.toUpperCase() : value;
-    setFormData((current) => ({ ...current, [field]: nextValue }));
-    if (field === "referred_by_code") {
-      setReferralCode(nextValue);
-    }
+    setFormData((current) => ({ ...current, [field]: value }));
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -54,7 +37,6 @@ const Signup = () => {
         email: formData.email,
         phone: formData.phone,
         password: formData.password,
-        referred_by_code: formData.referred_by_code || undefined,
       });
       trackCompleteRegistration("email");
       trackGASignUp("email");
@@ -77,13 +59,13 @@ const Signup = () => {
         className="w-full max-w-xl border border-border bg-background p-8 shadow-sm"
       >
         <p className="font-nav text-xs tracking-wide uppercase text-primary mb-3">
-          Join Ateeqo
+          Join Craftie._.Area
         </p>
         <h1 className="font-display text-3xl text-foreground mb-2">
           Create Account
         </h1>
         <p className="font-body text-sm text-muted-foreground mb-8">
-          Register to shop faster and receive your resale referral code.
+          Register to enjoy exclusive perks, save favorites, and shop seamlessly.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -158,20 +140,6 @@ const Signup = () => {
                 placeholder="********"
               />
             </div>
-          </div>
-
-          <div>
-            <label className="font-nav text-xs tracking-wide uppercase text-foreground">
-              Referral Code
-            </label>
-            <input
-              value={formData.referred_by_code}
-              onChange={(event) =>
-                updateField("referred_by_code", event.target.value)
-              }
-              className="mt-2 w-full border border-border bg-transparent px-4 py-3 font-body text-sm uppercase focus:border-primary focus:outline-none"
-              placeholder="Optional"
-            />
           </div>
 
           <button

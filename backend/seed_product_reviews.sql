@@ -1,5 +1,5 @@
 -- ============================================================
--- Ateeqo: Seed product reviews (min 10 per product, avg 4-5)
+-- Craftie._.Area: Seed product reviews (min 10 per product, avg 4-5)
 -- Run on LIVE DB via phpMyAdmin / MySQL client.
 -- Safe to re-run: only fills products that have fewer than 10 reviews.
 -- ============================================================
@@ -76,7 +76,7 @@ INSERT INTO tmp_review_texts (tid, review_text) VALUES
 (5, 'Stitching clean hai aur zip smoothly chalti hai. Happy with purchase.'),
 (6, 'Gift ke liye liya tha, unko bohot pasand aaya. Packaging bhi achi thi.'),
 (7, 'Daily office use me chal raha hai, spacious aur stylish dono.'),
-(8, 'Kapra soft hai, look classy hai. Ateeqo se phir order karungi.'),
+(8, 'Kapra soft hai, look classy hai. Craftie._.Area se phir order karungi.'),
 (9, 'Price ke hisaab se quality bohot better hai. Satisfied customer.'),
 (10, 'Strap comfortable hai, lambi walk pe bhi shoulder me dard nahi hota.'),
 (11, 'Design unique hai, market me common bags se alag lagta hai.'),
@@ -97,7 +97,7 @@ INSERT INTO tmp_review_texts (tid, review_text) VALUES
 (26, 'Comfortable to carry and surprisingly roomy. Great value.'),
 (27, 'The finish is clean and elegant. Will order more colors soon.'),
 (28, 'Solid quality for the price. My new go-to bag for work.'),
-(29, 'Looks expensive and feels durable. Impressed with Ateeqo.'),
+(29, 'Looks expensive and feels durable. Impressed with Craftie._.Area.'),
 (30, 'Soft material, strong straps, and a classy look. Five stars.'),
 (31, 'Great gift option. Packaging was neat and product was perfect.'),
 (32, 'Lightweight yet sturdy. Perfect for daily use around the city.'),

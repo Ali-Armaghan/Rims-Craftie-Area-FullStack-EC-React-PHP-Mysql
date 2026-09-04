@@ -41,9 +41,6 @@ switch ($module) {
     case 'checkout-drafts':
         require_once __DIR__ . '/checkout-drafts/handler.php';
         break;
-    case 'resale':
-        require_once __DIR__ . '/resale/handler.php';
-        break;
     case 'loyalty':
         require_once __DIR__ . '/loyalty/handler.php';
         break;
@@ -60,7 +57,7 @@ switch ($module) {
         if ($module === '') {
             http_response_code(200);
             echo json_encode([
-                "message" => "Ateeqo API is running",
+                "message" => "Craftie._.Area API is running",
                 "status" => "ok",
                 "examples" => [
                     "GET /api/index.php?path=products",

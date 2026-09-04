@@ -1,6 +1,6 @@
 const apiBaseUrl =
   import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ??
-  'http://localhost/ateeqo/backend/api'
+  'http://localhost/RCA/backend/api'
 
 export function resolveImageUrl(image: string): string {
   if (!image?.trim()) {

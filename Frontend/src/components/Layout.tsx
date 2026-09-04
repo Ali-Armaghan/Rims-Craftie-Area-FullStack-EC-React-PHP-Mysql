@@ -25,7 +25,6 @@ const navLinks = [
   { label: "Home", path: "/" },
   { label: "Collections", path: "/products" },
   { label: "Loyalty", path: "/loyalty" },
-  { label: "Rewards", path: "/rewards" },
   { label: "Contact", path: "/contact" },
 ];
 
@@ -40,8 +39,8 @@ const footerCustomerCareLinks = [
 const ANNOUNCEMENT_SLIDES = [
   "LIMITED TIME OFFER: Upto 25% OFF ON ALL ORDERS",
   "FREE DELIVERY ON ALL ORDERS",
-  "NEW ARRIVALS — SHOP HANDBAGS",
-  "USE RESALE CODE FOR REWARDS",
+  "NEW ARRIVALS — SHOP CRAFTS & ACCESSORIES",
+  "PREMIUM HANDCRAFTED DESIGNS",
 ];
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
@@ -148,15 +147,15 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             <Link
               to="/"
               onClick={handleLogoClick}
-              aria-label="Ateeqo home"
+              aria-label="Craftie._.Area home"
               className="relative z-30 min-w-0 flex-1 px-1 pointer-events-auto lg:absolute lg:left-1/2 lg:flex-none lg:-translate-x-1/2 lg:px-0"
             >
               <div className="text-center">
                 <h1 className="truncate font-display text-xl font-semibold text-foreground sm:text-2xl md:text-3xl">
-                  ATEEQO
+                  Craftie._.Area
                 </h1>
                 <p className="font-nav text-[10px] tracking-wide text-muted-foreground -mt-0.5 sm:text-xs">
-                  Wear your story
+                  Handcrafted with elegance
                 </p>
               </div>
             </Link>
@@ -236,9 +235,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               {/* Header */}
               <div className="flex items-center justify-between border-b border-border/60 px-5 py-4">
                 <div>
-                  <p className="font-display text-xl font-semibold text-foreground">ATEEQO</p>
+                  <p className="font-display text-xl font-semibold text-foreground">Craftie._.Area</p>
                   <p className="font-nav text-[10px] tracking-wide text-muted-foreground">
-                    Wear your story
+                    Handcrafted with elegance
                   </p>
                 </div>
                 <button
@@ -429,9 +428,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         <div className="container py-16">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
             <div>
-              <h3 className="font-display text-xl mb-4">Ateeqo</h3>
+              <h3 className="font-display text-xl mb-4">Craftie._.Area</h3>
               <p className="font-body text-sm text-primary-foreground/70 leading-relaxed mb-5">
-                Stylish handwear your story for every occasion — quality you can see and feel.
+                Handcrafted elegance and bespoke designs for every occasion — quality you can see and feel.
               </p>
               <SocialLinks />
               <a
@@ -505,7 +504,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </div>
           </div>
           <div className="border-t border-primary-foreground/10 mt-12 pt-8 text-center">
-            <p className="font-body text-xs text-primary-foreground/50">© 2026 Ateeqo Wear your story. All rights reserved.</p>
+            <p className="font-body text-xs text-primary-foreground/50">© 2026 Craftie._.Area. All rights reserved.</p>
           </div>
         </div>
       </footer>

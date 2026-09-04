@@ -12,7 +12,7 @@ type WhatsAppOrderDetails = {
 export function buildWhatsAppOrderUrl(details: WhatsAppOrderDetails): string {
   const total = details.price * details.quantity;
   const lines = [
-    "Hello Ateeqo! I would like to order:",
+    "Hello Craftie._.Area! I would like to order:",
     "",
     `Product: ${details.productName}`,
     ...(details.category ? [`Category: ${details.category}`] : []),

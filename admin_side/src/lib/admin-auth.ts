@@ -1,9 +1,9 @@
 export const ADMIN_CREDENTIALS = {
-  email: 'ateeq@gmail.com',
+  email: 'rims@gmail.com',
   password: '55105510',
 } as const
 
-export const ADMIN_SESSION_TOKEN = 'ateeqo-admin-hardcoded-session'
+export const ADMIN_SESSION_TOKEN = 'craftie-area-admin-hardcoded-session'
 
 export type AdminSessionUser = {
   accountNo: string

@@ -1,13 +1,13 @@
-# Online Store & ReSale Backend (PHP + MySQL)
+# Craftie._.Area Backend (PHP + MySQL)
 
 ## Setup Instructions
 
 1.  **Database**:
-    *   Create a MySQL database named `online_store_resale`.
+    *   Create a MySQL database (e.g., `craftie_area` or `ateeqo`).
     *   Import the `db.sql` file located in the root of this folder.
 
 2.  **Configuration**:
-    *   Open `config/database.php` and update the database credentials (host, username, password).
+    *   Open `config/database.php` and update the database credentials (host, username, password, dbname).
 
 3.  **Web Server**:
     *   Point your web server (Apache/Nginx) to the `backend/` folder.
@@ -19,13 +19,13 @@
     *   **Products**: `GET /api/products`, `GET /api/products/{slug}`
     *   **Tracking**: `POST /api/tracking/init`, `POST /api/tracking/pageview`, `POST /api/tracking/ping`
     *   **Orders**: `POST /api/orders/create`
-    *   **Admin**: `GET /api/admin/stats`, `GET /api/admin/live-traffic`, `POST /api/admin/adjust-balance`
+    *   **Admin**: `GET /api/admin/stats`, `GET /api/admin/live-traffic`, `GET /api/admin/users`
 
 ## Key Features
 
-*   **ReSale System**: Every user gets a `resale_code` upon registration. If an order is placed using this code, the referrer earns a 5% commission (configurable in `settings` table) once the order is marked as `delivered`.
+*   **E-Commerce Storefront**: Products, categories, reviews, customer loyalty discounts, checkout, order management.
 *   **Visitor Tracking**: Tracks both anonymous and logged-in users. Logs every page view and provides real-time "Live Now" statistics.
-*   **Admin Management**: Full control over user balances, commissions, and live site traffic.
+*   **Admin Management**: Full control over products, orders, categories, customer analytics, and live site traffic.
 
 ## Note on Security
 This is a baseline implementation. For production use:

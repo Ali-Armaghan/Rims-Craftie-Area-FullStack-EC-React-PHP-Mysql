@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { useCart } from "@/context/CartContext";
 import { Lock, ArrowLeft, Loader2, BadgePercent } from "lucide-react";
-import { createOrder, convertCheckoutDraft, fetchLoyaltyStatus, fetchResaleCodePreview, loginCustomer, OrderPayload, saveCheckoutDraft, signupCustomer } from "@/services/api";
+import { createOrder, convertCheckoutDraft, fetchLoyaltyStatus, loginCustomer, OrderPayload, saveCheckoutDraft, signupCustomer } from "@/services/api";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { calculateLoyaltyDiscount } from "@/lib/loyalty";
@@ -16,7 +16,6 @@ import {
   trackGABeginCheckout,
   trackGAPurchase,
 } from "@/lib/google-analytics";
-import { getReferralCode, setReferralCode } from "@/lib/referral";
 import {
   clearCheckoutDraftToken,
   getCheckoutDraftToken,
@@ -38,7 +37,6 @@ const Checkout = () => {
     phone: '',
     address: '',
     city: '',
-    referralCode: getReferralCode(),
   });
   const itemsRef = useRef(items);
   const totalPriceRef = useRef(totalPrice);
@@ -47,7 +45,6 @@ const Checkout = () => {
     phone: '',
     address: '',
     city: '',
-    referralCode: getReferralCode(),
   });
 
   const phoneValidation = useMemo(() => {
@@ -62,12 +59,7 @@ const Checkout = () => {
     if (name === "phone") {
       setPhoneTouched(true);
     }
-    const nextValue =
-      name === "referralCode" ? value.toUpperCase() : value;
-    setFormData((prev) => ({ ...prev, [name]: nextValue }));
-    if (name === "referralCode") {
-      setReferralCode(nextValue);
-    }
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   useEffect(() => {
@@ -99,7 +91,6 @@ const Checkout = () => {
       email: "",
       address: current.address.trim(),
       city: current.city.trim(),
-      referral_code: current.referralCode.trim(),
       cart_json: cartItems,
       cart_total: totalPriceRef.current,
     };
@@ -149,14 +140,6 @@ const Checkout = () => {
   }, [user]);
 
   useEffect(() => {
-    const stored = getReferralCode();
-    if (!stored) return;
-    setFormData((prev) =>
-      prev.referralCode ? prev : { ...prev, referralCode: stored }
-    );
-  }, []);
-
-  useEffect(() => {
     if (checkoutTrackedRef.current || items.length === 0) return;
     checkoutTrackedRef.current = true;
 
@@ -187,53 +170,29 @@ const Checkout = () => {
     enabled: !!user?.id,
   });
 
-  const resaleCode = formData.referralCode.trim().toUpperCase();
-  const { data: resalePreview } = useQuery({
-    queryKey: ["resale-code-preview", resaleCode],
-    queryFn: () => fetchResaleCodePreview(resaleCode),
-    enabled: resaleCode.length > 0,
-  });
-
-  const loyaltySavings = useMemo(() => {
-    if (!user || !loyaltyStatus) {
-      return { discountPercent: 0, discountAmount: 0, totalAfterDiscount: totalPrice };
-    }
-    return calculateLoyaltyDiscount(totalPrice, loyaltyStatus.lifetime_spent);
-  }, [user, loyaltyStatus, totalPrice]);
-
-  const resaleSavings = useMemo(() => {
-    const percent = resalePreview?.discount_percent ?? 0;
-    const discountAmount = Math.round(totalPrice * (percent / 100));
-    return {
-      discountPercent: percent,
-      discountAmount,
-      totalAfterDiscount: Math.max(0, totalPrice - discountAmount),
-    };
-  }, [resalePreview, totalPrice]);
-
   const appliedSavings = useMemo(() => {
-    if (resaleSavings.discountAmount >= loyaltySavings.discountAmount) {
+    if (!user || !loyaltyStatus) {
       return {
-        source: resaleSavings.discountAmount > 0 ? "resale" : "none",
-        discountPercent: resaleSavings.discountPercent,
-        discountAmount: resaleSavings.discountAmount,
-        totalAfterDiscount: resaleSavings.totalAfterDiscount,
+        source: "none" as const,
+        discountPercent: 0,
+        discountAmount: 0,
+        totalAfterDiscount: totalPrice,
       };
     }
-
+    const loyalty = calculateLoyaltyDiscount(totalPrice, loyaltyStatus.lifetime_spent);
     return {
-      source: loyaltySavings.discountAmount > 0 ? "loyalty" : "none",
-      discountPercent: loyaltySavings.discountPercent,
-      discountAmount: loyaltySavings.discountAmount,
-      totalAfterDiscount: loyaltySavings.totalAfterDiscount,
+      source: loyalty.discountAmount > 0 ? ("loyalty" as const) : ("none" as const),
+      discountPercent: loyalty.discountPercent,
+      discountAmount: loyalty.discountAmount,
+      totalAfterDiscount: loyalty.totalAfterDiscount,
     };
-  }, [loyaltySavings, resaleSavings]);
+  }, [user, loyaltyStatus, totalPrice]);
 
   const resolveOrderUserId = async () => {
     if (user) return Number(user.id);
 
     const phoneDigits = formData.phone.replace(/\D/g, "");
-    const accountEmail = `guest.${phoneDigits}.${Date.now()}@orders.ateeqo.local`;
+    const accountEmail = `guest.${phoneDigits}.${Date.now()}@orders.craftiearea.local`;
     const password = `Guest${phoneDigits.slice(-4)}${Date.now().toString(36)}`;
 
     await signupCustomer({
@@ -241,7 +200,6 @@ const Checkout = () => {
       email: accountEmail,
       phone: formData.phone,
       password,
-      referred_by_code: formData.referralCode || undefined,
     });
 
     const authUser = await loginCustomer({ email: accountEmail, password });
@@ -276,7 +234,6 @@ const Checkout = () => {
         subtotal: totalPrice,
         total: appliedSavings.totalAfterDiscount,
         apply_loyalty: Boolean(user),
-        referred_by_code: formData.referralCode || undefined,
         shipping_address: {
           full_name: formData.fullName.trim(),
           address: formData.address.trim(),
@@ -346,7 +303,6 @@ const Checkout = () => {
       setIsSubmitting(false);
     }
   };
-
 
   if (placed) {
     return (
@@ -433,14 +389,6 @@ const Checkout = () => {
                 <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange} placeholder="Full Name" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
                 <input type="text" name="address" value={formData.address} onChange={handleInputChange} placeholder="Address" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
                 <input type="text" name="city" value={formData.city} onChange={handleInputChange} placeholder="City" className="w-full border border-border bg-transparent px-4 py-3 font-body text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
-                <input
-                  type="text"
-                  name="referralCode"
-                  value={formData.referralCode}
-                  onChange={handleInputChange}
-                  placeholder="Referral code (optional)"
-                  className="w-full max-w-[220px] border border-border bg-transparent px-3 py-2 font-body text-xs uppercase placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
-                />
               </div>
             </div>
 
@@ -512,23 +460,11 @@ const Checkout = () => {
                 <div className="flex justify-between font-body text-sm">
                   <span className="inline-flex items-center gap-1.5 text-emerald-700">
                     <BadgePercent size={14} />
-                    {appliedSavings.source === "resale"
-                      ? `Resale code discount (${appliedSavings.discountPercent}%)`
-                      : `Loyalty discount (${appliedSavings.discountPercent}%)`}
+                    Loyalty discount ({appliedSavings.discountPercent}%)
                   </span>
                   <span className="font-semibold text-emerald-700">
                     - Rs. {appliedSavings.discountAmount.toLocaleString()}
                   </span>
-                </div>
-              )}
-              {resaleCode && !resalePreview && (
-                <div className="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 font-body text-xs text-destructive">
-                  This resale code is invalid or inactive.
-                </div>
-              )}
-              {resalePreview && appliedSavings.source === "resale" && (
-                <div className="rounded-md border border-emerald-700/20 bg-emerald-700/5 px-3 py-2 font-body text-xs text-emerald-700">
-                  Code <strong>{resalePreview.resale_code}</strong> applied from {resalePreview.name}.
                 </div>
               )}
               {user && appliedSavings.discountAmount === 0 && loyaltyStatus && loyaltyStatus.lifetime_spent < 5000 && (

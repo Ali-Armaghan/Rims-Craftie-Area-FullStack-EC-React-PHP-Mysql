@@ -8,7 +8,7 @@ type AuthContextType = {
   logout: () => void;
 };
 
-const STORAGE_KEY = "ateeqo_customer_user";
+const STORAGE_KEY = "craftie_area_customer_user";
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 function getStoredUser() {

@@ -40,7 +40,7 @@ export function Users() {
           <div>
             <h2 className='text-2xl font-bold tracking-tight'>User List</h2>
             <p className='text-muted-foreground'>
-              Manage your users and their resale balances here.
+              Manage your customer and user accounts here.
             </p>
           </div>
           <UsersPrimaryButtons />

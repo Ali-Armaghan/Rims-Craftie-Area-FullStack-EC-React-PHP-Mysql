@@ -2,7 +2,7 @@ import axios from 'axios'
 
 const baseURL =
   import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ??
-  'http://localhost/ateeqo/backend/api'
+  'http://localhost/RCA/backend/api'
 
 const apiClient = axios.create({
   baseURL: `${baseURL}/index.php`,

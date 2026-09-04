@@ -15,7 +15,6 @@ import Checkout from "./pages/Checkout";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Account from "./pages/Account";
-import RewardsProgram from "./pages/RewardsProgram";
 import LoyaltyProgram from "./pages/LoyaltyProgram";
 import Contact from "./pages/Contact";
 import Policies from "./pages/Policies";
@@ -28,14 +27,12 @@ import PageTransition from "./components/PageTransition";
 import { useVisitorTracking } from "@/hooks/useVisitorTracking";
 import { useMetaPixelPageView } from "@/hooks/useMetaPixelPageView";
 import { useGoogleAnalyticsPageView } from "@/hooks/useGoogleAnalyticsPageView";
-import { useReferralCapture } from "@/hooks/useReferralCapture";
 
 const AnimatedRoutes = () => {
   const location = useLocation();
   useVisitorTracking();
   useMetaPixelPageView();
   useGoogleAnalyticsPageView();
-  useReferralCapture();
 
   return (
     <AnimatePresence mode="wait">
@@ -48,7 +45,6 @@ const AnimatedRoutes = () => {
         <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
         <Route path="/signup" element={<PageTransition><Signup /></PageTransition>} />
         <Route path="/account" element={<PageTransition><Account /></PageTransition>} />
-        <Route path="/rewards" element={<PageTransition><RewardsProgram /></PageTransition>} />
         <Route path="/loyalty" element={<PageTransition><LoyaltyProgram /></PageTransition>} />
         <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />
         <Route path="/policies" element={<PageTransition><Policies /></PageTransition>} />

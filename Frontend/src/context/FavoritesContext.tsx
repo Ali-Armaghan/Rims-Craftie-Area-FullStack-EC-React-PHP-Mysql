@@ -9,7 +9,7 @@ import { Product } from "@/data/products";
 import { trackAddToWishlist } from "@/lib/meta-pixel";
 import { trackGAAddToWishlist } from "@/lib/google-analytics";
 
-const FAVORITES_STORAGE_KEY = "ateeqo_favorites";
+const FAVORITES_STORAGE_KEY = "craftie_area_favorites";
 
 interface FavoritesContextType {
   favorites: Product[];

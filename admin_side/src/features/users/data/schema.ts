@@ -11,11 +11,6 @@ const userSchema = z.object({
   name: z.string(),
   email: z.string(),
   phone: z.string().nullable(),
-  resale_code: z.string(),
-  resale_discount_percent: z.number().or(z.string()).optional(),
-  resale_commission_percent: z.number().or(z.string()).optional(),
-  resale_code_active: z.number().or(z.boolean()).optional(),
-  resale_balance: z.number().or(z.string()),
   status: userStatusSchema,
   created_at: z.string().optional(),
 })

@@ -67,7 +67,7 @@ export function UserAuthForm({
       auth.setUser(user)
       auth.setAccessToken(ADMIN_SESSION_TOKEN)
 
-      toast.success('Welcome back, Ateeqo Admin!')
+      toast.success('Welcome back, Craftie._.Area Admin!')
       navigate({ to: redirectTo || '/', replace: true })
     } finally {
       setIsLoading(false)
@@ -88,7 +88,7 @@ export function UserAuthForm({
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder='ateeq@gmail.com' {...field} />
+                <Input placeholder='admin@craftiearea.com' {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

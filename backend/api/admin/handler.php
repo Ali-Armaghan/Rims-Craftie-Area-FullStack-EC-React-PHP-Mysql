@@ -98,17 +98,6 @@ switch ($action) {
         echo json_encode(["message" => "Method not allowed"]);
         break;
 
-    case 'resale-management':
-        echo json_encode($admin->getReSaleManagement());
-        break;
-
-    case 'adjust-balance':
-        if (!empty($data['user_id']) && !empty($data['amount']) && !empty($data['type'])) {
-            $res = $admin->adjustUserBalance($data['user_id'], $data['amount'], $data['type'], $data['reason'] ?? '', 1);
-            echo json_encode(["success" => $res]);
-        }
-        break;
-
     case 'update-settings':
         if (!empty($data['key']) && array_key_exists('value', $data)) {
             $q = "UPDATE settings SET setting_value = ? WHERE setting_key = ?";

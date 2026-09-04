@@ -10,7 +10,7 @@ import {
   pingTracking,
 } from "@/services/api";
 
-const SESSION_KEY = "ateeqo_visitor_session_uuid";
+const SESSION_KEY = "craftie_area_visitor_session_uuid";
 
 function getSessionUuid() {
   const existing = localStorage.getItem(SESSION_KEY);

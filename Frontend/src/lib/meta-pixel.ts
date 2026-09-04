@@ -25,7 +25,7 @@ declare global {
 }
 
 const CURRENCY = "PKR";
-const FIRED_EVENT_IDS_KEY = "ateeqo_meta_fired_event_ids";
+const FIRED_EVENT_IDS_KEY = "craftie_area_meta_fired_event_ids";
 
 function fbq(...args: unknown[]) {
   if (typeof window === "undefined" || typeof window.fbq !== "function") {
@@ -209,7 +209,7 @@ export function trackPurchase(params: {
 
 export function trackCompleteRegistration(method = "email") {
   trackMetaEvent("CompleteRegistration", {
-    content_name: "Ateeqo Account",
+    content_name: "Craftie._.Area Account",
     status: true,
     method,
   });

@@ -27,7 +27,6 @@ import {
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
 import { SelectDropdown } from '@/components/select-dropdown'
-import { Switch } from '@/components/ui/switch'
 import { type User } from '../data/schema'
 
 const formSchema = z
@@ -38,62 +37,58 @@ const formSchema = z
     email: z.email({
       error: (iss) => (iss.input === '' ? 'Email is required.' : undefined),
     }),
-    resaleCode: z.string().min(1, 'Resale code is required.'),
-    resaleDiscountPercent: z.number().min(0).max(100),
-    resaleCommissionPercent: z.number().min(0).max(100),
-    resaleCodeActive: z.boolean(),
     status: z.enum(['active', 'inactive']),
     password: z.string(),
     confirmPassword: z.string(),
     isEdit: z.boolean(),
   })
-    .superRefine((data, ctx) => {
-      const password = data.password.trim()
-      const confirmPassword = data.confirmPassword.trim()
+  .superRefine((data, ctx) => {
+    const password = data.password.trim()
+    const confirmPassword = data.confirmPassword.trim()
 
-      if (data.isEdit && !password) return
+    if (data.isEdit && !password) return
 
-      if (!password) {
-        ctx.addIssue({
-          code: 'custom',
-          message: 'Password is required.',
-          path: ['password'],
-        })
-        return
-      }
+    if (!password) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Password is required.',
+        path: ['password'],
+      })
+      return
+    }
 
-      if (password.length < 8) {
-        ctx.addIssue({
-          code: 'custom',
-          message: 'Password must be at least 8 characters long.',
-          path: ['password'],
-        })
-      }
+    if (password.length < 8) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Password must be at least 8 characters long.',
+        path: ['password'],
+      })
+    }
 
-      if (!/[a-z]/.test(password)) {
-        ctx.addIssue({
-          code: 'custom',
-          message: 'Password must contain at least one lowercase letter.',
-          path: ['password'],
-        })
-      }
+    if (!/[a-z]/.test(password)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Password must contain at least one lowercase letter.',
+        path: ['password'],
+      })
+    }
 
-      if (!/\d/.test(password)) {
-        ctx.addIssue({
-          code: 'custom',
-          message: 'Password must contain at least one number.',
-          path: ['password'],
-        })
-      }
+    if (!/\d/.test(password)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Password must contain at least one number.',
+        path: ['password'],
+      })
+    }
 
-      if (password !== confirmPassword) {
-        ctx.addIssue({
-          code: 'custom',
-          message: "Passwords don't match.",
-          path: ['confirmPassword'],
-        })
-      }
-    })
+    if (password !== confirmPassword) {
+      ctx.addIssue({
+        code: 'custom',
+        message: "Passwords don't match.",
+        path: ['confirmPassword'],
+      })
+    }
+  })
 type UserForm = z.infer<typeof formSchema>
 
 type UserActionDialogProps = {
@@ -126,14 +121,6 @@ export function UsersActionDialog({
           password: '',
           confirmPassword: '',
           phoneNumber: currentRow.phone ?? '',
-          resaleCode: currentRow.resale_code,
-          resaleDiscountPercent: Number(
-            currentRow.resale_discount_percent ?? 0
-          ),
-          resaleCommissionPercent: Number(
-            currentRow.resale_commission_percent ?? 5
-          ),
-          resaleCodeActive: Boolean(currentRow.resale_code_active ?? 1),
           status: currentRow.status,
           isEdit,
         }
@@ -142,10 +129,6 @@ export function UsersActionDialog({
           lastName: '',
           email: '',
           phoneNumber: '',
-          resaleCode: '',
-          resaleDiscountPercent: 0,
-          resaleCommissionPercent: 5,
-          resaleCodeActive: true,
           status: 'active',
           password: '',
           confirmPassword: '',
@@ -162,12 +145,6 @@ export function UsersActionDialog({
         lastName: nameParts.lastName,
         email: currentRow.email,
         phoneNumber: currentRow.phone ?? '',
-        resaleCode: currentRow.resale_code,
-        resaleDiscountPercent: Number(currentRow.resale_discount_percent ?? 0),
-        resaleCommissionPercent: Number(
-          currentRow.resale_commission_percent ?? 5
-        ),
-        resaleCodeActive: Boolean(currentRow.resale_code_active ?? 1),
         status: currentRow.status,
         password: '',
         confirmPassword: '',
@@ -181,10 +158,6 @@ export function UsersActionDialog({
       lastName: '',
       email: '',
       phoneNumber: '',
-      resaleCode: '',
-      resaleDiscountPercent: 0,
-      resaleCommissionPercent: 5,
-      resaleCodeActive: true,
       status: 'active',
       password: '',
       confirmPassword: '',
@@ -199,10 +172,6 @@ export function UsersActionDialog({
         email: values.email,
         phone: values.phoneNumber,
         password: values.password.trim() || undefined,
-        resale_code: values.resaleCode,
-        resale_discount_percent: values.resaleDiscountPercent,
-        resale_commission_percent: values.resaleCommissionPercent,
-        resale_code_active: values.resaleCodeActive ? 1 : 0,
         status: values.status,
       }
 
@@ -235,16 +204,9 @@ export function UsersActionDialog({
   }
 
   const isPasswordTouched = !!form.formState.dirtyFields.password
-  const generateResaleCode = () => {
-    const suffix = Math.random().toString(36).slice(2, 8).toUpperCase()
-    form.setValue('resaleCode', `RS-${suffix}`, {
-      shouldDirty: true,
-      shouldValidate: true,
-    })
-  }
   const generatePassword = () => {
     const chars = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-    let password = 'At'
+    let password = 'Cr'
     for (let i = 0; i < 8; i++) {
       password += chars[Math.floor(Math.random() * chars.length)]
     }
@@ -271,12 +233,13 @@ export function UsersActionDialog({
         onOpenChange(state)
       }}
     >
-      <DialogContent className='flex max-h-[90vh] w-[95vw] max-w-5xl flex-col gap-4 overflow-hidden sm:max-w-5xl'>
+      <DialogContent className='flex max-h-[90vh] w-[95vw] max-w-3xl flex-col gap-4 overflow-hidden sm:max-w-3xl'>
         <DialogHeader className='text-start'>
           <DialogTitle>{isEdit ? 'Edit User' : 'Add New User'}</DialogTitle>
           <DialogDescription>
-            Create an account and configure its resale code, buyer discount,
-            and influencer commission.
+            {isEdit
+              ? 'Update user account profile information and access status.'
+              : 'Create a new customer or user account.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -339,41 +302,11 @@ export function UsersActionDialog({
                   </FormItem>
                 )}
               />
-
-              <FormField
-                control={form.control}
-                name='resaleCode'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Resale Code</FormLabel>
-                    <div className='flex gap-2'>
-                      <FormControl>
-                        <Input
-                          placeholder='RS-INFLUENCER10'
-                          className='uppercase'
-                          {...field}
-                          onChange={(event) =>
-                            field.onChange(event.target.value.toUpperCase())
-                          }
-                        />
-                      </FormControl>
-                      <Button
-                        type='button'
-                        variant='outline'
-                        onClick={generateResaleCode}
-                      >
-                        Generate
-                      </Button>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               <FormField
                 control={form.control}
                 name='status'
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className='md:col-span-2'>
                     <FormLabel>Status</FormLabel>
                     <SelectDropdown
                       defaultValue={field.value}
@@ -385,63 +318,6 @@ export function UsersActionDialog({
                         { label: 'Inactive', value: 'inactive' },
                       ]}
                     />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name='resaleDiscountPercent'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Buyer Discount %</FormLabel>
-                    <FormControl>
-                      <Input
-                        type='number'
-                        min='0'
-                        max='100'
-                        step='0.01'
-                        value={field.value ?? 0}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                        ref={field.ref}
-                        onChange={(e) => {
-                          const raw = e.target.value
-                          field.onChange(
-                            raw === '' ? 0 : Number(raw)
-                          )
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='resaleCommissionPercent'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Commission %</FormLabel>
-                    <FormControl>
-                      <Input
-                        type='number'
-                        min='0'
-                        max='100'
-                        step='0.01'
-                        value={field.value ?? 0}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                        ref={field.ref}
-                        onChange={(e) => {
-                          const raw = e.target.value
-                          field.onChange(
-                            raw === '' ? 0 : Number(raw)
-                          )
-                        }}
-                      />
-                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -474,8 +350,8 @@ export function UsersActionDialog({
                     </div>
                     <p className='text-xs text-muted-foreground'>
                       {isEdit
-                        ? 'Optional on edit. Blank = old password same rahega.'
-                        : 'Yahi password user website login pe use karega.'}
+                        ? 'Optional on edit. Blank = password unchanged.'
+                        : 'Password used by customer to log into the storefront.'}
                     </p>
                     <FormMessage />
                   </FormItem>
@@ -498,30 +374,6 @@ export function UsersActionDialog({
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name='resaleCodeActive'
-                render={({ field }) => (
-                  <FormItem className='md:col-span-2'>
-                    <div className='flex items-center justify-between rounded-md border px-4 py-3'>
-                      <div>
-                        <FormLabel>Code Active</FormLabel>
-                        <p className='text-xs text-muted-foreground'>
-                          Inactive code checkout pe apply nahi hoga.
-                        </p>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </div>
                     <FormMessage />
                   </FormItem>
                 )}

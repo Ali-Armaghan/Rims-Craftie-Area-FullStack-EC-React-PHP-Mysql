@@ -7,8 +7,8 @@ import {
   type AdminSessionUser,
 } from '@/lib/admin-auth'
 
-const ACCESS_TOKEN = 'ateeqo_admin_access_token'
-const AUTH_USER = 'ateeqo_admin_user'
+const ACCESS_TOKEN = 'craftie_area_admin_access_token'
+const AUTH_USER = 'craftie_area_admin_user'
 
 interface AuthState {
   auth: {

@@ -28,7 +28,7 @@ const steps = [
   {
     icon: ShoppingBag,
     title: "Shop and build history",
-    body: "Every delivered order adds to your lifetime purchase total. The more you shop with Ateeqo, the higher your automatic discount becomes.",
+    body: "Every delivered order adds to your lifetime purchase total. The more you shop with Craftie._.Area, the higher your automatic discount becomes.",
   },
   {
     icon: BadgePercent,
@@ -54,10 +54,6 @@ const faqs = [
   {
     q: "What counts toward purchase history?",
     a: "Only orders marked as delivered count toward your lifetime spend total. Pending or in-progress orders are not included until delivery is complete.",
-  },
-  {
-    q: "Can I combine loyalty discount with a referral code?",
-    a: "Yes. Loyalty savings apply to your order total, and you can still enter a referral / ReSale code at checkout.",
   },
   {
     q: "What happens when I reach the next tier?",
@@ -97,7 +93,7 @@ const LoyaltyProgram = () => {
             animate={{ opacity: 1, y: 0 }}
             className="mx-auto max-w-3xl text-center"
           >
-            <p className="text-label mb-3">Ateeqo Loyalty</p>
+            <p className="text-label mb-3">Craftie._.Area Loyalty</p>
             <h1 className="mb-5 font-display text-4xl text-foreground md:text-5xl">
               Loyalty Points Program
             </h1>
@@ -246,9 +242,9 @@ const LoyaltyProgram = () => {
             <h3 className="mb-3 font-display text-2xl">Why loyalty points?</h3>
             <ul className="space-y-3 font-body text-sm leading-relaxed text-primary-foreground/85">
               <li>Automatic savings — no coupon codes to remember</li>
-              <li>Rewards repeat customers who love Ateeqo bags</li>
+              <li>Rewards repeat customers who love Craftie._.Area</li>
               <li>Transparent tiers — always know your next milestone</li>
-              <li>Works alongside our ReSale referral program</li>
+              <li>Applicable across our entire collection</li>
             </ul>
           </motion.div>
 

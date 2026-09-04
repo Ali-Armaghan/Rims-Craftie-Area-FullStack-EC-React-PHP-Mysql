@@ -135,7 +135,7 @@ const Contact = () => {
             <p className="text-label mb-3">Get in touch</p>
             <h1 className="mb-5 font-display text-4xl text-foreground md:text-5xl">Contact Us</h1>
             <p className="font-body text-base leading-relaxed text-muted-foreground md:text-lg">
-              We&apos;re here to help with orders, styling advice, and anything about Ateeqo bags
+              We&apos;re here to help with orders, styling advice, and anything about Craftie._.Area
               &amp; accessories.
             </p>
           </motion.div>
