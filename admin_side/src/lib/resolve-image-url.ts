@@ -11,16 +11,16 @@ export function resolveImageUrl(image: string): string {
     return image
   }
 
+  const uploadBase = apiBaseUrl.replace(/\/api\/?$/, '')
+
   const uploadsPath = image.match(/\/uploads\/(?:categories|products)\/[^\s?#]+/i)
   if (uploadsPath) {
-    const backendOrigin = new URL(apiBaseUrl).origin
-    return `${backendOrigin}${uploadsPath[0]}`
+    return `${uploadBase}${uploadsPath[0]}`
   }
 
   if (/^(https?:)?\/\//i.test(image)) {
     return image
   }
 
-  const backendOrigin = new URL(apiBaseUrl).origin
-  return image.startsWith('/') ? `${backendOrigin}${image}` : `${backendOrigin}/${image}`
+  return image.startsWith('/') ? `${uploadBase}${image}` : `${uploadBase}/${image}`
 }

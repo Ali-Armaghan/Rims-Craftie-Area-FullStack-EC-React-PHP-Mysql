@@ -190,14 +190,7 @@ function resolveImageUrl(image: string) {
         return image;
     }
 
-    // Rewrite stored localhost/xampp URLs to live API host (Vercel + Hostinger API)
-    const uploadsPath = image.match(/\/uploads\/(?:categories|products)\/[^\s?#]+/i);
-    if (uploadsPath && API_BASE_URL) {
-        const backendOrigin = new URL(API_BASE_URL).origin;
-        return `${backendOrigin}${uploadsPath[0]}`;
-    }
-
-    if (/^(https?:)?\/\//i.test(image) || image.startsWith('data:')) {
+    if (image.startsWith('blob:') || image.startsWith('data:')) {
         return image;
     }
 
@@ -205,8 +198,19 @@ function resolveImageUrl(image: string) {
         return image;
     }
 
-    const backendOrigin = new URL(API_BASE_URL).origin;
-    return image.startsWith('/') ? `${backendOrigin}${image}` : `${backendOrigin}/${image}`;
+    const uploadBase = API_BASE_URL.replace(/\/api\/?$/, '');
+
+    // Rewrite stored localhost/xampp URLs or relative uploads to current upload base
+    const uploadsPath = image.match(/\/uploads\/(?:categories|products)\/[^\s?#]+/i);
+    if (uploadsPath) {
+        return `${uploadBase}${uploadsPath[0]}`;
+    }
+
+    if (/^(https?:)?\/\//i.test(image)) {
+        return image;
+    }
+
+    return image.startsWith('/') ? `${uploadBase}${image}` : `${uploadBase}/${image}`;
 }
 
 function parseColors(colors: BackendProduct['colors']) {
