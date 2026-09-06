@@ -15,7 +15,10 @@ switch ($_SERVER['REQUEST_METHOD']) {
     case 'GET':
         if (!empty($_GET['id'])) {
             // Get single order with items
-            $query = "SELECT o.*, u.name as customer_name, u.email as customer_email 
+            $query = "SELECT o.*,
+                             COALESCE(u.name, JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.full_name')), 'Guest') as customer_name,
+                             COALESCE(u.email, JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.email')), '') as customer_email,
+                             COALESCE(u.phone, JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.phone')), '') as customer_phone
                       FROM orders o 
                       LEFT JOIN users u ON o.user_id = u.id 
                       WHERE o.id = ?";
@@ -48,7 +51,10 @@ switch ($_SERVER['REQUEST_METHOD']) {
             
             echo json_encode($ord);
         } elseif (!empty($_GET['user_id'])) {
-            $query = "SELECT o.*, u.name as customer_name 
+            $query = "SELECT o.*,
+                             COALESCE(u.name, JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.full_name')), 'Guest') as customer_name,
+                             COALESCE(u.email, JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.email')), '') as customer_email,
+                             COALESCE(u.phone, JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.phone')), '') as customer_phone
                       FROM orders o 
                       LEFT JOIN users u ON o.user_id = u.id 
                       WHERE o.user_id = ?
@@ -57,7 +63,10 @@ switch ($_SERVER['REQUEST_METHOD']) {
             $stmt->execute([$_GET['user_id']]);
             echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
         } else {
-            $query = "SELECT o.*, u.name as customer_name 
+            $query = "SELECT o.*,
+                             COALESCE(u.name, JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.full_name')), 'Guest') as customer_name,
+                             COALESCE(u.email, JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.email')), '') as customer_email,
+                             COALESCE(u.phone, JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.phone')), '') as customer_phone
                       FROM orders o 
                       LEFT JOIN users u ON o.user_id = u.id 
                       ORDER BY o.created_at DESC";
@@ -69,7 +78,6 @@ switch ($_SERVER['REQUEST_METHOD']) {
 
     case 'POST':
         if (
-            empty($data['user_id']) ||
             empty($data['shipping_address']) ||
             empty($data['items']) ||
             !isset($data['subtotal']) ||
@@ -80,12 +88,15 @@ switch ($_SERVER['REQUEST_METHOD']) {
             break;
         }
 
-        $userCheck = $db->prepare("SELECT id FROM users WHERE id = ? LIMIT 1");
-        $userCheck->execute([$data['user_id']]);
-        if (!$userCheck->fetch(PDO::FETCH_ASSOC)) {
-            http_response_code(401);
-            echo json_encode(['message' => 'Invalid user session. Please login again.']);
-            break;
+        // Check user_id if provided; otherwise null for guest checkout
+        if (!empty($data['user_id'])) {
+            $userCheck = $db->prepare("SELECT id FROM users WHERE id = ? LIMIT 1");
+            $userCheck->execute([$data['user_id']]);
+            if (!$userCheck->fetch(PDO::FETCH_ASSOC)) {
+                $data['user_id'] = null;
+            }
+        } else {
+            $data['user_id'] = null;
         }
 
         $res = $order->create($data);

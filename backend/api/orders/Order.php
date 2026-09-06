@@ -57,10 +57,12 @@ class Order {
             $discountAmount = 0.0;
             $loyaltyPercent = 0.0;
 
+            $userId = !empty($data['user_id']) ? (int) $data['user_id'] : null;
+
             $applyLoyalty = !empty($data['apply_loyalty']);
-            if ($applyLoyalty && !empty($data['user_id'])) {
+            if ($applyLoyalty && $userId !== null) {
                 $loyalty = new Loyalty($this->conn);
-                $lifetimeSpent = $loyalty->getLifetimeSpent($data['user_id']);
+                $lifetimeSpent = $loyalty->getLifetimeSpent($userId);
                 $loyaltyDiscount = $loyalty->calculateDiscount($subtotal, $lifetimeSpent);
                 $discountAmount = (float) $loyaltyDiscount['discount_amount'];
                 $loyaltyPercent = (float) $loyaltyDiscount['discount_percent'];
@@ -73,12 +75,12 @@ class Order {
                           discount=:discount, total=:total, shipping_address=:ship";
             
             $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(":user_id", $data['user_id']);
-            $stmt->bindParam(":onum", $order_number);
-            $stmt->bindParam(":sub", $subtotal);
-            $stmt->bindParam(":discount", $discountAmount);
-            $stmt->bindParam(":total", $finalTotal);
-            $stmt->bindParam(":ship", $shipping);
+            $stmt->bindValue(":user_id", $userId, $userId !== null ? PDO::PARAM_INT : PDO::PARAM_NULL);
+            $stmt->bindValue(":onum", $order_number);
+            $stmt->bindValue(":sub", $subtotal);
+            $stmt->bindValue(":discount", $discountAmount);
+            $stmt->bindValue(":total", $finalTotal);
+            $stmt->bindValue(":ship", $shipping);
             $stmt->execute();
             
             $order_id = $this->conn->lastInsertId();

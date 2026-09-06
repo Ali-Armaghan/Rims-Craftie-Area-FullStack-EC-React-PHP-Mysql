@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { useCart } from "@/context/CartContext";
 import { Lock, ArrowLeft, Loader2, BadgePercent } from "lucide-react";
-import { createOrder, convertCheckoutDraft, fetchLoyaltyStatus, loginCustomer, OrderPayload, saveCheckoutDraft, signupCustomer } from "@/services/api";
+import { createOrder, convertCheckoutDraft, fetchLoyaltyStatus, OrderPayload, saveCheckoutDraft } from "@/services/api";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { calculateLoyaltyDiscount } from "@/lib/loyalty";
@@ -188,25 +188,6 @@ const Checkout = () => {
     };
   }, [user, loyaltyStatus, totalPrice]);
 
-  const resolveOrderUserId = async () => {
-    if (user) return Number(user.id);
-
-    const phoneDigits = formData.phone.replace(/\D/g, "");
-    const accountEmail = `guest.${phoneDigits}.${Date.now()}@orders.craftiearea.local`;
-    const password = `Guest${phoneDigits.slice(-4)}${Date.now().toString(36)}`;
-
-    await signupCustomer({
-      name: formData.fullName,
-      email: accountEmail,
-      phone: formData.phone,
-      password,
-    });
-
-    const authUser = await loginCustomer({ email: accountEmail, password });
-    login(authUser);
-    return Number(authUser.id);
-  };
-
   const handlePlaceOrder = async () => {
     setPhoneTouched(true);
 
@@ -227,10 +208,8 @@ const Checkout = () => {
     setIsSubmitting(true);
 
     try {
-      const userId = await resolveOrderUserId();
-
       const orderPayload: OrderPayload = {
-        user_id: userId,
+        user_id: user?.id ? Number(user.id) : null,
         subtotal: totalPrice,
         total: appliedSavings.totalAfterDiscount,
         apply_loyalty: Boolean(user),

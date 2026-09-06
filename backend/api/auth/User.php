@@ -44,11 +44,7 @@ class User {
     }
 
     public function login($password) {
-        $query = "SELECT id, name, email, phone, role
-                  FROM " . $this->table_name . " 
-                  WHERE email = ? LIMIT 0,1";
-        // Also select password for verification
-        $queryWithPass = "SELECT id, name, email, phone, password, role
+        $queryWithPass = "SELECT id, name, email, phone, password, status
                           FROM " . $this->table_name . " 
                           WHERE email = ? LIMIT 0,1";
         $stmt = $this->conn->prepare($queryWithPass);

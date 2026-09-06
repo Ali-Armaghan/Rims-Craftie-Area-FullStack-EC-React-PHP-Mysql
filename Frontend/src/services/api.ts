@@ -1,7 +1,7 @@
 import { Product, ProductReview } from '@/data/products';
 
 export interface OrderPayload {
-    user_id: number;
+    user_id?: number | null;
     subtotal: number;
     total: number;
     apply_loyalty?: boolean;
