@@ -9,10 +9,6 @@ import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { calculateLoyaltyDiscount } from "@/lib/loyalty";
 import {
-  trackInitiateCheckout,
-  trackPurchase,
-} from "@/lib/meta-pixel";
-import {
   trackGABeginCheckout,
   trackGAPurchase,
 } from "@/lib/google-analytics";
@@ -143,16 +139,6 @@ const Checkout = () => {
     if (checkoutTrackedRef.current || items.length === 0) return;
     checkoutTrackedRef.current = true;
 
-    trackInitiateCheckout({
-      contents: items.map((item) => ({
-        id: String(item.product.id),
-        quantity: item.quantity,
-        item_price: item.product.price,
-      })),
-      value: totalPrice,
-      numItems: items.reduce((sum, item) => sum + item.quantity, 0),
-    });
-
     trackGABeginCheckout({
       contents: items.map((item) => ({
         id: String(item.product.id),
@@ -238,18 +224,6 @@ const Checkout = () => {
       if (!orderResult?.success) {
         throw new Error(orderResult?.message || "Failed to place order. Please try again.");
       }
-
-      trackPurchase({
-        orderId: orderResult.order_id,
-        orderNumber: orderResult.order_number,
-        contents: items.map((item) => ({
-          id: String(item.product.id),
-          quantity: item.quantity,
-          item_price: item.product.price,
-        })),
-        value: Number(orderResult.total ?? appliedSavings.totalAfterDiscount),
-        numItems: items.reduce((sum, item) => sum + item.quantity, 0),
-      });
 
       trackGAPurchase({
         orderId: orderResult.order_id,

@@ -27,7 +27,6 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchSaleCountdown } from "@/services/api";
 import { getProductUrl } from "@/lib/product-url";
 import { buildWhatsAppOrderUrl } from "@/lib/whatsapp-order";
-import { trackViewContent } from "@/lib/meta-pixel";
 import { trackGAViewItem } from "@/lib/google-analytics";
 import {
   Dialog,
@@ -192,7 +191,6 @@ const ProductDetail = () => {
 
   useEffect(() => {
     if (!product?.id) return;
-    trackViewContent(product);
     trackGAViewItem(product);
     // Fire once per product id (avoid remount / refetch duplicates)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only when product id changes

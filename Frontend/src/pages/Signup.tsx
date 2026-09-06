@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { signupCustomer } from "@/services/api";
-import { trackCompleteRegistration } from "@/lib/meta-pixel";
 import { trackGASignUp } from "@/lib/google-analytics";
 
 const Signup = () => {
@@ -38,7 +37,6 @@ const Signup = () => {
         phone: formData.phone,
         password: formData.password,
       });
-      trackCompleteRegistration("email");
       trackGASignUp("email");
       toast.success("Account created. Please login.");
       navigate("/login");

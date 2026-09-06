@@ -8,6 +8,7 @@ class CheckoutDraft {
     public function __construct($db) {
         $this->conn = $db;
         $this->ensureTable();
+        $this->ensureColumns();
     }
 
     private function ensureTable() {
@@ -49,6 +50,42 @@ class CheckoutDraft {
         $done = true;
     }
 
+    private function ensureColumns() {
+        static $done = false;
+        if ($done) {
+            return;
+        }
+
+        try {
+            $this->conn->query("SELECT referral_code FROM " . $this->table_name . " LIMIT 1");
+        } catch (Exception $e) {
+            try {
+                $this->conn->exec(
+                    "ALTER TABLE " . $this->table_name . " ADD COLUMN referral_code VARCHAR(40) NULL DEFAULT NULL AFTER city"
+                );
+            } catch (Exception $ignored) {
+            }
+        }
+
+        $done = true;
+    }
+
+    private function hasReferralCodeColumn(): bool {
+        static $hasCol = null;
+        if ($hasCol !== null) {
+            return $hasCol;
+        }
+
+        try {
+            $this->conn->query("SELECT referral_code FROM " . $this->table_name . " LIMIT 1");
+            $hasCol = true;
+        } catch (Exception $e) {
+            $hasCol = false;
+        }
+
+        return $hasCol;
+    }
+
     private function normalizePhone($phone) {
         return preg_replace('/\D+/', '', (string)$phone);
     }
@@ -61,94 +98,132 @@ class CheckoutDraft {
     }
 
     public function upsert($data) {
-        $token = trim((string)($data['draft_token'] ?? ''));
-        if ($token === '') {
-            return ['success' => false, 'message' => 'draft_token is required'];
+        try {
+            $token = trim((string)($data['draft_token'] ?? ''));
+            if ($token === '') {
+                return ['success' => false, 'message' => 'draft_token is required'];
+            }
+
+            $phone = trim((string)($data['phone'] ?? ''));
+            $phoneDigits = $this->normalizePhone($phone);
+            if (strlen($phoneDigits) < 7) {
+                return ['success' => false, 'message' => 'Phone must have at least 7 digits'];
+            }
+
+            $userId = isset($data['user_id']) && $data['user_id'] !== '' && $data['user_id'] !== null
+                ? (int)$data['user_id']
+                : null;
+            $fullName = trim((string)($data['full_name'] ?? ''));
+            $email = trim((string)($data['email'] ?? ''));
+            $address = trim((string)($data['address'] ?? ''));
+            $city = trim((string)($data['city'] ?? ''));
+            $referral = strtoupper(trim((string)($data['referral_code'] ?? '')));
+            $cartJson = $this->encodeCart($data['cart_json'] ?? $data['items'] ?? []);
+            $cartTotal = isset($data['cart_total']) ? (float)$data['cart_total'] : 0.0;
+
+            $hasReferral = $this->hasReferralCodeColumn();
+
+            if ($hasReferral) {
+                $query = "INSERT INTO " . $this->table_name . "
+                            (draft_token, user_id, full_name, phone, email, address, city, referral_code,
+                             cart_json, cart_total, status)
+                          VALUES
+                            (:token, :user_id, :full_name, :phone, :email, :address, :city, :referral,
+                             :cart_json, :cart_total, 'abandoned')
+                          ON DUPLICATE KEY UPDATE
+                            user_id = VALUES(user_id),
+                            full_name = VALUES(full_name),
+                            phone = VALUES(phone),
+                            email = VALUES(email),
+                            address = VALUES(address),
+                            city = VALUES(city),
+                            referral_code = VALUES(referral_code),
+                            cart_json = VALUES(cart_json),
+                            cart_total = VALUES(cart_total),
+                            status = IF(status = 'converted', status, 'abandoned'),
+                            updated_at = CURRENT_TIMESTAMP";
+            } else {
+                $query = "INSERT INTO " . $this->table_name . "
+                            (draft_token, user_id, full_name, phone, email, address, city,
+                             cart_json, cart_total, status)
+                          VALUES
+                            (:token, :user_id, :full_name, :phone, :email, :address, :city,
+                             :cart_json, :cart_total, 'abandoned')
+                          ON DUPLICATE KEY UPDATE
+                            user_id = VALUES(user_id),
+                            full_name = VALUES(full_name),
+                            phone = VALUES(phone),
+                            email = VALUES(email),
+                            address = VALUES(address),
+                            city = VALUES(city),
+                            cart_json = VALUES(cart_json),
+                            cart_total = VALUES(cart_total),
+                            status = IF(status = 'converted', status, 'abandoned'),
+                            updated_at = CURRENT_TIMESTAMP";
+            }
+
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindValue(':token', $token);
+            $stmt->bindValue(':user_id', $userId, $userId === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
+            $stmt->bindValue(':full_name', $fullName !== '' ? $fullName : null);
+            $stmt->bindValue(':phone', $phone);
+            $stmt->bindValue(':email', $email !== '' ? $email : null);
+            $stmt->bindValue(':address', $address !== '' ? $address : null);
+            $stmt->bindValue(':city', $city !== '' ? $city : null);
+            if ($hasReferral) {
+                $stmt->bindValue(':referral', $referral !== '' ? $referral : null);
+            }
+            $stmt->bindValue(':cart_json', $cartJson);
+            $stmt->bindValue(':cart_total', $cartTotal);
+
+            if (!$stmt->execute()) {
+                return ['success' => false, 'message' => 'Failed to save checkout draft'];
+            }
+
+            $row = $this->findByToken($token);
+            return [
+                'success' => true,
+                'draft' => $row,
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+            ];
         }
-
-        $phone = trim((string)($data['phone'] ?? ''));
-        $phoneDigits = $this->normalizePhone($phone);
-        if (strlen($phoneDigits) < 7) {
-            return ['success' => false, 'message' => 'Phone must have at least 7 digits'];
-        }
-
-        $userId = isset($data['user_id']) && $data['user_id'] !== '' && $data['user_id'] !== null
-            ? (int)$data['user_id']
-            : null;
-        $fullName = trim((string)($data['full_name'] ?? ''));
-        $email = trim((string)($data['email'] ?? ''));
-        $address = trim((string)($data['address'] ?? ''));
-        $city = trim((string)($data['city'] ?? ''));
-        $referral = strtoupper(trim((string)($data['referral_code'] ?? '')));
-        $cartJson = $this->encodeCart($data['cart_json'] ?? $data['items'] ?? []);
-        $cartTotal = isset($data['cart_total']) ? (float)$data['cart_total'] : 0.0;
-
-        $query = "INSERT INTO " . $this->table_name . "
-                    (draft_token, user_id, full_name, phone, email, address, city, referral_code,
-                     cart_json, cart_total, status)
-                  VALUES
-                    (:token, :user_id, :full_name, :phone, :email, :address, :city, :referral,
-                     :cart_json, :cart_total, 'abandoned')
-                  ON DUPLICATE KEY UPDATE
-                    user_id = VALUES(user_id),
-                    full_name = VALUES(full_name),
-                    phone = VALUES(phone),
-                    email = VALUES(email),
-                    address = VALUES(address),
-                    city = VALUES(city),
-                    referral_code = VALUES(referral_code),
-                    cart_json = VALUES(cart_json),
-                    cart_total = VALUES(cart_total),
-                    status = IF(status = 'converted', status, 'abandoned'),
-                    updated_at = CURRENT_TIMESTAMP";
-
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindValue(':token', $token);
-        $stmt->bindValue(':user_id', $userId, $userId === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
-        $stmt->bindValue(':full_name', $fullName !== '' ? $fullName : null);
-        $stmt->bindValue(':phone', $phone);
-        $stmt->bindValue(':email', $email !== '' ? $email : null);
-        $stmt->bindValue(':address', $address !== '' ? $address : null);
-        $stmt->bindValue(':city', $city !== '' ? $city : null);
-        $stmt->bindValue(':referral', $referral !== '' ? $referral : null);
-        $stmt->bindValue(':cart_json', $cartJson);
-        $stmt->bindValue(':cart_total', $cartTotal);
-
-        if (!$stmt->execute()) {
-            return ['success' => false, 'message' => 'Failed to save checkout draft'];
-        }
-
-        $row = $this->findByToken($token);
-        return [
-            'success' => true,
-            'draft' => $row,
-        ];
     }
 
     public function convert($data) {
-        $token = trim((string)($data['draft_token'] ?? ''));
-        if ($token === '') {
-            return ['success' => false, 'message' => 'draft_token is required'];
+        try {
+            $token = trim((string)($data['draft_token'] ?? ''));
+            if ($token === '') {
+                return ['success' => false, 'message' => 'draft_token is required'];
+            }
+
+            $orderId = isset($data['order_id']) && $data['order_id'] !== '' && $data['order_id'] !== null
+                ? (int)$data['order_id']
+                : null;
+
+            $query = "UPDATE " . $this->table_name . "
+                      SET status = 'converted',
+                          converted_order_id = COALESCE(:order_id, converted_order_id),
+                          updated_at = CURRENT_TIMESTAMP
+                      WHERE draft_token = :token";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindValue(':order_id', $orderId, $orderId === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
+            $stmt->bindValue(':token', $token);
+            $stmt->execute();
+
+            return [
+                'success' => true,
+                'draft' => $this->findByToken($token),
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+            ];
         }
-
-        $orderId = isset($data['order_id']) && $data['order_id'] !== '' && $data['order_id'] !== null
-            ? (int)$data['order_id']
-            : null;
-
-        $query = "UPDATE " . $this->table_name . "
-                  SET status = 'converted',
-                      converted_order_id = COALESCE(:order_id, converted_order_id),
-                      updated_at = CURRENT_TIMESTAMP
-                  WHERE draft_token = :token";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindValue(':order_id', $orderId, $orderId === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
-        $stmt->bindValue(':token', $token);
-        $stmt->execute();
-
-        return [
-            'success' => true,
-            'draft' => $this->findByToken($token),
-        ];
     }
 
     public function findByToken($token) {

@@ -6,7 +6,6 @@ import React, {
   useState,
 } from "react";
 import { Product } from "@/data/products";
-import { trackAddToWishlist } from "@/lib/meta-pixel";
 import { trackGAAddToWishlist } from "@/lib/google-analytics";
 
 const FAVORITES_STORAGE_KEY = "craftie_area_favorites";
@@ -81,7 +80,6 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({
     });
 
     if (added) {
-      trackAddToWishlist(product);
       trackGAAddToWishlist(product);
     }
 
@@ -91,7 +89,6 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({
   const addFavorite = useCallback((product: Product) => {
     setFavorites((prev) => {
       if (prev.some((item) => item.id === product.id)) return prev;
-      trackAddToWishlist(product);
       trackGAAddToWishlist(product);
       return [...prev, product];
     });

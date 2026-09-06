@@ -212,6 +212,7 @@ CREATE TABLE IF NOT EXISTS checkout_drafts (
     email VARCHAR(150) NULL DEFAULT NULL,
     address TEXT NULL DEFAULT NULL,
     city VARCHAR(100) NULL DEFAULT NULL,
+    referral_code VARCHAR(40) NULL DEFAULT NULL,
     cart_json JSON NULL DEFAULT NULL,
     cart_total DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     status ENUM('abandoned', 'converted') NOT NULL DEFAULT 'abandoned',

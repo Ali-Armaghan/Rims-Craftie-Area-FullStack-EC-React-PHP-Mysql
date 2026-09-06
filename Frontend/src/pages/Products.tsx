@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import ProductCard from "@/components/ProductCard";
 import { useProducts } from "@/hooks/useProducts";
 import ProductCardSkeleton from "@/components/skeletons/ProductCardSkeleton";
-import { trackSearch } from "@/lib/meta-pixel";
 import { trackGASearch } from "@/lib/google-analytics";
 
 const Products = () => {
@@ -23,7 +22,6 @@ const Products = () => {
 
   useEffect(() => {
     if (searchQuery) {
-      trackSearch(searchQuery);
       trackGASearch(searchQuery);
     }
   }, [searchQuery]);
